@@ -1,0 +1,5 @@
+﻿*.exe
+*.db
+vendor/
+bin/
+
