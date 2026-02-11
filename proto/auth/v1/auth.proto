@@ -1,0 +1,4 @@
+﻿syntax = "proto3";
+package auth.v1;
+
+option go_package = "github.com/Oloarte/turbopos/gen/auth/v1;authv1";

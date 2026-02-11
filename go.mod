@@ -1,3 +1,5 @@
-﻿go 1.22
+module github.com/turbopos/turbopos
 
-module github.com/Oloarte/turbopos
+go 1.23
+
+require google.golang.org/protobuf v1.36.11
