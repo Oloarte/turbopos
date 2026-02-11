@@ -1,0 +1,29 @@
+@"
+# scan-proto.ps1 ── valida que cada .proto tenga option go_package correcto
+$goBase = 'github.com/Oloarte/turbopos/gen'
+$bad    = 0
+
+Get-ChildItem -Recurse -Path .\proto -Filter *.proto | ForEach-Object {
+    $file = $_.FullName
+    $txt  = Get-Content -Raw -Encoding UTF8 $file
+    if ($txt.StartsWith([char]0xFEFF)) { $txt = $txt.Substring(1) }
+
+    if ($txt -match '^\s*package\s+([a-z0-9.]+);\s*') {
+        $pkg    = $Matches[1]              # ej. auth.v1
+        $alias  = ($pkg -replace '\.', '') # authv1
+        $expect = "option go_package = `"$goBase/$($pkg -replace '\.','/');$alias`";"
+
+        if ($txt -notmatch [regex]::Escape($expect)) {
+            Write-Warning "[MISMATCH] $file`n ↳ Esperado: $expect"
+            $bad++
+        }
+    }
+}
+
+if ($bad -eq 0) {
+    Write-Host "`nTodos los .proto pasan la validación ✅"
+} else {
+    Write-Host "`n$bad archivo(s) necesitan arreglo ❌"
+    exit 1
+}
+"@ | Set-Content -Encoding UTF8 .\scan-proto.ps1
