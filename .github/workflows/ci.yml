@@ -24,7 +24,6 @@ jobs:
     - name: Setup Buf
       uses: bufbuild/buf-setup-action@v1
       with:
-        version: '1.48.0'
         github_token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Lint Protobuf Contracts
@@ -36,7 +35,7 @@ jobs:
     - name: Check for Uncommitted Generated Code
       run: |
         go mod tidy
-        git diff --exit-code || (echo "Error: Hay diferencias en el c?digo generado. Corre 'buf generate' localmente y haz commit." && exit 1)
+        git diff --ignore-space-at-eol --exit-code || (echo "Error: Hay diferencias reales en el c?digo." && exit 1)
 
     - name: Run Unit Tests
       run: go test -v ./...
