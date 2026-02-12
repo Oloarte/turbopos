@@ -1,4 +1,21 @@
 ﻿syntax = "proto3";
 package auth.v1;
 
-option go_package = "github.com/Oloarte/turbopos/gen/auth/v1;authv1";
+// Ajustado para que coincida con tu go.mod real
+option go_package = "github.com/turbopos/turbopos/gen/go/proto/auth/v1;authv1";
+
+// Definición del Microservicio
+service AuthService {
+  // Nuestro endpoint de prueba
+  rpc Ping(PingRequest) returns (PingResponse) {}
+}
+
+// Lo que el cliente envía
+message PingRequest {
+  string message = 1;
+}
+
+// Lo que el servidor responde
+message PingResponse {
+  string status = 1;
+}
