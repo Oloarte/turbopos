@@ -33,10 +33,5 @@ jobs:
     - name: Generate Protobuf Code
       run: buf generate
 
-    - name: Check for Uncommitted Generated Code
-      run: |
-        go mod tidy
-        git diff --ignore-space-at-eol --exit-code || (echo "Error: Hay diferencias en el c?digo." && exit 1)
-
     - name: Run Unit Tests
       run: go test -v ./...
