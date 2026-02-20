@@ -1,4 +1,4 @@
-name: TurboPOS CI/CD - Pipeline v10.1
+﻿name: TurboPOS CI/CD - Pipeline v10.1
 
 on:
   push:
@@ -12,23 +12,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Setup Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.24.x'
-        cache: true
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: true
 
-    - name: Setup Buf
-      uses: bufbuild/buf-setup-action@v1
-      with:
-        version: '1.48.0'
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install Protobuf Plugins
+        run: |
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.33.0
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3.0
+          echo "$HOME/go/bin" >> $GITHUB_PATH
 
-    - name: Generate Protobuf Code
-      run: buf generate
+      - name: Setup Buf
+        uses: bufbuild/buf-setup-action@v1
+        with:
+          version: '1.48.0'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Run Unit Tests
-      run: go test -v ./...
+      - name: Generate Protobuf Code
+        run: buf generate
+
+      - name: Run Unit Tests
+        run: go test -v ./...
