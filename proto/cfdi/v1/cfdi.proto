@@ -1,0 +1,10 @@
+﻿syntax = "proto3";
+package cfdi.v1;
+option go_package = "github.com/turbopos/turbopos/gen/go/proto/cfdi/v1;cfdiv1";
+
+service CfdiService {
+  rpc Timbrar (TimbrarRequest) returns (TimbrarResponse);
+}
+
+message TimbrarRequest  { string xml = 1; }
+message TimbrarResponse { string uuid = 1; }
