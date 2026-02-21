@@ -3,8 +3,16 @@ package cfdi.v1;
 option go_package = "github.com/turbopos/turbopos/gen/go/proto/cfdi/v1;cfdiv1";
 
 service CFDIService {
-  rpc Dummy (DummyRequest) returns (DummyResponse) {}
+  rpc Timbrar (FacturaRequest) returns (FacturaResponse) {}
 }
 
-message DummyRequest {}
-message DummyResponse {}
+message FacturaRequest {
+  int32 pac_id = 1;
+  int64 timestamp = 2;
+  string payload = 3;
+}
+
+message FacturaResponse {
+  string status = 1;
+  string uuid = 2;
+}

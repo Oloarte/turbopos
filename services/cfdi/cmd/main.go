@@ -1,4 +1,4 @@
-package main
+ï»¿package main
 
 import (
     "context"
@@ -36,7 +36,7 @@ func NewCFDIServer() *CFDIServer {
     return s
 }
 
-// Resetea las métricas cada 10 mins según tu regla
+// Resetea las mÃ©tricas cada 10 mins segÃºn tu regla
 func (s *CFDIServer) AuditWindowLoop() {
     ticker := time.NewTicker(WindowDuration)
     for range ticker.C {
@@ -52,7 +52,7 @@ func (s *CFDIServer) evaluateFailover() {
     s.mu.Lock()
     defer s.mu.Unlock()
 
-    if s.TotalRequests < 5 { return } // Sample mínimo
+    if s.TotalRequests < 5 { return } // Sample mÃ­nimo
 
     errorRatio := float64(s.FailedRequests) / float64(s.TotalRequests)
     if errorRatio > MaxErrorRatio && s.CurrentPAC == 0 {
@@ -73,7 +73,7 @@ func (s *CFDIServer) Timbrar(ctx context.Context, req *pb.FacturaRequest) (*pb.F
     pacName := "PAC_PRIMARIO_0"
     if pacActivo == 1 { pacName = "PAC_SECUNDARIO_1" }
 
-    log.Printf("Timbrando Venta %s vía %s para RFC: %s", req.VentaId, pacName, req.Rfc)
+    log.Printf("Timbrando Venta %s vÃ­a %s para RFC: %s", req.VentaId, pacName, req.Rfc)
 
     // Simular fallo aleatorio para probar el Kill-Switch (15% de fallo en PAC 0)
     success := true
@@ -84,7 +84,7 @@ func (s *CFDIServer) Timbrar(ctx context.Context, req *pb.FacturaRequest) (*pb.F
         s.FailedRequests++
         s.mu.Unlock()
         go s.evaluateFailover()
-        return nil, status.Errorf(codes.Unavailable, "Fallo en conexión con %s", pacName)
+        return nil, status.Errorf(codes.Unavailable, "Fallo en conexiÃ³n con %s", pacName)
     }
 
     return &pb.FacturaResponse{
