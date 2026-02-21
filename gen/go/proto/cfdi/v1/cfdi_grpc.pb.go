@@ -19,13 +19,17 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	CFDIService_Dummy_FullMethodName = "/cfdi.v1.CFDIService/Dummy"
+	CFDIService_Timbrar_FullMethodName = "/cfdi.v1.CFDIService/Timbrar"
+	CFDIService_Dummy_FullMethodName   = "/cfdi.v1.CFDIService/Dummy"
 )
 
 // CFDIServiceClient is the client API for CFDIService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CFDIServiceClient interface {
+	// Método real usado por el código Go
+	Timbrar(ctx context.Context, in *FacturaRequest, opts ...grpc.CallOption) (*FacturaResponse, error)
+	// Método placeholder anterior
 	Dummy(ctx context.Context, in *DummyRequest, opts ...grpc.CallOption) (*DummyResponse, error)
 }
 
@@ -35,6 +39,15 @@ type cFDIServiceClient struct {
 
 func NewCFDIServiceClient(cc grpc.ClientConnInterface) CFDIServiceClient {
 	return &cFDIServiceClient{cc}
+}
+
+func (c *cFDIServiceClient) Timbrar(ctx context.Context, in *FacturaRequest, opts ...grpc.CallOption) (*FacturaResponse, error) {
+	out := new(FacturaResponse)
+	err := c.cc.Invoke(ctx, CFDIService_Timbrar_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *cFDIServiceClient) Dummy(ctx context.Context, in *DummyRequest, opts ...grpc.CallOption) (*DummyResponse, error) {
@@ -50,6 +63,9 @@ func (c *cFDIServiceClient) Dummy(ctx context.Context, in *DummyRequest, opts ..
 // All implementations must embed UnimplementedCFDIServiceServer
 // for forward compatibility
 type CFDIServiceServer interface {
+	// Método real usado por el código Go
+	Timbrar(context.Context, *FacturaRequest) (*FacturaResponse, error)
+	// Método placeholder anterior
 	Dummy(context.Context, *DummyRequest) (*DummyResponse, error)
 	mustEmbedUnimplementedCFDIServiceServer()
 }
@@ -58,6 +74,9 @@ type CFDIServiceServer interface {
 type UnimplementedCFDIServiceServer struct {
 }
 
+func (UnimplementedCFDIServiceServer) Timbrar(context.Context, *FacturaRequest) (*FacturaResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Timbrar not implemented")
+}
 func (UnimplementedCFDIServiceServer) Dummy(context.Context, *DummyRequest) (*DummyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Dummy not implemented")
 }
@@ -72,6 +91,24 @@ type UnsafeCFDIServiceServer interface {
 
 func RegisterCFDIServiceServer(s grpc.ServiceRegistrar, srv CFDIServiceServer) {
 	s.RegisterService(&CFDIService_ServiceDesc, srv)
+}
+
+func _CFDIService_Timbrar_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FacturaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CFDIServiceServer).Timbrar(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CFDIService_Timbrar_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CFDIServiceServer).Timbrar(ctx, req.(*FacturaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _CFDIService_Dummy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -99,6 +136,10 @@ var CFDIService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "cfdi.v1.CFDIService",
 	HandlerType: (*CFDIServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Timbrar",
+			Handler:    _CFDIService_Timbrar_Handler,
+		},
 		{
 			MethodName: "Dummy",
 			Handler:    _CFDIService_Dummy_Handler,

@@ -1,10 +1,20 @@
 ﻿syntax = "proto3";
 package cfdi.v1;
+
 option go_package = "github.com/turbopos/turbopos/gen/go/proto/cfdi/v1;cfdiv1";
 
-service CFDIService {
-  rpc Dummy (DummyRequest) returns (DummyResponse) {}
-}
+// --------- Mensajes mínimos ----------
+message FacturaRequest  {}   // ← luego agregarás folio, emisor, receptor, etc.
+message FacturaResponse {}   // ← luego agregarás uuid, xml, pdf_url…
 
-message DummyRequest {}
-message DummyResponse {}
+message DummyRequest   {}
+message DummyResponse  {}
+
+// --------- Servicio ----------
+service CFDIService {
+  // Método real usado por el código Go
+  rpc Timbrar (FacturaRequest)  returns (FacturaResponse) {}
+
+  // Método placeholder anterior
+  rpc Dummy  (DummyRequest)    returns (DummyResponse) {}
+}
