@@ -7,8 +7,8 @@ service CFDIService {
 }
 
 message FacturaRequest {
-  int32 venta_id = 1;
-  int32 total = 2;
+  string venta_id = 1;
+  double total = 2;
   string rfc = 3;
   int32 pac_id = 4;
   int64 timestamp = 5;
@@ -19,6 +19,6 @@ message FacturaResponse {
   string status = 1;
   string uuid = 2;
   string sello_sat = 3;
-  string pac_usado = 4;
+  int32 pac_usado = 4;
   int64 timestamp = 5;
 }
