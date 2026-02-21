@@ -1,4 +1,4 @@
-﻿package main
+package main
 
 import (
     "context"
@@ -36,7 +36,7 @@ func NewCFDIServer() *CFDIServer {
     return s
 }
 
-// Resetea las métricas cada 10 mins según tu regla
+// Resetea las m�tricas cada 10 mins seg�n tu regla
 func (s *CFDIServer) AuditWindowLoop() {
     ticker := time.NewTicker(WindowDuration)
     for range ticker.C {
@@ -52,12 +52,12 @@ func (s *CFDIServer) evaluateFailover() {
     s.mu.Lock()
     defer s.mu.Unlock()
 
-    if s.TotalRequests < 5 { return } // Sample mínimo
+    if s.TotalRequests < 5 { return } // Sample m�nimo
 
     errorRatio := float64(s.FailedRequests) / float64(s.TotalRequests)
     if errorRatio > MaxErrorRatio && s.CurrentPAC == 0 {
-        log.Printf("🚨 [PRC-SAT-Kill] ERROR RATIO %.2f%% EXCEDE 5%%!", errorRatio*100)
-        log.Println("⚡ ACTIVANDO KILL-SWITCH: Cambiando a PAC Secundario (1)")
+        log.Printf("?? [PRC-SAT-Kill] ERROR RATIO %.2f%% EXCEDE 5%%!", errorRatio*100)
+        log.Println("? ACTIVANDO KILL-SWITCH: Cambiando a PAC Secundario (1)")
         s.CurrentPAC = 1
         s.TotalRequests = 0
         s.FailedRequests = 0
@@ -73,7 +73,7 @@ func (s *CFDIServer) Timbrar(ctx context.Context, req *pb.FacturaRequest) (*pb.F
     pacName := "PAC_PRIMARIO_0"
     if pacActivo == 1 { pacName = "PAC_SECUNDARIO_1" }
 
-    log.Printf("Timbrando Venta %s vía %s para RFC: %s", req.VentaId, pacName, req.Rfc)
+    log.Printf("Timbrando Venta %s v�a %s para RFC: %s", req.VentaId, pacName, req.Rfc)
 
     // Simular fallo aleatorio para probar el Kill-Switch (15% de fallo en PAC 0)
     success := true
@@ -84,7 +84,7 @@ func (s *CFDIServer) Timbrar(ctx context.Context, req *pb.FacturaRequest) (*pb.F
         s.FailedRequests++
         s.mu.Unlock()
         go s.evaluateFailover()
-        return nil, status.Errorf(codes.Unavailable, "Fallo en conexión con %s", pacName)
+        return nil, status.Errorf(codes.Unavailable, "Fallo en conexi�n con %s", pacName)
     }
 
     return &pb.FacturaResponse{
@@ -96,7 +96,7 @@ func (s *CFDIServer) Timbrar(ctx context.Context, req *pb.FacturaRequest) (*pb.F
 }
 
 func main() {
-    lis, err := net.Listen("tcp", Port)
+    _, err := net.Listen("tcp", Port)
     if err != nil { log.Fatalf("Fallo en TCP listener: %v", err) }
 
     grpcServer := grpc.NewServer()
@@ -105,8 +105,8 @@ func main() {
     pb.RegisterCFDIServiceServer(grpcServer, cfdiService)
     reflection.Register(grpcServer)
 
-    log.Printf("🚀 CFDI Service iniciado en puerto %s", Port)
-    log.Printf("🛡️  Agente PRC-SAT-Kill activo. PAC Primario por defecto.")
+    log.Printf("?? CFDI Service iniciado en puerto %s", Port)
+    log.Printf("???  Agente PRC-SAT-Kill activo. PAC Primario por defecto.")
     
 }
 
