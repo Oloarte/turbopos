@@ -90,7 +90,7 @@ func (s *CFDIServer) Timbrar(ctx context.Context, req *pb.FacturaRequest) (*pb.F
     return &pb.FacturaResponse{
         Uuid:      fmt.Sprintf("mock-uuid-%d", time.Now().UnixNano()),
         SelloSat:  "SAT_SELLO_X29384729384_MOCK",
-        PacUsado:  int32(pacID),
+        PacUsado:  pacID,
         Timestamp: time.Now().UnixMilli(),
     }, nil
 }
@@ -108,6 +108,7 @@ func main() {
     log.Printf("🚀 CFDI Service iniciado en puerto %s", Port)
     log.Printf("🛡️  Agente PRC-SAT-Kill activo. PAC Primario por defecto.")
     
-    if err := grpcServer.Serve(lis); err != nil { log.Fatalf("Fallo en gRPC Server: %v", err) }
+    if err := grpcServer.Serve(lis);\n\tpacID := int32(0) // ← 0=primario,1=secundario err != nil { log.Fatalf("Fallo en gRPC Server: %v", err) }
 }
+
 
