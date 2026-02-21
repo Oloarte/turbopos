@@ -10,11 +10,14 @@ service CFDIService {
 
 // ---------- Mensajes completos ----------
 message FacturaRequest {
-  string venta_id = 1;   // ← VentaId en Go
-  string rfc      = 2;   // ← Rfc    en Go
+  string venta_id = 1;   // ID de la venta
+  string rfc      = 2;   // RFC del receptor
+  double total    = 3;   // Importe total
 }
 
 message FacturaResponse {
-  string uuid      = 1;  // ← Uuid      en Go
-  string sello_sat = 2;  // ← SelloSat  en Go
+  string uuid       = 1; // UUID fiscal
+  string sello_sat  = 2; // Sello SAT
+  int32  pac_usado  = 3; // 0 = primario, 1 = secundario
+  int64  timestamp  = 4; // Epoch ms del timbrado
 }
