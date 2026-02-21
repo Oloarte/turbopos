@@ -1,23 +1,10 @@
 ﻿syntax = "proto3";
-
 package cfdi.v1;
 option go_package = "github.com/turbopos/turbopos/gen/go/proto/cfdi/v1;cfdiv1";
 
-// ——— Servicio mínimo para compilar ———
 service CFDIService {
-  rpc Timbrar (FacturaRequest) returns (FacturaResponse) {}
+  rpc Dummy (DummyRequest) returns (DummyResponse) {}
 }
 
-// ---------- Mensajes completos ----------
-message FacturaRequest {
-  string venta_id = 1;   // ID de la venta
-  string rfc      = 2;   // RFC del receptor
-  double total    = 3;   // Importe total
-}
-
-message FacturaResponse {
-  string uuid       = 1; // UUID fiscal
-  string sello_sat  = 2; // Sello SAT
-  int32  pac_usado  = 3; // 0 = primario, 1 = secundario
-  int64  timestamp  = 4; // Epoch ms del timbrado
-}
+message DummyRequest {}
+message DummyResponse {}
