@@ -1,4 +1,4 @@
-package main
+﻿package main
 import (
     "database/sql"
     "fmt"
@@ -18,7 +18,7 @@ func main() {
         query := "SELECT count(*), COALESCE(sum((payload->>'total')::numeric), 0) FROM event_store WHERE event_type = 'CFDI_ISSUED'"
         err := db.QueryRow(query).Scan(&count, &totalVentas)
         if err != nil { log.Printf("? Error: %v", err); continue }
-        fmt.Println("\n************************************************")
+        fmt.Println("************************************************")
         fmt.Println("?? TURBOPOS - INFORME DE DESEMPE?O")
         fmt.Printf("?? Ventas Totales: $%.2f MXN\n", totalVentas)
         fmt.Printf("?? Transacciones: %d\n", count)
