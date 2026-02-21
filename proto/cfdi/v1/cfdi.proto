@@ -1,24 +1,10 @@
 ﻿syntax = "proto3";
 package cfdi.v1;
-
-option go_package = "github.com/turbopos/turbopos/gen/go/proto/cfdi/v1;pb_cfdi";
+option go_package = "github.com/turbopos/turbopos/gen/go/proto/cfdi/v1;cfdiv1";
 
 service CFDIService {
-  rpc Timbrar (FacturaRequest) returns (FacturaResponse);
+  rpc Dummy (DummyRequest) returns (DummyResponse) {}
 }
 
-message FacturaRequest {
-  string xml      = 1;
-  string venta_id = 2;   // VentaId
-  double total    = 3;   // Total
-  string rfc      = 4;   // Rfc
-}
-
-message FacturaResponse {
-  string uuid         = 1;
-  string xml_timbrado = 2;
-  string status       = 3;
-  string sello_sat    = 4; // SelloSat
-  string pac_usado    = 5; // PacUsado
-  string timestamp    = 6; // Timestamp
-}
+message DummyRequest {}
+message DummyResponse {}
