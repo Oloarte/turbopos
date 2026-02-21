@@ -71,6 +71,7 @@ func (s *CFDIServer) Timbrar(ctx context.Context, req *pb.FacturaRequest) (*pb.F
     s.mu.Unlock()
 
     pacName := "PAC_PRIMARIO_0"
+    pacID := int32(0) // 0 = primario, 1 = secundario
     if pacActivo == 1 { pacName = "PAC_SECUNDARIO_1" }
 
     log.Printf("Timbrando Venta %s vía %s para RFC: %s", req.VentaId, pacName, req.Rfc)
@@ -90,7 +91,7 @@ func (s *CFDIServer) Timbrar(ctx context.Context, req *pb.FacturaRequest) (*pb.F
     return &pb.FacturaResponse{
         Uuid:      fmt.Sprintf("mock-uuid-%d", time.Now().UnixNano()),
         SelloSat:  "SAT_SELLO_X29384729384_MOCK",
-        PacUsado:  pacID,
+        PacUsado: pacID,
         Timestamp: time.Now().UnixMilli(),
     }, nil
 }
