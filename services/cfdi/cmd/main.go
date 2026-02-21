@@ -90,8 +90,8 @@ func (s *CFDIServer) Timbrar(ctx context.Context, req *pb.FacturaRequest) (*pb.F
     return &pb.FacturaResponse{
         Uuid:      fmt.Sprintf("mock-uuid-%d", time.Now().UnixNano()),
         SelloSat:  "SAT_SELLO_X29384729384_MOCK",
-        PacUsado:  pacName,
-        Timestamp: time.Now().Format(time.RFC3339),
+        PacUsado:  int32(pacID),
+        Timestamp: time.Now().UnixMilli(),
     }, nil
 }
 
@@ -110,3 +110,4 @@ func main() {
     
     if err := grpcServer.Serve(lis); err != nil { log.Fatalf("Fallo en gRPC Server: %v", err) }
 }
+
