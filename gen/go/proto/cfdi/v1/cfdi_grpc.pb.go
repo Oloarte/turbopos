@@ -26,7 +26,6 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CFDIServiceClient interface {
-	// timbra un CFDI y devuelve UUID + XML timbrado
 	Timbrar(ctx context.Context, in *FacturaRequest, opts ...grpc.CallOption) (*FacturaResponse, error)
 }
 
@@ -51,7 +50,6 @@ func (c *cFDIServiceClient) Timbrar(ctx context.Context, in *FacturaRequest, opt
 // All implementations must embed UnimplementedCFDIServiceServer
 // for forward compatibility
 type CFDIServiceServer interface {
-	// timbra un CFDI y devuelve UUID + XML timbrado
 	Timbrar(context.Context, *FacturaRequest) (*FacturaResponse, error)
 	mustEmbedUnimplementedCFDIServiceServer()
 }
