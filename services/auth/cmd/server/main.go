@@ -20,11 +20,15 @@ type server struct {
     db *sql.DB
 }
 
-// Ping — ciclo completo: recibe mensaje → guarda en ping_log → responde
 func (s *server) Ping(ctx context.Context, req *authv1.PingRequest) (*authv1.PingResponse, error) {
     msg := req.GetMessage()
     if msg == "" {
         msg = "ping"
+    }
+
+    // Proteccion contra db nil — permite tests sin DB real
+    if s.db == nil {
+        return nil, fmt.Errorf("db no disponible")
     }
 
     _, err := s.db.ExecContext(ctx,
