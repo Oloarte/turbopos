@@ -23,6 +23,6 @@ func main() {
         fmt.Printf("?? Ventas Totales: $%.2f MXN\n", totalVentas)
         fmt.Printf("?? Transacciones: %d\n", count)
         fmt.Printf("?? ROAS: Dark Kitchen estable en 4.2\n")
-        fmt.Println("************************************************\n")
+        fmt.Println("************************************************")
     }
 }

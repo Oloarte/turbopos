@@ -1,10 +1,18 @@
 ﻿syntax = "proto3";
 package cfdi.v1;
-option go_package = "github.com/turbopos/turbopos/gen/go/proto/cfdi/v1;cfdiv1";
 
-service CfdiService {
-  rpc Timbrar (TimbrarRequest) returns (TimbrarResponse);
+option go_package = "github.com/turbopos/turbopos/gen/go/proto/cfdi/v1;pb_cfdi";
+
+service CFDIService {
+  // timbra un CFDI y devuelve UUID + XML timbrado
+  rpc Timbrar (FacturaRequest) returns (FacturaResponse);
 }
 
-message TimbrarRequest  { string xml = 1; }
-message TimbrarResponse { string uuid = 1; }
+// ===== mensajes mínimos para compilar =====
+message FacturaRequest  { string xml = 1; }
+
+message FacturaResponse {
+  string uuid          = 1;
+  string xml_timbrado  = 2;
+  string status        = 3;
+}

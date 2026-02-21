@@ -4,7 +4,7 @@
 // - protoc             (unknown)
 // source: proto/cfdi/v1/cfdi.proto
 
-package cfdiv1
+package pb_cfdi
 
 import (
 	context "context"
@@ -19,89 +19,91 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	CfdiService_Timbrar_FullMethodName = "/cfdi.v1.CfdiService/Timbrar"
+	CFDIService_Timbrar_FullMethodName = "/cfdi.v1.CFDIService/Timbrar"
 )
 
-// CfdiServiceClient is the client API for CfdiService service.
+// CFDIServiceClient is the client API for CFDIService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type CfdiServiceClient interface {
-	Timbrar(ctx context.Context, in *TimbrarRequest, opts ...grpc.CallOption) (*TimbrarResponse, error)
+type CFDIServiceClient interface {
+	// timbra un CFDI y devuelve UUID + XML timbrado
+	Timbrar(ctx context.Context, in *FacturaRequest, opts ...grpc.CallOption) (*FacturaResponse, error)
 }
 
-type cfdiServiceClient struct {
+type cFDIServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewCfdiServiceClient(cc grpc.ClientConnInterface) CfdiServiceClient {
-	return &cfdiServiceClient{cc}
+func NewCFDIServiceClient(cc grpc.ClientConnInterface) CFDIServiceClient {
+	return &cFDIServiceClient{cc}
 }
 
-func (c *cfdiServiceClient) Timbrar(ctx context.Context, in *TimbrarRequest, opts ...grpc.CallOption) (*TimbrarResponse, error) {
-	out := new(TimbrarResponse)
-	err := c.cc.Invoke(ctx, CfdiService_Timbrar_FullMethodName, in, out, opts...)
+func (c *cFDIServiceClient) Timbrar(ctx context.Context, in *FacturaRequest, opts ...grpc.CallOption) (*FacturaResponse, error) {
+	out := new(FacturaResponse)
+	err := c.cc.Invoke(ctx, CFDIService_Timbrar_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// CfdiServiceServer is the server API for CfdiService service.
-// All implementations must embed UnimplementedCfdiServiceServer
+// CFDIServiceServer is the server API for CFDIService service.
+// All implementations must embed UnimplementedCFDIServiceServer
 // for forward compatibility
-type CfdiServiceServer interface {
-	Timbrar(context.Context, *TimbrarRequest) (*TimbrarResponse, error)
-	mustEmbedUnimplementedCfdiServiceServer()
+type CFDIServiceServer interface {
+	// timbra un CFDI y devuelve UUID + XML timbrado
+	Timbrar(context.Context, *FacturaRequest) (*FacturaResponse, error)
+	mustEmbedUnimplementedCFDIServiceServer()
 }
 
-// UnimplementedCfdiServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedCfdiServiceServer struct {
+// UnimplementedCFDIServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedCFDIServiceServer struct {
 }
 
-func (UnimplementedCfdiServiceServer) Timbrar(context.Context, *TimbrarRequest) (*TimbrarResponse, error) {
+func (UnimplementedCFDIServiceServer) Timbrar(context.Context, *FacturaRequest) (*FacturaResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Timbrar not implemented")
 }
-func (UnimplementedCfdiServiceServer) mustEmbedUnimplementedCfdiServiceServer() {}
+func (UnimplementedCFDIServiceServer) mustEmbedUnimplementedCFDIServiceServer() {}
 
-// UnsafeCfdiServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to CfdiServiceServer will
+// UnsafeCFDIServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to CFDIServiceServer will
 // result in compilation errors.
-type UnsafeCfdiServiceServer interface {
-	mustEmbedUnimplementedCfdiServiceServer()
+type UnsafeCFDIServiceServer interface {
+	mustEmbedUnimplementedCFDIServiceServer()
 }
 
-func RegisterCfdiServiceServer(s grpc.ServiceRegistrar, srv CfdiServiceServer) {
-	s.RegisterService(&CfdiService_ServiceDesc, srv)
+func RegisterCFDIServiceServer(s grpc.ServiceRegistrar, srv CFDIServiceServer) {
+	s.RegisterService(&CFDIService_ServiceDesc, srv)
 }
 
-func _CfdiService_Timbrar_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(TimbrarRequest)
+func _CFDIService_Timbrar_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FacturaRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CfdiServiceServer).Timbrar(ctx, in)
+		return srv.(CFDIServiceServer).Timbrar(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: CfdiService_Timbrar_FullMethodName,
+		FullMethod: CFDIService_Timbrar_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CfdiServiceServer).Timbrar(ctx, req.(*TimbrarRequest))
+		return srv.(CFDIServiceServer).Timbrar(ctx, req.(*FacturaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// CfdiService_ServiceDesc is the grpc.ServiceDesc for CfdiService service.
+// CFDIService_ServiceDesc is the grpc.ServiceDesc for CFDIService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var CfdiService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "cfdi.v1.CfdiService",
-	HandlerType: (*CfdiServiceServer)(nil),
+var CFDIService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "cfdi.v1.CFDIService",
+	HandlerType: (*CFDIServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "Timbrar",
-			Handler:    _CfdiService_Timbrar_Handler,
+			Handler:    _CFDIService_Timbrar_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
