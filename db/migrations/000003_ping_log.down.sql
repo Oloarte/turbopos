@@ -1,1 +1,1 @@
-﻿DROP TABLE IF EXISTS ping_log;
+DROP TABLE IF EXISTS ping_log;
