@@ -7,12 +7,18 @@ service CFDIService {
 }
 
 message FacturaRequest {
-  int32 pac_id = 1;
-  int64 timestamp = 2;
-  string payload = 3;
+  int32 venta_id = 1;
+  int32 total = 2;
+  string rfc = 3;
+  int32 pac_id = 4;
+  int64 timestamp = 5;
+  string payload = 6;
 }
 
 message FacturaResponse {
   string status = 1;
   string uuid = 2;
+  string sello_sat = 3;
+  string pac_usado = 4;
+  int64 timestamp = 5;
 }
