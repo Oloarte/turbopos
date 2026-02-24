@@ -1,4 +1,4 @@
-// TurboPOS v10.1 - BFF (Backend For Frontend) PRO
+// TurboPOS v10.1 - BFF (Backend For Frontend)
 package main
 
 import (
@@ -7,84 +7,183 @@ import (
     "encoding/json"
     "log"
     "net/http"
+    "os"
     "time"
 
     _ "github.com/lib/pq"
+    pb_auth  "github.com/turbopos/turbopos/gen/go/proto/auth/v1"
+    pb_sales "github.com/turbopos/turbopos/gen/go/proto/sales/v1"
     "google.golang.org/grpc"
     "google.golang.org/grpc/credentials/insecure"
-
-    pb_auth "github.com/turbopos/turbopos/gen/go/proto/auth/v1"
-    pb_cfdi "github.com/turbopos/turbopos/gen/go/proto/cfdi/v1"
 )
 
 type Gateway struct {
-    cfdiClient pb_cfdi.CFDIServiceClient
-    authClient pb_auth.AuthServiceClient
-    db         *sql.DB
+    authClient  pb_auth.AuthServiceClient
+    salesClient pb_sales.SalesServiceClient
+    db          *sql.DB
+}
+
+func getenv(key, fallback string) string {
+    if v := os.Getenv(key); v != "" {
+        return v
+    }
+    return fallback
 }
 
 func main() {
-    log.Println("?? [BFF] Iniciando Gateway de Misi?n Cr?tica en :8080...")
+    log.Println("[BFF] Iniciando Gateway TurboPOS en :8080...")
 
-    cfdiConn, _ := grpc.Dial("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
-    authConn, _ := grpc.Dial("localhost:50052", grpc.WithTransportCredentials(insecure.NewCredentials()))
+    authConn, err := grpc.Dial(getenv("AUTH_ADDR","localhost:50051"),
+        grpc.WithTransportCredentials(insecure.NewCredentials()))
+    if err != nil {
+        log.Fatalf("ERROR conectando auth: %v", err)
+    }
 
-    connStr := "host=127.0.0.1 port=5432 user=postgres password=turbopos dbname=turbopos sslmode=disable"
-    db, _ := sql.Open("postgres", connStr)
+    salesConn, err := grpc.Dial(getenv("SALES_ADDR","localhost:50052"),
+        grpc.WithTransportCredentials(insecure.NewCredentials()))
+    if err != nil {
+        log.Fatalf("ERROR conectando sales: %v", err)
+    }
+
+    dsn := "host=" + getenv("DB_HOST","127.0.0.1") +
+        " port=" + getenv("DB_PORT","5432") +
+        " user=" + getenv("DB_USER","postgres") +
+        " password=" + getenv("DB_PASS","turbopos") +
+        " dbname=" + getenv("DB_NAME","turbopos") +
+        " sslmode=disable"
+    db, _ := sql.Open("postgres", dsn)
 
     gw := &Gateway{
-        cfdiClient: pb_cfdi.NewCFDIServiceClient(cfdiConn),
-        authClient: pb_auth.NewAuthServiceClient(authConn),
-        db:         db,
+        authClient:  pb_auth.NewAuthServiceClient(authConn),
+        salesClient: pb_sales.NewSalesServiceClient(salesConn),
+        db:          db,
     }
 
     mux := http.NewServeMux()
     mux.HandleFunc("/api/v1/cobrar", gw.handleCobrar)
     mux.HandleFunc("/api/v1/status", gw.handleStatus)
-    mux.HandleFunc("/api/v1/logs", gw.handleLogs)
+    mux.HandleFunc("/api/v1/logs",   gw.handleLogs)
 
-    corsHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    cors := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         w.Header().Set("Access-Control-Allow-Origin", "*")
         w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
         w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-        if r.Method == "OPTIONS" { return }
+        if r.Method == "OPTIONS" {
+            return
+        }
         mux.ServeHTTP(w, r)
     })
 
-    log.Fatal(http.ListenAndServe(":8080", corsHandler))
+    log.Println("[BFF] Escuchando en :8080")
+    log.Fatal(http.ListenAndServe(":8080", cors))
 }
 
 func (gw *Gateway) handleCobrar(w http.ResponseWriter, r *http.Request) {
-    if r.Method != http.MethodPost { return }
-    var req struct {
-        VentaID string  `json:"venta_id"`
-        Total   float64 `json:"total"`
+    if r.Method != http.MethodPost {
+        w.WriteHeader(http.StatusMethodNotAllowed)
+        return
     }
-    json.NewDecoder(r.Body).Decode(&req)
-    ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+
+    var req struct {
+        CashierID     string  "json:\"cashier_id\""
+        Total         float64 "json:\"total\""
+        PaymentMethod string  "json:\"payment_method\""
+        Items         []struct {
+            ProductID string  "json:\"product_id\""
+            Name      string  "json:\"name\""
+            Quantity  int32   "json:\"quantity\""
+            UnitPrice float64 "json:\"unit_price\""
+            Subtotal  float64 "json:\"subtotal\""
+        } "json:\"items\""
+    }
+
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        w.WriteHeader(http.StatusBadRequest)
+        json.NewEncoder(w).Encode(map[string]string{"error": "JSON invalido"})
+        return
+    }
+
+    if req.PaymentMethod == "" {
+        req.PaymentMethod = "cash"
+    }
+    if req.CashierID == "" {
+        req.CashierID = "00000000-0000-0000-0000-000000000001"
+    }
+
+    var items []*pb_sales.SaleItem
+    for _, it := range req.Items {
+        items = append(items, &pb_sales.SaleItem{
+            ProductId: it.ProductID,
+            Name:      it.Name,
+            Quantity:  it.Quantity,
+            UnitPrice: it.UnitPrice,
+            Subtotal:  it.Subtotal,
+        })
+    }
+
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
     defer cancel()
-    res, err := gw.cfdiClient.Timbrar(ctx, &pb_cfdi.FacturaRequest{
-        VentaId: req.VentaID, Total: req.Total, Rfc: "XAXX010101000",
+
+    res, err := gw.salesClient.CreateSale(ctx, &pb_sales.CreateSaleRequest{
+        CashierId:     req.CashierID,
+        Total:         req.Total,
+        PaymentMethod: req.PaymentMethod,
+        Items:         items,
     })
     if err != nil {
-        w.WriteHeader(500); json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}); return
+        w.WriteHeader(http.StatusInternalServerError)
+        json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+        return
     }
-    json.NewEncoder(w).Encode(res)
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]interface{}{
+        "sale_id":    res.GetSaleId(),
+        "status":     res.GetStatus(),
+        "total":      res.GetTotal(),
+        "created_at": res.GetCreatedAt(),
+    })
 }
 
 func (gw *Gateway) handleStatus(w http.ResponseWriter, r *http.Request) {
-    json.NewEncoder(w).Encode(map[string]interface{}{"system": "ONLINE", "services": map[string]string{"auth": "OK", "cfdi": "OK", "db": "CONNECTED"}})
+    ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+    defer cancel()
+
+    authOK := "OK"
+    _, err := gw.authClient.Ping(ctx, &pb_auth.PingRequest{Message: "health"})
+    if err != nil {
+        authOK = "ERROR: " + err.Error()
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]interface{}{
+        "system": "ONLINE",
+        "services": map[string]string{
+            "auth":  authOK,
+            "sales": "OK",
+        },
+    })
 }
 
 func (gw *Gateway) handleLogs(w http.ResponseWriter, r *http.Request) {
-    rows, err := gw.db.Query("SELECT event_type, aggregate_id, created_at FROM event_store ORDER BY created_at DESC LIMIT 15")
-    if err != nil { return }
-    defer rows.Close()
-    var logs []map[string]string
-    for rows.Next() {
-        var et, aid, cat string
-        rows.Scan(&et, &aid, &cat)
-        logs = append(logs, map[string]string{"msg": "Venta " + aid + " (" + et + ")", "time": cat, "type": "info"})
+    rows, err := gw.db.Query(
+        "SELECT id, total, payment_method, created_at FROM sales ORDER BY created_at DESC LIMIT 15")
+    if err != nil {
+        w.WriteHeader(http.StatusInternalServerError)
+        return
     }
+    defer rows.Close()
+
+    var logs []map[string]interface{}
+    for rows.Next() {
+        var id, method, cat string
+        var total float64
+        rows.Scan(&id, &total, &method, &cat)
+        logs = append(logs, map[string]interface{}{
+            "sale_id": id, "total": total,
+            "method": method, "time": cat,
+        })
+    }
+    w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(logs)
 }
