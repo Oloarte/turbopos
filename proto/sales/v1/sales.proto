@@ -1,0 +1,44 @@
+﻿syntax = "proto3";
+package sales.v1;
+
+option go_package = "github.com/turbopos/turbopos/gen/go/proto/sales/v1;salesv1";
+
+service SalesService {
+  rpc CreateSale(CreateSaleRequest)   returns (CreateSaleResponse) {}
+  rpc GetSale(GetSaleRequest)         returns (GetSaleResponse)    {}
+}
+
+message SaleItem {
+  string product_id   = 1;
+  string name         = 2;
+  int32  quantity     = 3;
+  double unit_price   = 4;
+  double subtotal     = 5;
+}
+
+message CreateSaleRequest {
+  string          cashier_id    = 1;
+  repeated SaleItem items       = 2;
+  double          total         = 3;
+  string          payment_method = 4;
+}
+
+message CreateSaleResponse {
+  string sale_id    = 1;
+  string status     = 2;
+  double total      = 3;
+  string created_at = 4;
+}
+
+message GetSaleRequest {
+  string sale_id = 1;
+}
+
+message GetSaleResponse {
+  string            sale_id        = 1;
+  string            cashier_id     = 2;
+  repeated SaleItem items          = 3;
+  double            total          = 4;
+  string            payment_method = 5;
+  string            created_at     = 6;
+}
