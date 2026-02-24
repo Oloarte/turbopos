@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	SalesService_CreateSale_FullMethodName = "/sales.v1.SalesService/CreateSale"
 	SalesService_GetSale_FullMethodName    = "/sales.v1.SalesService/GetSale"
+	SalesService_CancelSale_FullMethodName = "/sales.v1.SalesService/CancelSale"
 )
 
 // SalesServiceClient is the client API for SalesService service.
@@ -29,6 +30,7 @@ const (
 type SalesServiceClient interface {
 	CreateSale(ctx context.Context, in *CreateSaleRequest, opts ...grpc.CallOption) (*CreateSaleResponse, error)
 	GetSale(ctx context.Context, in *GetSaleRequest, opts ...grpc.CallOption) (*GetSaleResponse, error)
+	CancelSale(ctx context.Context, in *CancelSaleRequest, opts ...grpc.CallOption) (*CancelSaleResponse, error)
 }
 
 type salesServiceClient struct {
@@ -57,12 +59,22 @@ func (c *salesServiceClient) GetSale(ctx context.Context, in *GetSaleRequest, op
 	return out, nil
 }
 
+func (c *salesServiceClient) CancelSale(ctx context.Context, in *CancelSaleRequest, opts ...grpc.CallOption) (*CancelSaleResponse, error) {
+	out := new(CancelSaleResponse)
+	err := c.cc.Invoke(ctx, SalesService_CancelSale_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SalesServiceServer is the server API for SalesService service.
 // All implementations must embed UnimplementedSalesServiceServer
 // for forward compatibility
 type SalesServiceServer interface {
 	CreateSale(context.Context, *CreateSaleRequest) (*CreateSaleResponse, error)
 	GetSale(context.Context, *GetSaleRequest) (*GetSaleResponse, error)
+	CancelSale(context.Context, *CancelSaleRequest) (*CancelSaleResponse, error)
 	mustEmbedUnimplementedSalesServiceServer()
 }
 
@@ -75,6 +87,9 @@ func (UnimplementedSalesServiceServer) CreateSale(context.Context, *CreateSaleRe
 }
 func (UnimplementedSalesServiceServer) GetSale(context.Context, *GetSaleRequest) (*GetSaleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSale not implemented")
+}
+func (UnimplementedSalesServiceServer) CancelSale(context.Context, *CancelSaleRequest) (*CancelSaleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CancelSale not implemented")
 }
 func (UnimplementedSalesServiceServer) mustEmbedUnimplementedSalesServiceServer() {}
 
@@ -125,6 +140,24 @@ func _SalesService_GetSale_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SalesService_CancelSale_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CancelSaleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SalesServiceServer).CancelSale(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SalesService_CancelSale_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SalesServiceServer).CancelSale(ctx, req.(*CancelSaleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SalesService_ServiceDesc is the grpc.ServiceDesc for SalesService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -139,6 +172,10 @@ var SalesService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetSale",
 			Handler:    _SalesService_GetSale_Handler,
+		},
+		{
+			MethodName: "CancelSale",
+			Handler:    _SalesService_CancelSale_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

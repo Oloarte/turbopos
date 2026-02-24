@@ -147,3 +147,32 @@ func getenv(key, fallback string) string {
     }
     return fallback
 }
+
+func (s *server) CancelSale(ctx context.Context, req *salesv1.CancelSaleRequest) (*salesv1.CancelSaleResponse, error) {
+    if s.db == nil {
+        return nil, fmt.Errorf("db no disponible")
+    }
+
+    now := time.Now()
+    result, err := s.db.ExecContext(ctx,
+        `UPDATE sales SET status = 'cancelled', cancelled_at = $1, cancel_reason = $2
+          WHERE id = $3::uuid AND status != 'cancelled'`,
+        now, req.GetReason(), req.GetSaleId(),
+    )
+    if err != nil {
+        return nil, fmt.Errorf("cancelar venta: %w", err)
+    }
+
+    rows, _ := result.RowsAffected()
+    if rows == 0 {
+        return nil, fmt.Errorf("venta no encontrada o ya cancelada: %s", req.GetSaleId())
+    }
+
+    log.Printf("✓ Venta cancelada: %s — Motivo: %s", req.GetSaleId(), req.GetReason())
+
+    return &salesv1.CancelSaleResponse{
+        SaleId:      req.GetSaleId(),
+        Status:      "cancelled",
+        CancelledAt: now.Format(time.RFC3339),
+    }, nil
+}

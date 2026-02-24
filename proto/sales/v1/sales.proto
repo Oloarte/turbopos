@@ -1,4 +1,4 @@
-﻿syntax = "proto3";
+syntax = "proto3";
 package sales.v1;
 
 option go_package = "github.com/turbopos/turbopos/gen/go/proto/sales/v1;salesv1";
@@ -6,6 +6,7 @@ option go_package = "github.com/turbopos/turbopos/gen/go/proto/sales/v1;salesv1"
 service SalesService {
   rpc CreateSale(CreateSaleRequest)   returns (CreateSaleResponse) {}
   rpc GetSale(GetSaleRequest)         returns (GetSaleResponse)    {}
+  rpc CancelSale(CancelSaleRequest)   returns (CancelSaleResponse) {}
 }
 
 message SaleItem {
@@ -17,10 +18,10 @@ message SaleItem {
 }
 
 message CreateSaleRequest {
-  string          cashier_id    = 1;
-  repeated SaleItem items       = 2;
-  double          total         = 3;
-  string          payment_method = 4;
+  string            cashier_id     = 1;
+  repeated SaleItem items          = 2;
+  double            total          = 3;
+  string            payment_method = 4;
 }
 
 message CreateSaleResponse {
@@ -41,4 +42,16 @@ message GetSaleResponse {
   double            total          = 4;
   string            payment_method = 5;
   string            created_at     = 6;
+  string            status         = 7;
+}
+
+message CancelSaleRequest {
+  string sale_id = 1;
+  string reason  = 2;
+}
+
+message CancelSaleResponse {
+  string sale_id    = 1;
+  string status     = 2;
+  string cancelled_at = 3;
 }
