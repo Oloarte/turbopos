@@ -34,6 +34,19 @@ func TestGetSale_Con_DB_Nil(t *testing.T) {
     t.Logf("Error esperado: %v", err)
 }
 
+func TestCancelSale_Con_DB_Nil(t *testing.T) {
+    s := &server{db: nil}
+    req := &salesv1.CancelSaleRequest{
+        SaleId: "71817a09-8616-4681-b300-b0ddc0995269",
+        Reason: "test de cancelacion",
+    }
+    _, err := s.CancelSale(context.Background(), req)
+    if err == nil {
+        t.Error("esperaba error por DB nil")
+    }
+    t.Logf("Error esperado: %v", err)
+}
+
 func TestGetenv_Sales_Fallback(t *testing.T) {
     val := getenv("VARIABLE_INEXISTENTE_SALES_XYZ", "default_sales")
     if val != "default_sales" {
