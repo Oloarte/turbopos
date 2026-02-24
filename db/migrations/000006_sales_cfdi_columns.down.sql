@@ -1,0 +1,4 @@
+ALTER TABLE sales DROP COLUMN IF EXISTS cancelled_at;
+ALTER TABLE sales DROP COLUMN IF EXISTS cancel_reason;
+ALTER TABLE sales DROP COLUMN IF EXISTS cfdi_uuid;
+ALTER TABLE sales DROP COLUMN IF EXISTS cfdi_status;
