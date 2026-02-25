@@ -2,13 +2,14 @@ package main
 
 import (
     "context"
-    "fmt"
     "log"
-    "math/rand"
     "net"
+    "os"
     "sync"
     "time"
 
+    finkok "github.com/turbopos/turbopos/services/cfdi/internal/finkok"
+    xmlgen "github.com/turbopos/turbopos/services/cfdi/internal/xmlgen"
     pb "github.com/turbopos/turbopos/gen/go/proto/cfdi/v1"
     "google.golang.org/grpc"
     "google.golang.org/grpc/codes"
@@ -17,45 +18,59 @@ import (
 )
 
 const (
-    Port           = ":50053"
-    MaxErrorRatio  = 0.05
-    WindowDuration = 10 * time.Minute
+    Port          = ":50053"
+    MaxErrorRatio = 0.05
+    WindowDur     = 10 * time.Minute
+    CertPath      = "services/cfdi/certs/test/eku9003173c9.cer"
+    KeyPath       = "services/cfdi/certs/test/eku9003173c9.pem"
+    KeyPassword   = "12345678a"
+    NoCert        = "30001000000500003416"
 )
 
 type CFDIServer struct {
     pb.UnimplementedCFDIServiceServer
+    pacs           [2]*finkok.Client
     CurrentPAC     int
     TotalRequests  int64
     FailedRequests int64
     mu             sync.RWMutex
+    certBase64     string
+    keyBytes       []byte
 }
 
 func NewCFDIServer() *CFDIServer {
-    s := &CFDIServer{CurrentPAC: 0}
-    go s.AuditWindowLoop()
+    user := os.Getenv("FINKOK_USER")
+    pass := os.Getenv("FINKOK_PASS")
+    if user == "" { log.Fatal("[CFDI] FINKOK_USER no definido") }
+    if pass == "" { log.Fatal("[CFDI] FINKOK_PASS no definido") }
+    cert, _, err := finkok.LoadCertificate(CertPath)
+    if err != nil { log.Fatalf("[CFDI] Error certificado: %v", err) }
+    key, err := os.ReadFile(KeyPath)
+    if err != nil { log.Fatalf("[CFDI] Error llave: %v", err) }
+    s := &CFDIServer{certBase64: cert, keyBytes: key}
+    s.pacs[0] = finkok.NewDemoClient(user, pass)
+    s.pacs[1] = finkok.NewDemoClient(user, pass)
+    go s.auditLoop()
     return s
 }
 
-func (s *CFDIServer) AuditWindowLoop() {
-    ticker := time.NewTicker(WindowDuration)
-    for range ticker.C {
+func (s *CFDIServer) auditLoop() {
+    for range time.NewTicker(WindowDur).C {
         s.mu.Lock()
-        log.Printf("[Audit-Loop] Ventana 10m. Total: %d, Errores: %d", s.TotalRequests, s.FailedRequests)
+        log.Printf("[Audit] Total: %d Errores: %d", s.TotalRequests, s.FailedRequests)
         s.TotalRequests = 0
         s.FailedRequests = 0
         s.mu.Unlock()
     }
 }
 
-func (s *CFDIServer) evaluateFailover() {
+func (s *CFDIServer) checkFailover() {
     s.mu.Lock()
     defer s.mu.Unlock()
-    if s.TotalRequests < 5 {
-        return
-    }
-    errorRatio := float64(s.FailedRequests) / float64(s.TotalRequests)
-    if errorRatio > MaxErrorRatio && s.CurrentPAC == 0 {
-        log.Printf("[Kill-Switch] ERROR RATIO %.2f%% > 5%% — cambiando a PAC Secundario", errorRatio*100)
+    if s.TotalRequests < 5 { return }
+    ratio := float64(s.FailedRequests) / float64(s.TotalRequests)
+    if ratio > MaxErrorRatio && s.CurrentPAC == 0 {
+        log.Printf("[Kill-Switch] %.2f%% errores - cambiando a PAC Secundario", ratio*100)
         s.CurrentPAC = 1
         s.TotalRequests = 0
         s.FailedRequests = 0
@@ -65,52 +80,68 @@ func (s *CFDIServer) evaluateFailover() {
 func (s *CFDIServer) Timbrar(ctx context.Context, req *pb.FacturaRequest) (*pb.FacturaResponse, error) {
     s.mu.Lock()
     s.TotalRequests++
-    pacActivo := s.CurrentPAC
+    pac := s.CurrentPAC
     s.mu.Unlock()
 
     pacName := "FINKOK_SANDBOX"
-    if pacActivo == 1 {
-        pacName = "PAC_SECUNDARIO"
+    if pac == 1 { pacName = "PAC_SECUNDARIO" }
+    log.Printf("[CFDI] Timbrando venta=%s rfc=%s pac=%s", req.VentaId, req.Rfc, pacName)
+
+    items := []xmlgen.SaleItem{{
+        Nombre:         "Venta POS",
+        Cantidad:       1,
+        PrecioUnitario: float64(req.Total),
+        Subtotal:       float64(req.Total),
+    }}
+
+    xmlStr, err := xmlgen.GenerarXML(xmlgen.SaleData{
+        SaleID:          req.VentaId,
+        Fecha:           time.Now(),
+        RFC:             req.Rfc,
+        Items:           items,
+        Total:           float64(req.Total),
+        FormaPago:       "01",
+        LugarExpedicion: "64000",
+    }, s.certBase64, NoCert)
+    if err != nil {
+        s.mu.Lock(); s.FailedRequests++; s.mu.Unlock()
+        return nil, status.Errorf(codes.Internal, "generar XML: %v", err)
     }
 
-    log.Printf("[CFDI] Timbrando venta %s via %s para RFC: %s", req.VentaId, pacName, req.Rfc)
-
-    // Mock: 15% fallo en PAC primario para probar kill-switch
-    if pacActivo == 0 && rand.Float32() < 0.15 {
-        s.mu.Lock()
-        s.FailedRequests++
-        s.mu.Unlock()
-        go s.evaluateFailover()
-        return nil, status.Errorf(codes.Unavailable, "Fallo en %s — activando evaluacion de failover", pacName)
+    xmlFirmado, err := xmlgen.FirmarXML(xmlStr, s.keyBytes, KeyPassword)
+    if err != nil {
+        s.mu.Lock(); s.FailedRequests++; s.mu.Unlock()
+        return nil, status.Errorf(codes.Internal, "firmar XML: %v", err)
     }
 
-    uuid := fmt.Sprintf("MOCK-%d", time.Now().UnixNano())
-    log.Printf("[CFDI] Timbrado exitoso: UUID=%s PAC=%s", uuid, pacName)
+    result, err := s.pacs[pac].Timbrar(xmlFirmado)
+    if err != nil {
+        s.mu.Lock(); s.FailedRequests++; s.mu.Unlock()
+        go s.checkFailover()
+        return nil, status.Errorf(codes.Unavailable, "PAC error: %v", err)
+    }
+    if result.Error != "" {
+        s.mu.Lock(); s.FailedRequests++; s.mu.Unlock()
+        go s.checkFailover()
+        return nil, status.Errorf(codes.InvalidArgument, "Finkok: %s", result.Error)
+    }
 
+    log.Printf("[CFDI] Timbrado OK UUID=%s", result.UUID)
     return &pb.FacturaResponse{
-        Status:   "timbrado",
-        Uuid:     uuid,
-        SelloSat: "SAT_SELLO_MOCK_" + uuid,
-        PacUsado: int32(pacActivo),
+        Status:    "timbrado",
+        Uuid:      result.UUID,
+        SelloSat:  result.SelloSAT,
+        PacUsado:  int32(pac),
         Timestamp: time.Now().UnixMilli(),
     }, nil
 }
 
 func main() {
     lis, err := net.Listen("tcp", Port)
-    if err != nil {
-        log.Fatalf("ERROR listener: %v", err)
-    }
-
-    grpcServer := grpc.NewServer()
-    cfdiService := NewCFDIServer()
-    pb.RegisterCFDIServiceServer(grpcServer, cfdiService)
-    reflection.Register(grpcServer)
-
-    log.Printf("[CFDI] Servidor iniciado en %s — PAC Primario: FINKOK_SANDBOX", Port)
-    log.Printf("[CFDI] Kill-Switch activo: failover automatico si error > 5%% en 10 minutos")
-
-    if err := grpcServer.Serve(lis); err != nil {
-        log.Fatalf("ERROR sirviendo: %v", err)
-    }
+    if err != nil { log.Fatalf("listener: %v", err) }
+    srv := grpc.NewServer()
+    pb.RegisterCFDIServiceServer(srv, NewCFDIServer())
+    reflection.Register(srv)
+    log.Printf("[CFDI] Servidor en %s - Finkok REAL activo", Port)
+    if err := srv.Serve(lis); err != nil { log.Fatalf("serve: %v", err) }
 }
