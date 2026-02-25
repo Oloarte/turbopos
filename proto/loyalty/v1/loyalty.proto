@@ -1,0 +1,62 @@
+syntax = "proto3";
+package loyalty.v1;
+option go_package = "github.com/turbopos/turbopos/gen/go/proto/loyalty/v1;loyaltyv1";
+
+service LoyaltyService {
+  rpc GetAccount    (GetAccountRequest)    returns (AccountResponse);
+  rpc EarnPoints    (EarnPointsRequest)    returns (AccountResponse);
+  rpc RedeemPoints  (RedeemPointsRequest)  returns (RedeemResponse);
+  rpc GetHistory    (GetHistoryRequest)    returns (HistoryResponse);
+}
+
+message GetAccountRequest {
+  string phone = 1;
+}
+
+message EarnPointsRequest {
+  string phone    = 1;
+  string sale_id  = 2;
+  double total    = 3;
+  string name     = 4;
+}
+
+message RedeemPointsRequest {
+  string phone      = 1;
+  int32  points     = 2;
+  string reward_id  = 3;
+}
+
+message GetHistoryRequest {
+  string phone = 1;
+  int32  limit = 2;
+}
+
+message AccountResponse {
+  string account_id   = 1;
+  string phone        = 2;
+  string name         = 3;
+  int32  points       = 4;
+  double total_spent  = 5;
+  string tier         = 6;
+}
+
+message RedeemResponse {
+  bool   success       = 1;
+  int32  points_used   = 2;
+  int32  points_remaining = 3;
+  string message       = 4;
+}
+
+message Transaction {
+  string id          = 1;
+  string type        = 2;
+  int32  points      = 3;
+  string description = 4;
+  string created_at  = 5;
+}
+
+message HistoryResponse {
+  string             account_id   = 1;
+  int32              points       = 2;
+  repeated Transaction transactions = 3;
+}
