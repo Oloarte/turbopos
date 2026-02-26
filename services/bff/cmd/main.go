@@ -274,7 +274,7 @@ func (gw *Gateway) handleMigrate(w http.ResponseWriter, r *http.Request) {
 		_, e := gw.db.Exec(
 			`INSERT INTO products (id, name, price, sku, created_at)
 			 VALUES (gen_random_uuid(), $1, $2, $3, NOW())
-			 ON CONFLICT (sku) DO UPDATE SET name=EXCLUDED.name, price=EXCLUDED.price`,
+			 ON CONFLICT (sku) WHERE sku IS NOT NULL DO UPDATE SET name=EXCLUDED.name, price=EXCLUDED.price`,
 			p["name"], price, p["sku"])
 		if e != nil { log.Printf("[BFF] product insert err: %v", e); prodErr++ } else { prodOK++ }
 	}
