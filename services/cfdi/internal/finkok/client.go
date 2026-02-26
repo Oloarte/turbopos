@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"html"
 	"io"
 	"net/http"
 	"os"
@@ -39,6 +40,7 @@ type StampResult struct {
 	SelloSAT      string
 	NoCertSAT     string
 	FechaTimbrado string
+	CodEstatus    string
 	Error         string
 	Incidencias   []Incidencia
 }
@@ -86,16 +88,23 @@ func (c *Client) Timbrar(xmlContent string) (*StampResult, error) {
 func parseStampResponse(responseXML string) (*StampResult, error) {
 	result := &StampResult{}
 
-	// XML timbrado viene en base64 dentro de <s0:xml>
-	xmlB64 := extractTag(responseXML, "xml")
-	if xmlB64 != "" {
-		decoded, err := base64.StdEncoding.DecodeString(xmlB64)
-		if err == nil {
+	// UUID, SelloSAT, Fecha vienen en tags s0: directamente en stampResult
+	result.UUID = extractTag(responseXML, "UUID")
+	result.SelloSAT = extractTag(responseXML, "SatSeal")
+	result.NoCertSAT = extractTag(responseXML, "NoCertificadoSAT")
+	result.FechaTimbrado = extractTag(responseXML, "Fecha")
+	result.CodEstatus = extractTag(responseXML, "CodEstatus")
+
+	// XML timbrado viene HTML-encoded dentro de <s0:xml>
+	xmlEncoded := extractTag(responseXML, "xml")
+	if xmlEncoded != "" {
+		// Intentar base64 primero (algunos PAC lo envían así)
+		decoded, err := base64.StdEncoding.DecodeString(xmlEncoded)
+		if err == nil && strings.Contains(string(decoded), "cfdi:Comprobante") {
 			result.XML = string(decoded)
-			result.UUID = extractAttr(result.XML, "UUID")
-			result.SelloSAT = extractAttr(result.XML, "SelloSAT")
-			result.NoCertSAT = extractAttr(result.XML, "NoCertificadoSAT")
-			result.FechaTimbrado = extractAttr(result.XML, "FechaTimbrado")
+		} else {
+			// Viene HTML-encoded
+			result.XML = html.UnescapeString(xmlEncoded)
 		}
 	}
 
@@ -137,14 +146,20 @@ func parseStampResponse(responseXML string) (*StampResult, error) {
 }
 
 func extractTag(xml, tag string) string {
-	opens  := []string{"<s0:" + tag + ">", "<tns:" + tag + ">", "<" + tag + ">"}
-	closes := []string{"</s0:" + tag + ">", "</tns:" + tag + ">", "</" + tag + ">"}
-	for i, open := range opens {
+	prefixes := []string{"s0:", "tns:", "s1:", ""}
+	for _, p := range prefixes {
+		open := "<" + p + tag + ">"
+		close := "</" + p + tag + ">"
 		si := strings.Index(xml, open)
-		if si == -1 { continue }
-		ei := strings.Index(xml[si+len(open):], closes[i])
-		if ei == -1 { continue }
-		return xml[si+len(open) : si+len(open)+ei]
+		if si == -1 {
+			continue
+		}
+		si += len(open)
+		ei := strings.Index(xml[si:], close)
+		if ei == -1 {
+			continue
+		}
+		return xml[si : si+ei]
 	}
 	return ""
 }
@@ -152,23 +167,31 @@ func extractTag(xml, tag string) string {
 func extractAttr(xml, attr string) string {
 	pattern := attr + `="`
 	si := strings.Index(xml, pattern)
-	if si == -1 { return "" }
+	if si == -1 {
+		return ""
+	}
 	si += len(pattern)
 	ei := strings.Index(xml[si:], `"`)
-	if ei == -1 { return "" }
+	if ei == -1 {
+		return ""
+	}
 	return xml[si : si+ei]
 }
 
 func findTag(xml, tag string) int {
 	for _, p := range []string{"<s0:" + tag + ">", "<" + tag + ">"} {
-		if i := strings.Index(xml, p); i != -1 { return i }
+		if i := strings.Index(xml, p); i != -1 {
+			return i
+		}
 	}
 	return -1
 }
 
 func LoadCertificate(cerPath string) (certBase64 string, noCert string, err error) {
 	certBytes, err := os.ReadFile(cerPath)
-	if err != nil { return "", "", fmt.Errorf("leer .cer: %w", err) }
+	if err != nil {
+		return "", "", fmt.Errorf("leer .cer: %w", err)
+	}
 	certBase64 = base64.StdEncoding.EncodeToString(certBytes)
 	noCert = "30001000000500003416"
 	return certBase64, noCert, nil
