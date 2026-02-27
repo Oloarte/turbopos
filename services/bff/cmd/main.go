@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -67,6 +68,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/v1/cobrar",          gw.handleCobrar)
 	mux.HandleFunc("/api/v1/timbrar",         gw.handleTimbrar)
+	mux.HandleFunc("/api/v1/cancelar",        gw.handleCancelar)
 	mux.HandleFunc("/api/v1/status",          gw.handleStatus)
 	mux.HandleFunc("/api/v1/logs",            gw.handleLogs)
 	mux.HandleFunc("/api/v1/corte",           gw.handleCorte)
@@ -117,7 +119,7 @@ func (gw *Gateway) handleCobrar(w http.ResponseWriter, r *http.Request) {
 			Quantity: it.Quantity, UnitPrice: it.UnitPrice, Subtotal: it.Subtotal,
 		})
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
 	defer cancel()
 	res, err := gw.salesClient.CreateSale(ctx, &pb_sales.CreateSaleRequest{
 		CashierId: req.CashierID, Total: req.Total,
@@ -157,7 +159,7 @@ func (gw *Gateway) handleLoyalty(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"error": "phone requerido"})
 		return
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
 	defer cancel()
 	acc, err := gw.loyaltyClient.GetAccount(ctx, &pb_loyalty.GetAccountRequest{Phone: phone})
 	if err != nil {
@@ -205,7 +207,7 @@ func (gw *Gateway) handleLoyaltyRedeem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if req.Reason == "" { req.Reason = "Canje en caja" }
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
 	defer cancel()
 	acc, err := gw.loyaltyClient.RedeemPoints(ctx, &pb_loyalty.RedeemPointsRequest{
 		Phone: req.Phone, Points: int32(req.Points), RewardId: req.Reason,
@@ -296,6 +298,63 @@ func (gw *Gateway) handleMigrate(w http.ResponseWriter, r *http.Request) {
 		"productos_ok": prodOK, "productos_error": prodErr,
 		"clientes_ok": custOK, "clientes_error": custErr,
 	})
+}
+
+func (gw *Gateway) handleCancelar(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost { w.WriteHeader(http.StatusMethodNotAllowed); return }
+
+	defer func() {
+		if rec := recover(); rec != nil {
+			log.Printf("[BFF] PANIC en handleCancelar: %v", rec)
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": fmt.Sprintf("panic: %v", rec)})
+		}
+	}()
+
+	var req struct {
+		UUID          string `json:"uuid"`
+		RFC           string `json:"rfc"`
+		Motivo        string `json:"motivo"`
+		UUIDReemplazo string `json:"uuid_reemplazo"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "JSON invalido"})
+		return
+	}
+	if req.UUID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "uuid requerido"})
+		return
+	}
+	if req.Motivo == "" { req.Motivo = "02" }
+
+	// Llamar al CFDI server via HTTP (evita proto para cancelación)
+	cfdiHTTP := getenv("CFDI_HTTP_ADDR", "http://localhost:50055")
+	body, _ := json.Marshal(req)
+	httpResp, err := http.Post(cfdiHTTP+"/cancelar", "application/json", strings.NewReader(string(body)))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "CFDI server no disponible: " + err.Error()})
+		return
+	}
+	defer httpResp.Body.Close()
+
+	var cfdiResult map[string]interface{}
+	json.NewDecoder(httpResp.Body).Decode(&cfdiResult)
+
+	if httpResp.StatusCode != http.StatusOK {
+		w.WriteHeader(httpResp.StatusCode)
+		json.NewEncoder(w).Encode(cfdiResult)
+		return
+	}
+
+	// Actualizar DB
+	gw.db.Exec(`UPDATE sales SET cfdi_status=$1 WHERE cfdi_uuid=$2`, "cancelado", req.UUID)
+	log.Printf("[BFF] Cancelación: uuid=%s", req.UUID)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(cfdiResult)
 }
 
 func (gw *Gateway) handleTimbrar(w http.ResponseWriter, r *http.Request) {

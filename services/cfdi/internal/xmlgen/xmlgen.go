@@ -35,28 +35,28 @@ type SaleItem struct {
 // --- Structs para parsear CFDI 4.0 ---
 
 type Comprobante struct {
-	XMLName              xml.Name          `xml:"Comprobante"`
-	Version              string            `xml:"Version,attr"`
-	Fecha                string            `xml:"Fecha,attr"`
-	FormaPago            string            `xml:"FormaPago,attr"`
-	NoCertificado        string            `xml:"NoCertificado,attr"`
-	Certificado          string            `xml:"Certificado,attr"`
-	Sello                string            `xml:"Sello,attr"`
-	SubTotal             string            `xml:"SubTotal,attr"`
-	Descuento            string            `xml:"Descuento,attr"`
-	Moneda               string            `xml:"Moneda,attr"`
-	TipoCambio           string            `xml:"TipoCambio,attr"`
-	Total                string            `xml:"Total,attr"`
-	TipoDeComprobante    string            `xml:"TipoDeComprobante,attr"`
-	Exportacion          string            `xml:"Exportacion,attr"`
-	MetodoPago           string            `xml:"MetodoPago,attr"`
-	LugarExpedicion      string            `xml:"LugarExpedicion,attr"`
-	Confirmacion         string            `xml:"Confirmacion,attr"`
-	InformacionGlobal    *InformacionGlobal `xml:"InformacionGlobal"`
-	Emisor               Emisor            `xml:"Emisor"`
-	Receptor             Receptor          `xml:"Receptor"`
-	Conceptos            Conceptos         `xml:"Conceptos"`
-	Impuestos            *ImpuestosGlobal  `xml:"Impuestos"`
+	XMLName           xml.Name           `xml:"Comprobante"`
+	Version           string             `xml:"Version,attr"`
+	Fecha             string             `xml:"Fecha,attr"`
+	FormaPago         string             `xml:"FormaPago,attr"`
+	NoCertificado     string             `xml:"NoCertificado,attr"`
+	Certificado       string             `xml:"Certificado,attr"`
+	Sello             string             `xml:"Sello,attr"`
+	SubTotal          string             `xml:"SubTotal,attr"`
+	Descuento         string             `xml:"Descuento,attr"`
+	Moneda            string             `xml:"Moneda,attr"`
+	TipoCambio        string             `xml:"TipoCambio,attr"`
+	Total             string             `xml:"Total,attr"`
+	TipoDeComprobante string             `xml:"TipoDeComprobante,attr"`
+	Exportacion       string             `xml:"Exportacion,attr"`
+	MetodoPago        string             `xml:"MetodoPago,attr"`
+	LugarExpedicion   string             `xml:"LugarExpedicion,attr"`
+	Confirmacion      string             `xml:"Confirmacion,attr"`
+	InformacionGlobal *InformacionGlobal `xml:"InformacionGlobal"`
+	Emisor            Emisor             `xml:"Emisor"`
+	Receptor          Receptor           `xml:"Receptor"`
+	Conceptos         Conceptos          `xml:"Conceptos"`
+	Impuestos         *ImpuestosGlobal   `xml:"Impuestos"`
 }
 
 type InformacionGlobal struct {
@@ -122,9 +122,9 @@ type RetencionConcepto struct {
 }
 
 type ImpuestosGlobal struct {
-	TotalImpuestosTrasladados string           `xml:"TotalImpuestosTrasladados,attr"`
-	TotalImpuestosRetenidos   string           `xml:"TotalImpuestosRetenidos,attr"`
-	Traslados                 []TrasladoGlobal `xml:"Traslados>Traslado"`
+	TotalImpuestosTrasladados string            `xml:"TotalImpuestosTrasladados,attr"`
+	TotalImpuestosRetenidos   string            `xml:"TotalImpuestosRetenidos,attr"`
+	Traslados                 []TrasladoGlobal  `xml:"Traslados>Traslado"`
 	Retenciones               []RetencionGlobal `xml:"Retenciones>Retencion"`
 }
 
@@ -159,47 +159,71 @@ func GenerarXML(data SaleData, certBase64, noCert string) (string, error) {
 		ivaItem := item.Subtotal - baseItem
 		concepto := fmt.Sprintf(
 			`    <cfdi:Concepto ClaveProdServ="78101803" ClaveUnidad="E48" Cantidad="%.6f" Descripcion="%s" ValorUnitario="%.6f" Importe="%.6f" ObjetoImp="02">`+"\n"+
-			`      <cfdi:Impuestos>`+"\n"+
-			`        <cfdi:Traslados>`+"\n"+
-			`          <cfdi:Traslado Base="%.2f" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="%.2f"/>`+"\n"+
-			`        </cfdi:Traslados>`+"\n"+
-			`      </cfdi:Impuestos>`+"\n"+
-			`    </cfdi:Concepto>`,
+				`      <cfdi:Impuestos>`+"\n"+
+				`        <cfdi:Traslados>`+"\n"+
+				`          <cfdi:Traslado Base="%.2f" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="%.2f"/>`+"\n"+
+				`        </cfdi:Traslados>`+"\n"+
+				`      </cfdi:Impuestos>`+"\n"+
+				`    </cfdi:Concepto>`,
 			float64(item.Cantidad), escapeXML(item.Nombre),
 			item.PrecioUnitario/1.16, baseItem, baseItem, ivaItem)
 		conceptosXML = append(conceptosXML, concepto)
 	}
 
-	nombreReceptor := data.NombreReceptor
-	if nombreReceptor == "" { nombreReceptor = "PUBLICO EN GENERAL" }
+	// ── Determinar tipo de receptor ──────────────────────────────────────────
 	rfcReceptor := data.RFC
-	if rfcReceptor == "" || rfcReceptor == "XAXX010101000" {
-		rfcReceptor = "XAXX010101000"
-		nombreReceptor = "PUBLICO EN GENERAL"
+	esPublicoGeneral := rfcReceptor == "" || rfcReceptor == "XAXX010101000"
+
+	var receptorXML, infoGlobalXML string
+
+	if esPublicoGeneral {
+		// Venta a público general — requiere InformacionGlobal
+		meses := data.Fecha.Format("01")
+		ano := data.Fecha.Year()
+		infoGlobalXML = fmt.Sprintf(
+			`  <cfdi:InformacionGlobal Periodicidad="04" Meses="%s" Año="%d"/>`, meses, ano)
+		receptorXML = fmt.Sprintf(
+			`  <cfdi:Receptor Rfc="XAXX010101000" Nombre="PUBLICO EN GENERAL" DomicilioFiscalReceptor="%s" RegimenFiscalReceptor="616" UsoCFDI="S01"/>`,
+			lugar)
+	} else {
+		// Receptor identificado — sin InformacionGlobal
+		nombreReceptor := data.NombreReceptor
+		// Si el nombre no viene y el RFC es el del certificado de prueba, usar nombre SAT
+		if nombreReceptor == "" && rfcReceptor == "EKU9003173C9" {
+			nombreReceptor = "ESCUELA KEMPER URGATE"
+		}
+		if nombreReceptor == "" { nombreReceptor = rfcReceptor }
+		infoGlobalXML = ""
+		receptorXML = fmt.Sprintf(
+			`  <cfdi:Receptor Rfc="%s" Nombre="%s" DomicilioFiscalReceptor="%s" RegimenFiscalReceptor="601" UsoCFDI="G03"/>`,
+			rfcReceptor, escapeXML(nombreReceptor), lugar)
 	}
 
-	meses := data.Fecha.Format("01")
-	ano := data.Fecha.Year()
+	// Construir XML
+	var infoGlobalLine string
+	if infoGlobalXML != "" {
+		infoGlobalLine = infoGlobalXML + "\n"
+	}
 
 	xmlStr := fmt.Sprintf(
 		`<?xml version="1.0" encoding="UTF-8"?>`+"\n"+
-		`<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" Version="4.0" Fecha="%s" Sello="" NoCertificado="%s" Certificado="%s" SubTotal="%.2f" Total="%.2f" Moneda="MXN" TipoDeComprobante="I" MetodoPago="PUE" FormaPago="%s" LugarExpedicion="%s" Exportacion="01">`+"\n"+
-		`  <cfdi:InformacionGlobal Periodicidad="04" Meses="%s" Año="%d"/>`+"\n"+
-		`  <cfdi:Emisor Rfc="EKU9003173C9" Nombre="ESCUELA KEMPER URGATE" RegimenFiscal="601"/>`+"\n"+
-		`  <cfdi:Receptor Rfc="%s" Nombre="%s" DomicilioFiscalReceptor="%s" RegimenFiscalReceptor="616" UsoCFDI="S01"/>`+"\n"+
-		`  <cfdi:Conceptos>`+"\n"+
-		`%s`+"\n"+
-		`  </cfdi:Conceptos>`+"\n"+
-		`  <cfdi:Impuestos TotalImpuestosTrasladados="%.2f">`+"\n"+
-		`    <cfdi:Traslados>`+"\n"+
-		`      <cfdi:Traslado Base="%.2f" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="%.2f"/>`+"\n"+
-		`    </cfdi:Traslados>`+"\n"+
-		`  </cfdi:Impuestos>`+"\n"+
-		`</cfdi:Comprobante>`,
+			`<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" Version="4.0" Fecha="%s" Sello="" NoCertificado="%s" Certificado="%s" SubTotal="%.2f" Total="%.2f" Moneda="MXN" TipoDeComprobante="I" MetodoPago="PUE" FormaPago="%s" LugarExpedicion="%s" Exportacion="01">`+"\n"+
+			`%s`+
+			`  <cfdi:Emisor Rfc="EKU9003173C9" Nombre="ESCUELA KEMPER URGATE" RegimenFiscal="601"/>`+"\n"+
+			`%s`+"\n"+
+			`  <cfdi:Conceptos>`+"\n"+
+			`%s`+"\n"+
+			`  </cfdi:Conceptos>`+"\n"+
+			`  <cfdi:Impuestos TotalImpuestosTrasladados="%.2f">`+"\n"+
+			`    <cfdi:Traslados>`+"\n"+
+			`      <cfdi:Traslado Base="%.2f" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="%.2f"/>`+"\n"+
+			`    </cfdi:Traslados>`+"\n"+
+			`  </cfdi:Impuestos>`+"\n"+
+			`</cfdi:Comprobante>`,
 		fecha, noCert, certBase64,
 		baseIVA, subtotal, formaPago, lugar,
-		meses, ano,
-		rfcReceptor, nombreReceptor, lugar,
+		infoGlobalLine,
+		receptorXML,
 		strings.Join(conceptosXML, "\n"),
 		ivaTotal, baseIVA, ivaTotal)
 
@@ -228,7 +252,6 @@ func CertificadoBase64(certDER []byte) string {
 	return base64.StdEncoding.EncodeToString(certDER)
 }
 
-// CadenaOriginalDebug expone la cadena original para debugging
 func CadenaOriginalDebug(xmlStr string) (string, error) {
 	return generarCadenaOriginal(xmlStr)
 }
@@ -257,10 +280,10 @@ func parsePrivateKey(keyBytes []byte, password string) (*rsa.PrivateKey, error) 
 	return x509.ParsePKCS1PrivateKey(derBytes)
 }
 
-// generarCadenaOriginal parsea el XML con encoding/xml y sigue el XSLT del SAT para CFDI 4.0
 func generarCadenaOriginal(xmlStr string) (string, error) {
 	normalized := strings.ReplaceAll(xmlStr, "cfdi:", "")
 	normalized = strings.ReplaceAll(normalized, `xmlns:cfdi="http://www.sat.gob.mx/cfd/4"`, "")
+	normalized = strings.ReplaceAll(normalized, "AÃ±o=", "Ano=")
 	normalized = strings.ReplaceAll(normalized, "Año=", "Ano=")
 
 	var c Comprobante
@@ -273,7 +296,6 @@ func generarCadenaOriginal(xmlStr string) (string, error) {
 		if v != "" { campos = append(campos, v) }
 	}
 
-	// cfdi:Comprobante — orden exacto del XSLT SAT
 	add(c.Version)
 	add(c.Fecha)
 	add(c.FormaPago)
@@ -289,20 +311,17 @@ func generarCadenaOriginal(xmlStr string) (string, error) {
 	add(c.LugarExpedicion)
 	add(c.Confirmacion)
 
-	// cfdi:InformacionGlobal
 	if c.InformacionGlobal != nil {
 		add(c.InformacionGlobal.Periodicidad)
 		add(c.InformacionGlobal.Meses)
 		add(c.InformacionGlobal.Ano)
 	}
 
-	// cfdi:Emisor
 	add(c.Emisor.Rfc)
 	add(c.Emisor.Nombre)
 	add(c.Emisor.RegimenFiscal)
 	add(c.Emisor.FacAtrAdquirente)
 
-	// cfdi:Receptor
 	add(c.Receptor.Rfc)
 	add(c.Receptor.Nombre)
 	add(c.Receptor.DomicilioFiscalReceptor)
@@ -311,7 +330,6 @@ func generarCadenaOriginal(xmlStr string) (string, error) {
 	add(c.Receptor.RegimenFiscalReceptor)
 	add(c.Receptor.UsoCFDI)
 
-	// cfdi:Concepto(s)
 	for _, concepto := range c.Conceptos.Conceptos {
 		add(concepto.ClaveProdServ)
 		add(concepto.NoIdentificacion)
@@ -323,39 +341,24 @@ func generarCadenaOriginal(xmlStr string) (string, error) {
 		add(concepto.Importe)
 		add(concepto.Descuento)
 		add(concepto.ObjetoImp)
-
 		if concepto.Impuestos != nil {
 			for _, t := range concepto.Impuestos.Traslados {
-				add(t.Base)
-				add(t.Impuesto)
-				add(t.TipoFactor)
-				add(t.TasaOCuota)
-				add(t.Importe)
+				add(t.Base); add(t.Impuesto); add(t.TipoFactor); add(t.TasaOCuota); add(t.Importe)
 			}
 			for _, r := range concepto.Impuestos.Retenciones {
-				add(r.Base)
-				add(r.Impuesto)
-				add(r.TipoFactor)
-				add(r.TasaOCuota)
-				add(r.Importe)
+				add(r.Base); add(r.Impuesto); add(r.TipoFactor); add(r.TasaOCuota); add(r.Importe)
 			}
 		}
 	}
 
-	// cfdi:Impuestos globales — Traslados primero, luego totales
 	if c.Impuestos != nil {
 		for _, t := range c.Impuestos.Traslados {
-			add(t.Base)
-			add(t.Impuesto)
-			add(t.TipoFactor)
-			add(t.TasaOCuota)
-			add(t.Importe)
+			add(t.Base); add(t.Impuesto); add(t.TipoFactor); add(t.TasaOCuota); add(t.Importe)
 		}
 		add(c.Impuestos.TotalImpuestosRetenidos)
 		add(c.Impuestos.TotalImpuestosTrasladados)
 		for _, r := range c.Impuestos.Retenciones {
-			add(r.Impuesto)
-			add(r.Importe)
+			add(r.Impuesto); add(r.Importe)
 		}
 	}
 
