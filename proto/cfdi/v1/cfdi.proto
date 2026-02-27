@@ -1,24 +1,40 @@
-﻿syntax = "proto3";
+syntax = "proto3";
 package cfdi.v1;
 option go_package = "github.com/turbopos/turbopos/gen/go/proto/cfdi/v1;cfdiv1";
 
 service CFDIService {
-  rpc Timbrar (FacturaRequest) returns (FacturaResponse) {}
+  rpc Timbrar  (FacturaRequest)   returns (FacturaResponse)  {}
+  rpc Cancelar (CancelRequest)    returns (CancelResponse)   {}
 }
 
 message FacturaRequest {
   string venta_id = 1;
-  double total = 2;
-  string rfc = 3;
-  int32 pac_id = 4;
-  int64 timestamp = 5;
-  string payload = 6;
+  double total    = 2;
+  string rfc      = 3;
+  int32  pac_id   = 4;
+  int64  timestamp = 5;
+  string payload  = 6;
 }
 
 message FacturaResponse {
-  string status = 1;
-  string uuid = 2;
+  string status    = 1;
+  string uuid      = 2;
   string sello_sat = 3;
-  int32 pac_usado = 4;
-  int64 timestamp = 5;
+  int32  pac_usado = 4;
+  int64  timestamp = 5;
+}
+
+message CancelRequest {
+  string uuid      = 1;
+  string rfc       = 2;
+  string motivo    = 3;
+  string uuid_reemplazo = 4;
+}
+
+message CancelResponse {
+  string status    = 1;
+  string uuid      = 2;
+  string acuse     = 3;
+  string mensaje   = 4;
+  int64  timestamp = 5;
 }
