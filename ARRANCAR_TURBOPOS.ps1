@@ -27,12 +27,12 @@ Start-Sleep 3
 
 # 2. Sales Service :50052
 Write-Host "[2] Iniciando Sales Service (:50052)..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-NoExit","-Command","cd C:\dev\turbopos; go run services/sales/cmd/server/main.go"
+Start-Process powershell -ArgumentList "-NoExit","-Command","cd C:\dev\turbopos; `$env:DB_PASS='turbopos'; go run services/sales/cmd/server/main.go"
 Start-Sleep 3
 
 # 3. Loyalty Service :50054
 Write-Host "[3] Iniciando Loyalty Service (:50054)..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-NoExit","-Command","cd C:\dev\turbopos; go run services/loyalty/cmd/main.go"
+Start-Process powershell -ArgumentList "-NoExit","-Command","cd C:\dev\turbopos; `$env:DB_PASS='turbopos'; go run services/loyalty/cmd/main.go"
 Start-Sleep 3
 
 # 4. CFDI Service :50053 + :50055
@@ -66,7 +66,7 @@ if ($cfdiListo) {
 # 5. BFF Gateway :8080
 Write-Host ""
 Write-Host "[5] Iniciando BFF Gateway (:8080)..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-NoExit","-Command","cd C:\dev\turbopos; go run services/bff/cmd/main.go"
+Start-Process powershell -ArgumentList "-NoExit","-Command","cd C:\dev\turbopos; `$env:DB_PASS='turbopos'; go run services/bff/cmd/main.go"
 Start-Sleep 6
 
 # 6. Verificacion final

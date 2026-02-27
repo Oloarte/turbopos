@@ -144,6 +144,24 @@ func (gw *Gateway) handleCobrar(w http.ResponseWriter, r *http.Request) {
 			}
 		}()
 	}
+	// Auto-timbrado: si viene ?factura=1 en la URL, timbrar como público general en background
+	if r.URL.Query().Get("factura") == "1" || r.URL.Query().Get("rfc") != "" {
+		rfcTimbrar := "XAXX010101000" // público general — siempre válido
+		go func(saleID string, total float64, rfc string) {
+			ctxT, cancelT := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancelT()
+			tRes, err := gw.cfdiClient.Timbrar(ctxT, &pb_cfdi.FacturaRequest{
+				VentaId: saleID, Total: total, Rfc: rfc,
+			})
+			if err != nil {
+				log.Printf("[BFF] Auto-timbrado error sale=%s: %v", saleID, err)
+				return
+			}
+			gw.db.Exec(`UPDATE sales SET cfdi_uuid=$1, cfdi_status=$2 WHERE id=$3::uuid`,
+				tRes.GetUuid(), "timbrado", saleID)
+			log.Printf("[BFF] Auto-timbrado OK sale=%s uuid=%s", saleID, tRes.GetUuid())
+		}(res.GetSaleId(), req.Total, rfcTimbrar)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"sale_id": res.GetSaleId(), "status": res.GetStatus(),
