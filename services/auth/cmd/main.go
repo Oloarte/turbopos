@@ -15,7 +15,7 @@ import (
     "google.golang.org/grpc/reflection"
 )
 
-const Port = ":50052"
+const Port = ":50051"
 
 type AuthServer struct {
     pb.UnimplementedAuthServiceServer
@@ -43,14 +43,14 @@ func main() {
     connStr := "host=127.0.0.1 port=5432 user=postgres password=turbopos dbname=turbopos sslmode=disable"
     db, err := sql.Open("postgres", connStr)
     if err != nil {
-        log.Fatalf("Fallo crítico al preparar conexión a DB: %v", err)
+        log.Fatalf("Fallo cr�tico al preparar conexi�n a DB: %v", err)
     }
     defer db.Close()
 
     if err := db.Ping(); err != nil {
         log.Fatalf("Fallo al conectar a PostgreSQL: %v", err)
     }
-    log.Println("Conexión a PostgreSQL (Docker) establecida")
+    log.Println("Conexi�n a PostgreSQL (Docker) establecida")
 
     lis, err := net.Listen("tcp", Port)
     if err != nil {
@@ -69,3 +69,4 @@ func main() {
         log.Fatalf("Fallo en gRPC Server: %v", err)
     }
 }
+

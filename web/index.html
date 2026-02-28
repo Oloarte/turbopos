@@ -678,9 +678,12 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <label class="login-label">Usuario</label>
     <input class="login-input" id="login-user" type="text" placeholder="admin" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()">
     <label class="login-label">Contraseña</label>
-    <input class="login-input" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <div style="position:relative">
+      <input class="login-input" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:40px;width:100%">
+      <button type="button" onclick="var i=document.getElementById('login-pass');i.type=i.type==='password'?'text':'password'" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px">👁</button>
+    </div>
     <div class="login-error" id="login-error"></div>
-    <button class="login-btn" id="login-btn" onclick="doLogin()">Iniciar sesión</button>
+    <button type="button" class="login-btn" id="login-btn" onclick="doLogin()">Iniciar sesión</button>
     <div class="login-hint">Credenciales: admin / turbopos2026</div>
   </div>
 </div>
@@ -1058,6 +1061,12 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
         style="width:100%;margin-top:6px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border2);
                border-radius:8px;color:var(--text);font-size:13px;font-family:var(--mono);letter-spacing:.04em;box-sizing:border-box;outline:none"/>
     </div>
+    <div id="cp-row" style="display:none;margin-top:10px;">
+      <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">CP fiscal receptor</label>
+      <input id="sale-cp" maxlength="5" placeholder="Ej: 64000" autocomplete="off"
+        style="width:100%;margin-top:6px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border2);
+               border-radius:8px;color:var(--text);font-size:13px;font-family:var(--mono);letter-spacing:.04em;box-sizing:border-box;outline:none"/>
+    </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeSaleModal()">Cancelar</button>
       <button class="btn-save" id="confirm-sale-btn" onclick="confirmSale()">✅ Confirmar y cobrar</button>
@@ -1279,10 +1288,11 @@ function cobrar() {
   const total = cart.reduce((s,i)=>s+i.subtotal,0);
   const factura = document.getElementById('factura-check').checked;
   document.getElementById('rfc-row').style.display = factura ? 'block' : 'none';
+  document.getElementById('cp-row').style.display = factura ? 'block' : 'none';
   if (!factura) {
     document.getElementById('sale-rfc').value = '';
+    document.getElementById('sale-cp').value = '';
   } else {
-    // Autocompletar RFC si el cliente ya tiene uno registrado
     const savedRfc = loyaltyData?.rfc || loyaltyData?.account?.rfc || '';
     if (savedRfc) {
       document.getElementById('sale-rfc').value = savedRfc;
@@ -1290,6 +1300,14 @@ function cobrar() {
     } else {
       document.getElementById('sale-rfc').value = '';
       document.getElementById('sale-rfc').style.borderColor = '';
+    }
+    const savedCp = loyaltyData?.cp || loyaltyData?.account?.cp || '';
+    if (savedCp) {
+      document.getElementById('sale-cp').value = savedCp;
+      document.getElementById('sale-cp').style.borderColor = 'var(--green)';
+    } else {
+      document.getElementById('sale-cp').value = '';
+      document.getElementById('sale-cp').style.borderColor = '';
     }
   }
   const payLabels = {cash:'Efectivo',card:'Tarjeta',transfer:'Transferencia'};
@@ -1311,8 +1329,9 @@ async function confirmSale() {
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Procesando...';
   const body = { total, payment_method:payment, items:cart.map(i=>({product_id:i.id,name:i.name,quantity:i.qty,unit_price:i.price,subtotal:i.subtotal})) };
   const rfc = (document.getElementById('sale-rfc').value||'').trim().toUpperCase()||'XAXX010101000';
+  const cp = (document.getElementById('sale-cp').value||'').trim()||'64000';
   let url = API+'/cobrar';
-  if (factura) url+='?factura=1&rfc='+encodeURIComponent(rfc);
+  if (factura) url+='?factura=1&rfc='+encodeURIComponent(rfc)+'&cp='+encodeURIComponent(cp);
   if (phone) url+=(url.includes('?')?'&':'?')+'phone='+phone;
   try {
     const res = await apiFetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -1324,11 +1343,11 @@ async function confirmSale() {
     const phoneVal = document.getElementById('customer-phone').value.replace(/\D/g,'');
     const rfcVal = (document.getElementById('sale-rfc').value||'').trim().toUpperCase();
     if (phoneVal && rfcVal && rfcVal !== 'XAXX010101000' && (!loyaltyData?.rfc)) {
-      apiFetch(API+'/loyalty/rfc', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({phone: phoneVal, rfc: rfcVal})
-      }).catch(()=>{});
+      apiFetch(API+'/loyalty/rfc', {method:'POST',headers:{'Content-Type':'application/json'},body: JSON.stringify({phone: phoneVal, rfc: rfcVal})}).catch(()=>{});
+    }
+    const cpVal = (document.getElementById('sale-cp').value||'').trim();
+    if (phoneVal && cpVal && cpVal !== '64000' && (!loyaltyData?.cp)) {
+      apiFetch(API+'/loyalty/cp', {method:'POST',headers:{'Content-Type':'application/json'},body: JSON.stringify({phone: phoneVal, cp: cpVal})}).catch(()=>{});
     }
     if (factura) {
       setTimeout(()=>toast('🧾 Enviando al SAT...','info'),500);
