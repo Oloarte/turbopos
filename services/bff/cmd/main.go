@@ -3,7 +3,10 @@ package main
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/base64"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
@@ -66,6 +69,9 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v1/products",   gw.handleProducts)
+	mux.HandleFunc("/api/v1/products/",  gw.handleProductByID)
+	mux.HandleFunc("/api/v1/login",           gw.handleLogin)
 	mux.HandleFunc("/api/v1/cobrar",          gw.handleCobrar)
 	mux.HandleFunc("/api/v1/timbrar",         gw.handleTimbrar)
 	mux.HandleFunc("/api/v1/cancelar",        gw.handleCancelar)
@@ -76,13 +82,35 @@ func main() {
 	mux.HandleFunc("/api/v1/loyalty/redeem",  gw.handleLoyaltyRedeem)
 	mux.HandleFunc("/api/v1/migrate/preview", gw.handleMigratePreview)
 	mux.HandleFunc("/api/v1/migrate",         gw.handleMigrate)
+	mux.HandleFunc("/api/v1/tenants",         gw.handleTenants)
+	mux.HandleFunc("/api/v1/tenants/",        func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/cert") {
+			gw.handleTenantCert(w, r)
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	})
+	// Frontend estático — servir desde ./web/index.html si existe, o desde embebido
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" && r.URL.Path != "/index.html" {
+			http.NotFound(w, r)
+			return
+		}
+		indexPath := getenv("FRONTEND_PATH", "web/index.html")
+		if data, err := os.ReadFile(indexPath); err == nil {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Write(data)
+		} else {
+			http.ServeFile(w, r, indexPath)
+		}
+	})
 
 	cors := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Tenant-ID, Authorization")
 		if r.Method == "OPTIONS" { return }
-		mux.ServeHTTP(w, r)
+		jwtMiddleware(mux).ServeHTTP(w, r)
 	})
 
 	log.Println("[BFF] Escuchando en :8080")
@@ -130,6 +158,9 @@ func (gw *Gateway) handleCobrar(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
+	// Marcar la venta con el tenant_id
+	tid := tenantID(r)
+	gw.db.Exec(`UPDATE sales SET tenant_id=$1 WHERE id=$2::uuid`, tid, res.GetSaleId())
 	if phone := r.URL.Query().Get("phone"); phone != "" {
 		go func() {
 			ctxL, cancelL := context.WithTimeout(context.Background(), 3*time.Second)
@@ -450,6 +481,7 @@ func (gw *Gateway) handleCorte(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet { w.WriteHeader(http.StatusMethodNotAllowed); return }
 	fecha := r.URL.Query().Get("fecha")
 	if fecha == "" { fecha = time.Now().Format("2006-01-02") }
+	tid := tenantID(r)
 	rows, err := gw.db.Query(`
 		SELECT COUNT(*), COALESCE(SUM(total),0),
 			COALESCE(SUM(CASE WHEN status='cancelled' THEN 1 ELSE 0 END),0),
@@ -458,7 +490,8 @@ func (gw *Gateway) handleCorte(w http.ResponseWriter, r *http.Request) {
 			payment_method
 		FROM sales
 		WHERE DATE(created_at AT TIME ZONE 'UTC') = $1::date
-		GROUP BY payment_method`, fecha)
+		  AND (tenant_id = $2::uuid OR tenant_id IS NULL)
+		GROUP BY payment_method`, fecha, tid)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
@@ -490,6 +523,173 @@ func (gw *Gateway) handleCorte(w http.ResponseWriter, r *http.Request) {
 		"total_neto": totalNeto, "total_timbradas": totalTimbradas,
 		"por_metodo": metodos, "generado_at": time.Now().Format(time.RFC3339),
 	})
+}
+
+// ─── CRUD Productos ───────────────────────────────────────────────────────────
+// GET  /api/v1/products         — listar productos del tenant
+// POST /api/v1/products         — crear producto
+// PUT  /api/v1/products/{id}    — actualizar producto
+// DELETE /api/v1/products/{id}  — eliminar producto
+
+func (gw *Gateway) handleProducts(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	tid := tenantID(r)
+
+	switch r.Method {
+	case http.MethodGet:
+		q := `SELECT id, COALESCE(name,''), COALESCE(price,0),
+		             COALESCE(sku,''), COALESCE(category,''), COALESCE(unit,'pza'),
+		             COALESCE(barcode,''), active
+		      FROM products
+		      WHERE (tenant_id = $1::uuid OR tenant_id IS NULL)
+		        AND COALESCE(active, true) = true
+		      ORDER BY name`
+		rows, err := gw.db.Query(q, tid)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+		defer rows.Close()
+		var prods []map[string]interface{}
+		for rows.Next() {
+			var id, name, sku, category, unit, barcode string
+			var price float64
+			var active bool
+			rows.Scan(&id, &name, &price, &sku, &category, &unit, &barcode, &active)
+			prods = append(prods, map[string]interface{}{
+				"id": id, "name": name, "price": price,
+				"sku": sku, "category": category, "unit": unit,
+				"barcode": barcode, "active": active,
+			})
+		}
+		if prods == nil { prods = []map[string]interface{}{} }
+		json.NewEncoder(w).Encode(prods)
+
+	case http.MethodPost:
+		var req struct {
+			Name     string  `json:"name"`
+			Price    float64 `json:"price"`
+			SKU      string  `json:"sku"`
+			Category string  `json:"category"`
+			Unit     string  `json:"unit"`
+			Barcode  string  `json:"barcode"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "JSON inválido"})
+			return
+		}
+		if req.Name == "" || req.Price <= 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "name y price requeridos"})
+			return
+		}
+		if req.Unit == "" { req.Unit = "pza" }
+		if req.Category == "" { req.Category = "General" }
+		// Autogenerar SKU si no viene
+		if req.SKU == "" { req.SKU = fmt.Sprintf("PROD-%d", time.Now().UnixMilli()) }
+
+		var id string
+		err := gw.db.QueryRow(`
+			INSERT INTO products (id, name, price, sku, category, unit, barcode, tenant_id, active, created_at)
+			VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7::uuid, true, NOW())
+			ON CONFLICT (sku) WHERE sku IS NOT NULL
+			DO UPDATE SET name=EXCLUDED.name, price=EXCLUDED.price,
+			              category=EXCLUDED.category, unit=EXCLUDED.unit
+			RETURNING id`,
+			req.Name, req.Price, req.SKU, req.Category, req.Unit, req.Barcode, tid,
+		).Scan(&id)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+		log.Printf("[BFF] Producto creado: %s — %s $%.2f", id, req.Name, req.Price)
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"id": id, "name": req.Name, "price": req.Price, "sku": req.SKU,
+		})
+
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func (gw *Gateway) handleProductByID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	// Extraer ID del path: /api/v1/products/UUID
+	productID := strings.TrimPrefix(r.URL.Path, "/api/v1/products/")
+	if productID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "id requerido"})
+		return
+	}
+
+	switch r.Method {
+	case http.MethodPut:
+		var req struct {
+			Name     string  `json:"name"`
+			Price    float64 `json:"price"`
+			SKU      string  `json:"sku"`
+			Category string  `json:"category"`
+			Unit     string  `json:"unit"`
+			Barcode  string  `json:"barcode"`
+			Active   *bool   `json:"active"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "JSON inválido"})
+			return
+		}
+		active := true
+		if req.Active != nil { active = *req.Active }
+
+		res, err := gw.db.Exec(`
+			UPDATE products SET
+				name     = COALESCE(NULLIF($1,''), name),
+				price    = CASE WHEN $2 > 0 THEN $2 ELSE price END,
+				sku      = COALESCE(NULLIF($3,''), sku),
+				category = COALESCE(NULLIF($4,''), category),
+				unit     = COALESCE(NULLIF($5,''), unit),
+				barcode  = COALESCE(NULLIF($6,''), barcode),
+				active   = $7
+			WHERE id = $8::uuid`,
+			req.Name, req.Price, req.SKU, req.Category, req.Unit, req.Barcode, active, productID)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+		n, _ := res.RowsAffected()
+		if n == 0 {
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]string{"error": "producto no encontrado"})
+			return
+		}
+		log.Printf("[BFF] Producto actualizado: %s — %s $%.2f", productID, req.Name, req.Price)
+		json.NewEncoder(w).Encode(map[string]string{"status": "ok", "id": productID})
+
+	case http.MethodDelete:
+		// Soft delete — marcar inactive
+		res, err := gw.db.Exec(`UPDATE products SET active=false WHERE id=$1::uuid`, productID)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+		n, _ := res.RowsAffected()
+		if n == 0 {
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]string{"error": "producto no encontrado"})
+			return
+		}
+		log.Printf("[BFF] Producto eliminado (soft): %s", productID)
+		json.NewEncoder(w).Encode(map[string]string{"status": "eliminado", "id": productID})
+
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
 }
 
 func parseMigrationCSV(r io.Reader, tipo string) (products, customers []map[string]string, err error) {
@@ -581,6 +781,337 @@ func parseMigrationCSV(r io.Reader, tipo string) (products, customers []map[stri
 		}
 	}
 	return products, customers, nil
+}
+
+// ─── JWT ─────────────────────────────────────────────────────────────────────
+func jwtSecret() []byte {
+	s := getenv("JWT_SECRET", "turbopos-secret-2026-cambiar-en-produccion")
+	return []byte(s)
+}
+
+func b64url(b []byte) string {
+	return base64.RawURLEncoding.EncodeToString(b)
+}
+
+func generateJWT(username, role, tenantID string) (string, error) {
+	header := b64url([]byte(`{"alg":"HS256","typ":"JWT"}`))
+	payload, _ := json.Marshal(map[string]interface{}{
+		"sub":    username,
+		"role":   role,
+		"tid":    tenantID,
+		"exp":    time.Now().Add(12 * time.Hour).Unix(),
+		"iat":    time.Now().Unix(),
+	})
+	data := header + "." + b64url(payload)
+	mac := hmac.New(sha256.New, jwtSecret())
+	mac.Write([]byte(data))
+	return data + "." + b64url(mac.Sum(nil)), nil
+}
+
+type jwtClaims struct {
+	Sub      string `json:"sub"`
+	Role     string `json:"role"`
+	TenantID string `json:"tid"`
+	Exp      int64  `json:"exp"`
+}
+
+func validateJWT(token string) (*jwtClaims, error) {
+	parts := strings.Split(token, ".")
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("token inválido")
+	}
+	data := parts[0] + "." + parts[1]
+	mac := hmac.New(sha256.New, jwtSecret())
+	mac.Write([]byte(data))
+	expected := b64url(mac.Sum(nil))
+	if !hmac.Equal([]byte(expected), []byte(parts[2])) {
+		return nil, fmt.Errorf("firma inválida")
+	}
+	payloadBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil, fmt.Errorf("payload inválido")
+	}
+	var claims jwtClaims
+	if err := json.Unmarshal(payloadBytes, &claims); err != nil {
+		return nil, fmt.Errorf("claims inválidos")
+	}
+	if time.Now().Unix() > claims.Exp {
+		return nil, fmt.Errorf("token expirado")
+	}
+	return &claims, nil
+}
+
+// jwtMiddleware valida el token en todas las rutas excepto /api/v1/login y /
+func jwtMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Rutas públicas
+		if r.URL.Path == "/" || r.URL.Path == "/index.html" ||
+			r.URL.Path == "/api/v1/login" || r.URL.Path == "/api/v1/status" {
+			next.ServeHTTP(w, r)
+			return
+		}
+		// Preflight CORS
+		if r.Method == http.MethodOptions {
+			next.ServeHTTP(w, r)
+			return
+		}
+		// Extraer token
+		auth := r.Header.Get("Authorization")
+		if !strings.HasPrefix(auth, "Bearer ") {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{"error": "token requerido"})
+			return
+		}
+		claims, err := validateJWT(strings.TrimPrefix(auth, "Bearer "))
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+		// Inyectar tenant del token si no viene header explícito
+		if r.Header.Get("X-Tenant-ID") == "" && claims.TenantID != "" {
+			r.Header.Set("X-Tenant-ID", claims.TenantID)
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// POST /api/v1/login — autentica usuario y devuelve JWT
+func (gw *Gateway) handleLogin(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "JSON inválido"})
+		return
+	}
+	if req.Username == "" || req.Password == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "username y password requeridos"})
+		return
+	}
+
+	// Verificar credenciales en la DB
+	// La tabla users tiene: id, username, password_hash, role, tenant_id
+	// Soporte de password en texto plano para simplificar (mejorar a bcrypt en producción)
+	var userID, role, tenantID string
+	var storedPass string
+	err := gw.db.QueryRow(
+		`SELECT id, COALESCE(role,'cashier'), COALESCE(tenant_id::text,$3), password
+		 FROM users WHERE username=$1 LIMIT 1`,
+		req.Username, req.Password, defaultTenantID,
+	).Scan(&userID, &role, &tenantID, &storedPass)
+
+	if err != nil {
+		// Si no existe la tabla users o el usuario, permitir credenciales de admin hardcoded
+		adminUser := getenv("ADMIN_USER", "admin")
+		adminPass := getenv("ADMIN_PASS", "turbopos2026")
+		if req.Username != adminUser || req.Password != adminPass {
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{"error": "credenciales incorrectas"})
+			return
+		}
+		userID = "admin"
+		role = "admin"
+		tenantID = defaultTenantID
+	} else if storedPass != req.Password {
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "credenciales incorrectas"})
+		return
+	}
+
+	token, err := generateJWT(req.Username, role, tenantID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "error generando token"})
+		return
+	}
+	log.Printf("[BFF] Login: user=%s role=%s tenant=%s", req.Username, role, tenantID)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"token":     token,
+		"user":      req.Username,
+		"role":      role,
+		"tenant_id": tenantID,
+		"expires":   time.Now().Add(12 * time.Hour).Format(time.RFC3339),
+	})
+}
+
+// ─── Tenant middleware ────────────────────────────────────────────────────────
+// tenantIDFromRequest extrae el tenant_id del header X-Tenant-ID
+// Si no viene, usa el tenant demo por defecto
+const defaultTenantID = "00000000-0000-0000-0000-000000000001"
+
+func tenantID(r *http.Request) string {
+	if t := r.Header.Get("X-Tenant-ID"); t != "" {
+		return t
+	}
+	return defaultTenantID
+}
+
+// tenantInfo contiene los datos del tenant para CFDI
+type tenantInfo struct {
+	ID            string
+	RFC           string
+	RazonSocial   string
+	RegimenFiscal string
+	CodigoPostal  string
+	FinkokUser    string
+	FinkokPass    string
+	CertDERb64    string
+	KeyPEMb64     string
+	KeyPassword   string
+}
+
+func (gw *Gateway) getTenant(r *http.Request) (*tenantInfo, error) {
+	tid := tenantID(r)
+	row := gw.db.QueryRow(`
+		SELECT id, rfc, razon_social, regimen_fiscal, codigo_postal,
+		       COALESCE(finkok_user,''), COALESCE(finkok_pass,''),
+		       COALESCE(cert_der_b64,''), COALESCE(key_pem_b64,''), COALESCE(key_password,'')
+		FROM tenants WHERE id=$1 AND active=true`, tid)
+	t := &tenantInfo{}
+	err := row.Scan(&t.ID, &t.RFC, &t.RazonSocial, &t.RegimenFiscal, &t.CodigoPostal,
+		&t.FinkokUser, &t.FinkokPass, &t.CertDERb64, &t.KeyPEMb64, &t.KeyPassword)
+	if err != nil {
+		return nil, fmt.Errorf("tenant no encontrado: %v", err)
+	}
+	return t, nil
+}
+
+// ─── GET /api/v1/tenants ─────────────────────────────────────────────────────
+func (gw *Gateway) handleTenants(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	switch r.Method {
+	case http.MethodGet:
+		rows, err := gw.db.Query(`
+			SELECT id, nombre, rfc, razon_social, regimen_fiscal, codigo_postal,
+			       plan, active, created_at,
+			       (cert_der_b64 != '' AND cert_der_b64 IS NOT NULL) as tiene_cert
+			FROM tenants ORDER BY created_at`)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+		defer rows.Close()
+		var tenants []map[string]interface{}
+		for rows.Next() {
+			var id, nombre, rfc, razon, regimen, cp, plan, createdAt string
+			var active, tieneCert bool
+			rows.Scan(&id, &nombre, &rfc, &razon, &regimen, &cp, &plan, &active, &createdAt, &tieneCert)
+			tenants = append(tenants, map[string]interface{}{
+				"id": id, "nombre": nombre, "rfc": rfc, "razon_social": razon,
+				"regimen_fiscal": regimen, "codigo_postal": cp, "plan": plan,
+				"active": active, "created_at": createdAt, "tiene_cert": tieneCert,
+			})
+		}
+		if tenants == nil { tenants = []map[string]interface{}{} }
+		json.NewEncoder(w).Encode(tenants)
+
+	case http.MethodPost:
+		var req struct {
+			Nombre        string `json:"nombre"`
+			RFC           string `json:"rfc"`
+			RazonSocial   string `json:"razon_social"`
+			RegimenFiscal string `json:"regimen_fiscal"`
+			CodigoPostal  string `json:"codigo_postal"`
+			FinkokUser    string `json:"finkok_user"`
+			FinkokPass    string `json:"finkok_pass"`
+			CertDERb64    string `json:"cert_der_b64"`
+			KeyPEMb64     string `json:"key_pem_b64"`
+			KeyPassword   string `json:"key_password"`
+			Plan          string `json:"plan"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "JSON invalido"})
+			return
+		}
+		if req.RFC == "" || req.RazonSocial == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "rfc y razon_social requeridos"})
+			return
+		}
+		if req.RegimenFiscal == "" { req.RegimenFiscal = "601" }
+		if req.CodigoPostal == "" { req.CodigoPostal = "06600" }
+		if req.Plan == "" { req.Plan = "business" }
+		if req.Nombre == "" { req.Nombre = req.RazonSocial }
+
+		var id string
+		err := gw.db.QueryRow(`
+			INSERT INTO tenants (nombre, rfc, razon_social, regimen_fiscal, codigo_postal,
+			                     finkok_user, finkok_pass, cert_der_b64, key_pem_b64, key_password, plan)
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id`,
+			req.Nombre, strings.ToUpper(req.RFC), req.RazonSocial, req.RegimenFiscal, req.CodigoPostal,
+			req.FinkokUser, req.FinkokPass, req.CertDERb64, req.KeyPEMb64, req.KeyPassword, req.Plan,
+		).Scan(&id)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(map[string]string{"id": id, "rfc": req.RFC, "status": "creado"})
+
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+// ─── PUT /api/v1/tenants/{id}/cert ───────────────────────────────────────────
+func (gw *Gateway) handleTenantCert(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	// Extraer tenant ID del path: /api/v1/tenants/UUID/cert
+	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/tenants/"), "/")
+	if len(parts) < 1 || parts[0] == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "tenant id requerido en path"})
+		return
+	}
+	tid := parts[0]
+
+	var req struct {
+		CertDERb64  string `json:"cert_der_b64"`
+		KeyPEMb64   string `json:"key_pem_b64"`
+		KeyPassword string `json:"key_password"`
+		FinkokUser  string `json:"finkok_user"`
+		FinkokPass  string `json:"finkok_pass"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "JSON invalido"})
+		return
+	}
+
+	_, err := gw.db.Exec(`
+		UPDATE tenants SET
+		    cert_der_b64=$1, key_pem_b64=$2, key_password=$3,
+		    finkok_user=COALESCE(NULLIF($4,''), finkok_user),
+		    finkok_pass=COALESCE(NULLIF($5,''), finkok_pass),
+		    updated_at=NOW()
+		WHERE id=$6`,
+		req.CertDERb64, req.KeyPEMb64, req.KeyPassword,
+		req.FinkokUser, req.FinkokPass, tid)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{"status": "cert actualizado", "tenant_id": tid})
 }
 
 func limitSlice(s []map[string]string, n int) []map[string]string {
