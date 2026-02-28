@@ -354,13 +354,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .dash-view::-webkit-scrollbar { width: 4px; }
 .dash-view::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
 
-.rep-btn {
-  background: var(--surface2); border: 1px solid var(--border2); color: var(--muted);
-  border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
-  transition: all .15s;
-}
-.rep-btn:hover { color: var(--text); border-color: var(--border); }
-.rep-btn.active { background: var(--amber); color: #000; border-color: var(--amber); }
+.rep-btn { background:var(--surface2);border:1px solid var(--border2);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s; }
+.rep-btn:hover { color:var(--text);border-color:var(--border); }
+.rep-btn.active { background:var(--amber);color:#000;border-color:var(--amber); }
 
 .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px; }
 .section-title { font-size: 14px; font-weight: 700; color: var(--text); }
@@ -464,13 +460,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .cat-list::-webkit-scrollbar { width: 4px; }
 .cat-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
 
-.rep-btn {
-  background: var(--surface2); border: 1px solid var(--border2); color: var(--muted);
-  border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
-  transition: all .15s;
-}
-.rep-btn:hover { color: var(--text); border-color: var(--border); }
-.rep-btn.active { background: var(--amber); color: #000; border-color: var(--amber); }
+.rep-btn { background:var(--surface2);border:1px solid var(--border2);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s; }
+.rep-btn:hover { color:var(--text);border-color:var(--border); }
+.rep-btn.active { background:var(--amber);color:#000;border-color:var(--amber); }
 
 .cat-list-head {
   display: grid; grid-template-columns: 42px 2.5fr 100px 80px 140px 90px;
@@ -682,13 +674,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
 
-.rep-btn {
-  background: var(--surface2); border: 1px solid var(--border2); color: var(--muted);
-  border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
-  transition: all .15s;
-}
-.rep-btn:hover { color: var(--text); border-color: var(--border); }
-.rep-btn.active { background: var(--amber); color: #000; border-color: var(--amber); }
+.rep-btn { background:var(--surface2);border:1px solid var(--border2);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s; }
+.rep-btn:hover { color:var(--text);border-color:var(--border); }
+.rep-btn.active { background:var(--amber);color:#000;border-color:var(--amber); }
 
 </style>
 </head>
@@ -885,17 +873,41 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
       <!-- ══ CORTE Z ══ -->
       <div class="view corte-view" id="view-corte">
-        <div>
-          <div class="section-head">
+        <div style="padding:24px;max-width:1100px;margin:0 auto">
+          <!-- Header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
             <div>
-              <div class="section-title">Corte Z</div>
+              <div class="section-title" style="margin-bottom:2px">Corte Z</div>
               <div class="section-sub" id="corte-fecha">—</div>
             </div>
-            <button class="btn btn-primary" onclick="loadCorte()" style="font-size:12px">↻ Actualizar</button>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="date" id="corte-fecha-sel" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12px" onchange="loadCorte()">
+              <button class="btn btn-primary" onclick="loadCorte()" style="font-size:12px">↻ Actualizar</button>
+            </div>
           </div>
-          <div class="corte-grid" id="corte-cards" style="margin-bottom:20px"></div>
-          <div class="section-head"><div class="section-title">Desglose por método de pago</div></div>
-          <div class="methods-table" id="corte-methods"></div>
+
+          <!-- KPIs -->
+          <div class="corte-grid" id="corte-cards" style="margin-bottom:16px"></div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+            <!-- Gráfica por hora -->
+            <div class="corte-card" style="padding:20px">
+              <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Ventas por hora</div>
+              <div id="corte-hora-chart" style="display:flex;align-items:flex-end;gap:3px;height:100px;padding-bottom:16px"></div>
+            </div>
+
+            <!-- Métodos de pago con dona -->
+            <div class="corte-card" style="padding:20px">
+              <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Métodos de pago</div>
+              <div id="corte-methods"></div>
+            </div>
+          </div>
+
+          <!-- Top productos del día -->
+          <div class="corte-card" style="padding:20px">
+            <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Top productos del día</div>
+            <div id="corte-top-prods"></div>
+          </div>
         </div>
       </div>
 
@@ -1026,7 +1038,6 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
       <div class="view reportes-view" id="view-reportes">
         <div style="padding:24px;max-width:1100px;margin:0 auto">
-          <!-- Header -->
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
             <div>
               <div class="section-title" style="margin-bottom:2px">Reportes</div>
@@ -1041,38 +1052,26 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
               <button class="rep-btn" onclick="setRepPeriodo('custom')">Aplicar</button>
             </div>
           </div>
-
-          <!-- KPIs -->
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px" id="rep-kpis">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
             <div class="metric-card"><div class="metric-val" id="rep-kpi-total">$0</div><div class="metric-lbl">Ventas netas</div></div>
             <div class="metric-card"><div class="metric-val" id="rep-kpi-tx">0</div><div class="metric-lbl">Transacciones</div></div>
             <div class="metric-card"><div class="metric-val" id="rep-kpi-ticket">$0</div><div class="metric-lbl">Ticket promedio</div></div>
             <div class="metric-card"><div class="metric-val" id="rep-kpi-cfdi" style="color:var(--blue)">0</div><div class="metric-lbl">CFDIs timbrados</div></div>
           </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
-            <!-- Gráfica de barras -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
             <div class="corte-card" style="padding:20px">
               <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px">Ventas por día</div>
-              <div id="rep-chart" style="display:flex;align-items:flex-end;gap:4px;height:140px;padding-bottom:20px;position:relative;overflow-x:auto"></div>
+              <div id="rep-chart" style="display:flex;align-items:flex-end;gap:4px;height:140px;padding-bottom:20px"></div>
             </div>
-
-            <!-- Métodos de pago -->
             <div class="corte-card" style="padding:20px">
               <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px">Métodos de pago</div>
               <div id="rep-metodos"></div>
             </div>
           </div>
-
-          <!-- Top productos -->
           <div class="corte-card" style="padding:20px">
             <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px">Top productos</div>
-            <div style="display:grid;grid-template-columns:42px 1fr 80px 100px;gap:0" id="rep-prods-header"
-                 style="padding:8px 12px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase">
-              <div style="font-size:11px;color:var(--muted);font-weight:700;padding:8px 0">#</div>
-              <div style="font-size:11px;color:var(--muted);font-weight:700;padding:8px 0">Producto</div>
-              <div style="font-size:11px;color:var(--muted);font-weight:700;padding:8px 0;text-align:right">Uds.</div>
-              <div style="font-size:11px;color:var(--muted);font-weight:700;padding:8px 0;text-align:right">Total</div>
+            <div style="display:grid;grid-template-columns:42px 1fr 80px 100px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid var(--border)">
+              <div>#</div><div>Producto</div><div style="text-align:right">Uds.</div><div style="text-align:right">Total</div>
             </div>
             <div id="rep-prods"></div>
           </div>
@@ -1498,26 +1497,85 @@ async function loadTransactions() {
 // ─── Corte Z ─────────────────────────────────────────────────
 async function loadCorte() {
   try {
-    const res = await apiFetch(API+'/corte'); if(!res.ok) return;
+    const sel = document.getElementById('corte-fecha-sel');
+    const fecha = sel?.value || '';
+    const url = API+'/corte' + (fecha ? '?fecha='+fecha : '');
+    const res = await apiFetch(url); if(!res.ok) return;
     const d = await res.json();
     document.getElementById('corte-fecha').textContent = 'Corte del '+(d.fecha||'');
-    document.getElementById('corte-cards').innerHTML = `
-      <div class="corte-card"><h3>Total vendido</h3><div class="big" style="color:var(--amber)">$${Number(d.total_vendido||0).toLocaleString()}</div></div>
-      <div class="corte-card"><h3>Total neto</h3><div class="big" style="color:var(--green)">$${Number(d.total_neto||0).toLocaleString()}</div></div>
-      <div class="corte-card"><h3>Transacciones</h3><div class="big">${d.total_transacciones||0}</div></div>
-      <div class="corte-card"><h3>Timbradas SAT</h3><div class="big" style="color:var(--blue)">${d.total_timbradas||0}</div></div>
-      <div class="corte-card"><h3>Canceladas</h3><div class="big" style="color:var(--red)">${d.total_canceladas||0}</div></div>
-      <div class="corte-card"><h3>Hora de corte</h3><div class="big" style="font-size:22px">${new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}</div></div>`;
+
+    // KPIs
+    const ticket = d.total_transacciones > 0 ? (d.total_neto / d.total_transacciones) : 0;
+    document.getElementById('corte-cards').innerHTML =
+      `<div class="corte-card"><h3>Total neto</h3><div class="big" style="color:var(--amber)">$${Number(d.total_neto||0).toLocaleString('es-MX',{minimumFractionDigits:2})}</div></div>` +
+      `<div class="corte-card"><h3>Transacciones</h3><div class="big">${d.total_transacciones||0}</div></div>` +
+      `<div class="corte-card"><h3>Ticket promedio</h3><div class="big" style="color:var(--green)">$${ticket.toLocaleString('es-MX',{minimumFractionDigits:2})}</div></div>` +
+      `<div class="corte-card"><h3>CFDIs timbrados</h3><div class="big" style="color:var(--blue)">${d.total_timbradas||0}</div></div>` +
+      `<div class="corte-card"><h3>Canceladas</h3><div class="big" style="color:var(--red)">${d.total_canceladas||0}</div></div>` +
+      `<div class="corte-card"><h3>Hora corte</h3><div class="big" style="font-size:22px">${new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}</div></div>`;
+
+    // Gráfica por hora
+    const porHora = d.por_hora || [];
+    const chartEl = document.getElementById('corte-hora-chart');
+    chartEl.innerHTML = '';
+    if (porHora.length === 0) {
+      chartEl.innerHTML = '<div style="color:var(--muted);font-size:12px;margin:auto">Sin datos</div>';
+    } else {
+      const maxV = Math.max(...porHora.map(h=>h.total), 1);
+      porHora.forEach(h => {
+        const pct = Math.max((h.total/maxV)*80, 4);
+        const col = document.createElement('div');
+        col.style.cssText = 'display:flex;flex-direction:column;align-items:center;flex:1;min-width:18px;gap:2px;cursor:default';
+        col.title = h.hora+'h: $'+Number(h.total).toLocaleString('es-MX',{minimumFractionDigits:2})+' · '+h.tx+' ventas';
+        col.innerHTML =
+          '<div style="width:100%;background:var(--amber);border-radius:3px 3px 0 0;height:'+pct+'px;opacity:'+(h.total>0?'1':'.2')+'"></div>'+
+          '<div style="font-size:8px;color:var(--muted)">'+h.hora+'h</div>';
+        chartEl.appendChild(col);
+      });
+    }
+
+    // Métodos de pago
     const icons = {cash:'💵',card:'💳',transfer:'📲'};
     const methods = d.por_metodo||[];
+    const totalNeto = d.total_neto || 1;
     document.getElementById('corte-methods').innerHTML = methods.length
-      ? methods.map(m=>`<div class="method-row">
-          <span class="m-icon">${icons[m.metodo]||'💰'}</span>
-          <span class="m-name">${m.metodo||'-'}</span>
-          <span class="m-count">${m.transacciones} ventas</span>
-          <span class="m-total">$${Number(m.neto||m.total_vendido||0).toLocaleString('es-MX',{minimumFractionDigits:2})}</span>
-        </div>`).join('')
-      : '<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px">Sin ventas en este corte</div>';
+      ? methods.map(m => {
+          const pct = ((m.neto||0)/totalNeto*100).toFixed(1);
+          return '<div style="margin-bottom:12px">'+
+            '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'+
+              '<span style="font-size:13px">'+(icons[m.metodo]||'💰')+' '+(m.metodo||'-')+'</span>'+
+              '<span style="font-size:13px;font-weight:700">$'+Number(m.neto||0).toLocaleString('es-MX',{minimumFractionDigits:2})+'</span>'+
+            '</div>'+
+            '<div style="background:var(--surface3);border-radius:4px;height:6px">'+
+              '<div style="background:var(--amber);height:6px;border-radius:4px;width:'+pct+'%"></div>'+
+            '</div>'+
+            '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+pct+'% · '+m.transacciones+' ventas</div>'+
+          '</div>';
+        }).join('')
+      : '<div style="color:var(--muted);font-size:13px;padding:20px 0">Sin ventas</div>';
+
+    // Top productos
+    const topProds = d.top_prods || [];
+    document.getElementById('corte-top-prods').innerHTML = topProds.length
+      ? '<div style="display:grid;grid-template-columns:32px 1fr 60px 100px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid var(--border)">' +
+          '<div>#</div><div>Producto</div><div style="text-align:right">Uds</div><div style="text-align:right">Total</div></div>' +
+        topProds.map((p,i) => {
+          const maxT = topProds[0].total||1;
+          const pct = ((p.total/maxT)*100).toFixed(0);
+          return '<div style="display:grid;grid-template-columns:32px 1fr 60px 100px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">'+
+            '<div style="font-size:12px;color:var(--muted);font-weight:700">'+(i+1)+'</div>'+
+            '<div>'+
+              '<div style="font-size:13px">'+p.nombre+'</div>'+
+              '<div style="background:var(--surface3);border-radius:3px;height:3px;margin-top:3px;width:90%">'+
+                '<div style="background:var(--amber);height:3px;border-radius:3px;width:'+pct+'%"></div>'+
+              '</div>'+
+            '</div>'+
+            '<div style="text-align:right;font-size:13px;color:var(--muted)">'+p.uds+'</div>'+
+            '<div style="text-align:right;font-size:13px;font-weight:700;color:var(--green)">$'+Number(p.total).toLocaleString('es-MX',{minimumFractionDigits:2})+'</div>'+
+          '</div>';
+        }).join('')
+      : '<div style="color:var(--muted);font-size:13px;padding:20px 0">Sin productos vendidos</div>';
+
   } catch(e) { toast('Error cargando corte','error'); }
 }
 
@@ -1768,102 +1826,67 @@ function toast(msg,type='info') {
 
 // ════════ REPORTES ════════
 let repPeriodo = 'semana';
-
 function setRepPeriodo(p) {
   repPeriodo = p;
-  document.querySelectorAll('.rep-btn').forEach(b => b.classList.remove('active'));
-  const btnMap = {semana:'rep-semana', mes:'rep-mes', 'año':'rep-año'};
-  if (btnMap[p]) document.getElementById(btnMap[p])?.classList.add('active');
+  document.querySelectorAll('.rep-btn').forEach(b=>b.classList.remove('active'));
+  const m={semana:'rep-semana',mes:'rep-mes','año':'rep-año'};
+  if(m[p]) document.getElementById(m[p])?.classList.add('active');
   loadReportes();
 }
-
 async function loadReportes() {
-  let url = API + '/reportes?periodo=' + repPeriodo;
-  if (repPeriodo === 'custom') {
-    const desde = document.getElementById('rep-desde').value;
-    const hasta = document.getElementById('rep-hasta').value;
-    if (!desde || !hasta) return;
-    url = API + '/reportes?desde=' + desde + '&hasta=' + hasta;
+  let url = API+'/reportes?periodo='+repPeriodo;
+  if (repPeriodo==='custom') {
+    const d=document.getElementById('rep-desde').value, h=document.getElementById('rep-hasta').value;
+    if(!d||!h) return;
+    url=API+'/reportes?desde='+d+'&hasta='+h;
   }
-  const res = await apiFetch(url);
-  if (!res.ok) return;
-  const d = await res.json();
-  renderReportes(d);
-}
-
-function renderReportes(d) {
-  const porDia = d.por_dia || [];
-  const topProds = d.top_prods || [];
-  const metodos = d.metodos || [];
-  const total = d.total || 0;
-  const tx = d.transacciones || 0;
-
-  // KPIs
-  document.getElementById('rep-kpi-total').textContent = '$' + total.toLocaleString('es-MX', {minimumFractionDigits:2});
-  document.getElementById('rep-kpi-tx').textContent = tx;
-  document.getElementById('rep-kpi-ticket').textContent = tx > 0 ? '$' + (total/tx).toLocaleString('es-MX',{minimumFractionDigits:2}) : '$0';
-  const cfdiTotal = porDia.reduce((s,d) => s + (d.timbradas||0), 0);
-  document.getElementById('rep-kpi-cfdi').textContent = cfdiTotal;
-
-  // Gráfica de barras
-  const chart = document.getElementById('rep-chart');
-  chart.innerHTML = '';
-  if (porDia.length === 0) {
-    chart.innerHTML = '<div style="color:var(--muted);font-size:13px;margin:auto">Sin datos</div>';
-  } else {
-    const maxVal = Math.max(...porDia.map(d => d.total), 1);
-    porDia.forEach(d => {
-      const pct = Math.max((d.total / maxVal) * 120, 4);
-      const label = d.dia ? d.dia.toString().slice(5,10).replace('T00:00:00Z','') : '';
-      const col = document.createElement('div');
-      col.style.cssText = 'display:flex;flex-direction:column;align-items:center;flex:1;min-width:28px;gap:4px;cursor:default';
-      col.title = d.dia + ': $' + Number(d.total).toLocaleString('es-MX',{minimumFractionDigits:2}) + ' · ' + d.transacciones + ' ventas';
-      col.innerHTML =
-        '<div style="font-size:9px;color:var(--muted)">' + (d.total>0?'$'+Math.round(d.total):'') + '</div>' +
-        '<div style="width:100%;background:var(--amber);border-radius:4px 4px 0 0;height:' + pct + 'px;transition:height .3s;opacity:' + (d.total>0?'1':'.3') + '"></div>' +
-        '<div style="font-size:9px;color:var(--muted);white-space:nowrap">' + label + '</div>';
+  const res=await apiFetch(url); if(!res.ok) return;
+  const d=await res.json();
+  const porDia=d.por_dia||[], topProds=d.top_prods||[], metodos=d.metodos||[];
+  const total=d.total||0, tx=d.transacciones||0;
+  document.getElementById('rep-kpi-total').textContent='$'+total.toLocaleString('es-MX',{minimumFractionDigits:2});
+  document.getElementById('rep-kpi-tx').textContent=tx;
+  document.getElementById('rep-kpi-ticket').textContent=tx>0?'$'+(total/tx).toLocaleString('es-MX',{minimumFractionDigits:2}):'$0';
+  document.getElementById('rep-kpi-cfdi').textContent=porDia.reduce((s,d)=>s+(d.timbradas||0),0);
+  // Barras por día
+  const chart=document.getElementById('rep-chart'); chart.innerHTML='';
+  if(!porDia.length){chart.innerHTML='<div style="color:var(--muted);font-size:13px;margin:auto">Sin datos</div>';}
+  else {
+    const maxV=Math.max(...porDia.map(d=>d.total),1);
+    porDia.forEach(d=>{
+      const pct=Math.max((d.total/maxV)*120,4);
+      const col=document.createElement('div');
+      col.style.cssText='display:flex;flex-direction:column;align-items:center;flex:1;min-width:28px;gap:4px;cursor:default';
+      col.title=d.dia+': $'+Number(d.total).toLocaleString('es-MX',{minimumFractionDigits:2})+' · '+d.transacciones+' ventas';
+      col.innerHTML='<div style="font-size:9px;color:var(--muted)">'+(d.total>0?'$'+Math.round(d.total):'')+'</div>'+
+        '<div style="width:100%;background:var(--amber);border-radius:4px 4px 0 0;height:'+pct+'px;opacity:'+(d.total>0?'1':'.3')+'"></div>'+
+        '<div style="font-size:9px;color:var(--muted);white-space:nowrap">'+(d.dia?d.dia.toString().slice(5,10).replace('T00:00:00Z',''):'')+'</div>';
       chart.appendChild(col);
     });
   }
-
-  // Métodos de pago
-  const metEl = document.getElementById('rep-metodos');
-  const labels = {cash:'💵 Efectivo', card:'💳 Tarjeta', transfer:'🏦 Transferencia'};
-  metEl.innerHTML = metodos.length === 0
-    ? '<div style="color:var(--muted);font-size:13px;padding:20px 0">Sin datos</div>'
-    : metodos.map(m => {
-        const pct = total > 0 ? ((m.total/total)*100).toFixed(1) : 0;
-        return '<div style="margin-bottom:12px">' +
-          '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
-            '<span style="font-size:13px">' + (labels[m.metodo]||m.metodo) + '</span>' +
-            '<span style="font-size:13px;font-weight:700">$' + Number(m.total).toLocaleString('es-MX',{minimumFractionDigits:2}) + '</span>' +
-          '</div>' +
-          '<div style="background:var(--surface3);border-radius:4px;height:6px">' +
-            '<div style="background:var(--amber);height:6px;border-radius:4px;width:' + pct + '%"></div>' +
-          '</div>' +
-          '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + pct + '% · ' + m.transacciones + ' ventas</div>' +
-        '</div>';
-      }).join('');
-
-  // Top productos
-  const prodsEl = document.getElementById('rep-prods');
-  prodsEl.innerHTML = topProds.length === 0
-    ? '<div style="color:var(--muted);font-size:13px;padding:20px 0">Sin datos</div>'
-    : topProds.map((p, i) => {
-        const maxT = topProds[0].total || 1;
-        const pct = ((p.total / maxT) * 100).toFixed(0);
-        return '<div style="display:grid;grid-template-columns:42px 1fr 80px 100px;align-items:center;padding:8px 0;border-top:1px solid var(--border)">' +
-          '<div style="font-size:13px;color:var(--muted);font-weight:700">' + (i+1) + '</div>' +
-          '<div>' +
-            '<div style="font-size:13px">' + p.nombre + '</div>' +
-            '<div style="background:var(--surface3);border-radius:3px;height:4px;margin-top:4px;width:80%">' +
-              '<div style="background:var(--amber);height:4px;border-radius:3px;width:' + pct + '%"></div>' +
-            '</div>' +
-          '</div>' +
-          '<div style="text-align:right;font-size:13px;color:var(--muted)">' + p.unidades + '</div>' +
-          '<div style="text-align:right;font-size:13px;font-weight:700;color:var(--green)">$' + Number(p.total).toLocaleString('es-MX',{minimumFractionDigits:2}) + '</div>' +
-        '</div>';
-      }).join('');
+  // Métodos
+  const metEl=document.getElementById('rep-metodos');
+  const lbl={cash:'💵 Efectivo',card:'💳 Tarjeta',transfer:'🏦 Transferencia'};
+  metEl.innerHTML=!metodos.length?'<div style="color:var(--muted);font-size:13px;padding:20px 0">Sin datos</div>':
+    metodos.map(m=>{
+      const pct=total>0?((m.total/total)*100).toFixed(1):0;
+      return '<div style="margin-bottom:12px">'+
+        '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:13px">'+(lbl[m.metodo]||m.metodo)+'</span><span style="font-size:13px;font-weight:700">$'+Number(m.total).toLocaleString('es-MX',{minimumFractionDigits:2})+'</span></div>'+
+        '<div style="background:var(--surface3);border-radius:4px;height:6px"><div style="background:var(--amber);height:6px;border-radius:4px;width:'+pct+'%"></div></div>'+
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+pct+'% · '+m.transacciones+' ventas</div></div>';
+    }).join('');
+  // Top prods
+  const prodsEl=document.getElementById('rep-prods');
+  prodsEl.innerHTML=!topProds.length?'<div style="color:var(--muted);font-size:13px;padding:20px 0">Sin datos</div>':
+    topProds.map((p,i)=>{
+      const pct=((p.total/(topProds[0].total||1))*100).toFixed(0);
+      return '<div style="display:grid;grid-template-columns:42px 1fr 80px 100px;align-items:center;padding:8px 0;border-top:1px solid var(--border)">'+
+        '<div style="font-size:13px;color:var(--muted);font-weight:700">'+(i+1)+'</div>'+
+        '<div><div style="font-size:13px">'+p.nombre+'</div>'+
+        '<div style="background:var(--surface3);border-radius:3px;height:4px;margin-top:4px;width:80%"><div style="background:var(--amber);height:4px;border-radius:3px;width:'+pct+'%"></div></div></div>'+
+        '<div style="text-align:right;font-size:13px;color:var(--muted)">'+p.unidades+'</div>'+
+        '<div style="text-align:right;font-size:13px;font-weight:700;color:var(--green)">$'+Number(p.total).toLocaleString('es-MX',{minimumFractionDigits:2})+'</div></div>';
+    }).join('');
 }
 
 </script>

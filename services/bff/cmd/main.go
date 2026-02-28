@@ -84,7 +84,7 @@ func main() {
 	mux.HandleFunc("/api/v1/loyalty/cp",      gw.handleLoyaltyCp)
 	mux.HandleFunc("/api/v1/migrate/preview", gw.handleMigratePreview)
 	mux.HandleFunc("/api/v1/migrate",         gw.handleMigrate)
-	mux.HandleFunc("/api/v1/reportes",        gw.handleReportes)
+	mux.HandleFunc("/api/v1/reportes", gw.handleReportes)
 	mux.Handle("/", http.FileServer(http.Dir("web")))
 	log.Println("[BFF] Escuchando en :8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
@@ -508,6 +508,9 @@ func (gw *Gateway) handleCorte(w http.ResponseWriter, r *http.Request) {
 	fecha := r.URL.Query().Get("fecha")
 	if fecha == "" { fecha = time.Now().Format("2006-01-02") }
 	tid := tenantID(r)
+	w.Header().Set("Content-Type", "application/json")
+
+	// ── Por método de pago ───────────────────────────────────────────────────────
 	rows, err := gw.db.Query(`
 		SELECT COUNT(*), COALESCE(SUM(total),0),
 			COALESCE(SUM(CASE WHEN status='cancelled' THEN 1 ELSE 0 END),0),
@@ -515,7 +518,7 @@ func (gw *Gateway) handleCorte(w http.ResponseWriter, r *http.Request) {
 			COALESCE(SUM(CASE WHEN cfdi_uuid IS NOT NULL THEN 1 ELSE 0 END),0),
 			payment_method
 		FROM sales
-		WHERE DATE(created_at AT TIME ZONE 'UTC') = $1::date
+		WHERE DATE(created_at AT TIME ZONE 'America/Monterrey') = $1::date
 		  AND (tenant_id = $2::uuid OR tenant_id IS NULL)
 		GROUP BY payment_method`, fecha, tid)
 	if err != nil {
@@ -525,12 +528,12 @@ func (gw *Gateway) handleCorte(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 	type M struct {
-		Metodo string `json:"metodo"`
-		Transacciones int64 `json:"transacciones"`
-		TotalVendido float64 `json:"total_vendido"`
-		Canceladas int64 `json:"canceladas"`
-		Neto float64 `json:"neto"`
-		Timbradas int64 `json:"timbradas"`
+		Metodo        string  `json:"metodo"`
+		Transacciones int64   `json:"transacciones"`
+		TotalVendido  float64 `json:"total_vendido"`
+		Canceladas    int64   `json:"canceladas"`
+		Neto          float64 `json:"neto"`
+		Timbradas     int64   `json:"timbradas"`
 	}
 	var metodos []M
 	var totalTx, totalCanceladas, totalTimbradas int64
@@ -542,12 +545,61 @@ func (gw *Gateway) handleCorte(w http.ResponseWriter, r *http.Request) {
 		totalTx += m.Transacciones; totalVendido += m.TotalVendido
 		totalCanceladas += m.Canceladas; totalNeto += m.Neto; totalTimbradas += m.Timbradas
 	}
-	w.Header().Set("Content-Type", "application/json")
+
+	// ── Ventas por hora ──────────────────────────────────────────────────────────
+	rowsHora, _ := gw.db.Query(`
+		SELECT EXTRACT(HOUR FROM created_at AT TIME ZONE 'America/Monterrey')::int as hora,
+		       COUNT(*) as tx,
+		       COALESCE(SUM(CASE WHEN status='completed' THEN total ELSE 0 END),0) as total
+		FROM sales
+		WHERE DATE(created_at AT TIME ZONE 'America/Monterrey') = $1::date
+		  AND (tenant_id = $2::uuid OR tenant_id IS NULL)
+		GROUP BY hora ORDER BY hora ASC`, fecha, tid)
+	type HoraData struct {
+		Hora  int     `json:"hora"`
+		Tx    int64   `json:"tx"`
+		Total float64 `json:"total"`
+	}
+	var porHora []HoraData
+	if rowsHora != nil {
+		defer rowsHora.Close()
+		for rowsHora.Next() {
+			var h HoraData
+			rowsHora.Scan(&h.Hora, &h.Tx, &h.Total)
+			porHora = append(porHora, h)
+		}
+	}
+
+	// ── Top productos del día ────────────────────────────────────────────────────
+	rowsProd, _ := gw.db.Query(`
+		SELECT si.name, SUM(si.quantity) as uds, SUM(si.subtotal) as total
+		FROM sale_items si
+		JOIN sales s ON s.id = si.sale_id
+		WHERE s.status = 'completed'
+		  AND DATE(s.created_at AT TIME ZONE 'America/Monterrey') = $1::date
+		  AND (s.tenant_id = $2::uuid OR s.tenant_id IS NULL)
+		GROUP BY si.name ORDER BY total DESC LIMIT 5`, fecha, tid)
+	type ProdData struct {
+		Nombre string  `json:"nombre"`
+		Uds    int64   `json:"uds"`
+		Total  float64 `json:"total"`
+	}
+	var topProds []ProdData
+	if rowsProd != nil {
+		defer rowsProd.Close()
+		for rowsProd.Next() {
+			var p ProdData
+			rowsProd.Scan(&p.Nombre, &p.Uds, &p.Total)
+			topProds = append(topProds, p)
+		}
+	}
+
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"fecha": fecha, "total_transacciones": totalTx,
 		"total_vendido": totalVendido, "total_canceladas": totalCanceladas,
 		"total_neto": totalNeto, "total_timbradas": totalTimbradas,
-		"por_metodo": metodos, "generado_at": time.Now().Format(time.RFC3339),
+		"por_metodo": metodos, "por_hora": porHora, "top_prods": topProds,
+		"generado_at": time.Now().Format(time.RFC3339),
 	})
 }
 
@@ -1014,140 +1066,38 @@ func (gw *Gateway) getTenant(r *http.Request) (*tenantInfo, error) {
 }
 
 
-// ─── GET /api/v1/reportes ────────────────────────────────────────────────────
-// Params: periodo=semana|mes|custom  desde=YYYY-MM-DD  hasta=YYYY-MM-DD
-
 func (gw *Gateway) handleReportes(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	q := r.URL.Query()
-	periodo := q.Get("periodo")
-	desde := q.Get("desde")
-	hasta := q.Get("hasta")
-
-	now := time.Now()
-	switch periodo {
-	case "semana":
-		desde = now.AddDate(0, 0, -6).Format("2006-01-02")
-		hasta = now.Format("2006-01-02")
-	case "mes":
-		desde = now.AddDate(0, -1, 0).Format("2006-01-02")
-		hasta = now.Format("2006-01-02")
-	case "año":
-		desde = now.AddDate(-1, 0, 0).Format("2006-01-02")
-		hasta = now.Format("2006-01-02")
-	default:
-		if desde == "" { desde = now.AddDate(0, 0, -6).Format("2006-01-02") }
-		if hasta == "" { hasta = now.Format("2006-01-02") }
-	}
-
-	tid := tenantID(r)
-
-	// ── Ventas por día ──────────────────────────────────────────────────────────
-	rowsDia, err := gw.db.Query(`
-		SELECT DATE(created_at AT TIME ZONE 'America/Monterrey') as dia,
-		       COUNT(*) as transacciones,
-		       COALESCE(SUM(CASE WHEN status='completed' THEN total ELSE 0 END),0) as total,
-		       COALESCE(SUM(CASE WHEN status='cancelled' THEN 1 ELSE 0 END),0) as canceladas,
-		       COALESCE(SUM(CASE WHEN cfdi_uuid IS NOT NULL THEN 1 ELSE 0 END),0) as timbradas
-		FROM sales
-		WHERE DATE(created_at AT TIME ZONE 'America/Monterrey') BETWEEN $1::date AND $2::date
-		  AND (tenant_id = $3::uuid OR tenant_id IS NULL)
-		GROUP BY dia ORDER BY dia ASC`, desde, hasta, tid)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
-		return
-	}
-	defer rowsDia.Close()
-
-	type DiaData struct {
-		Dia           string  `json:"dia"`
-		Transacciones int64   `json:"transacciones"`
-		Total         float64 `json:"total"`
-		Canceladas    int64   `json:"canceladas"`
-		Timbradas     int64   `json:"timbradas"`
-	}
-	var porDia []DiaData
-	for rowsDia.Next() {
-		var d DiaData
-		rowsDia.Scan(&d.Dia, &d.Transacciones, &d.Total, &d.Canceladas, &d.Timbradas)
-		porDia = append(porDia, d)
-	}
-
-	// ── Top productos ────────────────────────────────────────────────────────────
-	rowsProd, err := gw.db.Query(`
-		SELECT si.name,
-		       SUM(si.quantity) as unidades,
-		       SUM(si.subtotal) as total
-		FROM sale_items si
-		JOIN sales s ON s.id = si.sale_id
-		WHERE s.status = 'completed'
-		  AND DATE(s.created_at AT TIME ZONE 'America/Monterrey') BETWEEN $1::date AND $2::date
-		  AND (s.tenant_id = $3::uuid OR s.tenant_id IS NULL)
-		GROUP BY si.name
-		ORDER BY total DESC LIMIT 10`, desde, hasta, tid)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
-		return
-	}
-	defer rowsProd.Close()
-
-	type ProdData struct {
-		Nombre   string  `json:"nombre"`
-		Unidades int64   `json:"unidades"`
-		Total    float64 `json:"total"`
-	}
-	var topProds []ProdData
-	for rowsProd.Next() {
-		var p ProdData
-		rowsProd.Scan(&p.Nombre, &p.Unidades, &p.Total)
-		topProds = append(topProds, p)
-	}
-
-	// ── Resumen métodos de pago ──────────────────────────────────────────────────
-	rowsMetodo, err := gw.db.Query(`
-		SELECT payment_method,
-		       COUNT(*) as transacciones,
-		       COALESCE(SUM(CASE WHEN status='completed' THEN total ELSE 0 END),0) as total
-		FROM sales
-		WHERE DATE(created_at AT TIME ZONE 'America/Monterrey') BETWEEN $1::date AND $2::date
-		  AND (tenant_id = $3::uuid OR tenant_id IS NULL)
-		GROUP BY payment_method`, desde, hasta, tid)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
-		return
-	}
-	defer rowsMetodo.Close()
-
-	type MetodoData struct {
-		Metodo        string  `json:"metodo"`
-		Transacciones int64   `json:"transacciones"`
-		Total         float64 `json:"total"`
-	}
-	var metodos []MetodoData
-	var grandTotal float64
-	var grandTx int64
-	for rowsMetodo.Next() {
-		var m MetodoData
-		rowsMetodo.Scan(&m.Metodo, &m.Transacciones, &m.Total)
-		metodos = append(metodos, m)
-		grandTotal += m.Total
-		grandTx += m.Transacciones
-	}
-
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"desde":      desde,
-		"hasta":      hasta,
-		"periodo":    periodo,
-		"por_dia":    porDia,
-		"top_prods":  topProds,
-		"metodos":    metodos,
-		"total":      grandTotal,
-		"transacciones": grandTx,
-	})
+    w.Header().Set("Content-Type", "application/json")
+    q := r.URL.Query()
+    periodo := q.Get("periodo")
+    desde := q.Get("desde")
+    hasta := q.Get("hasta")
+    now := time.Now()
+    switch periodo {
+    case "semana": desde = now.AddDate(0,0,-6).Format("2006-01-02"); hasta = now.Format("2006-01-02")
+    case "mes":    desde = now.AddDate(0,-1,0).Format("2006-01-02"); hasta = now.Format("2006-01-02")
+    case "año":   desde = now.AddDate(-1,0,0).Format("2006-01-02"); hasta = now.Format("2006-01-02")
+    default:       if desde=="" { desde=now.AddDate(0,0,-6).Format("2006-01-02") }; if hasta=="" { hasta=now.Format("2006-01-02") }
+    }
+    tid := tenantID(r)
+    // Ventas por día
+    rowsDia, err := gw.db.Query(`SELECT DATE(created_at AT TIME ZONE 'America/Monterrey') as dia, COUNT(*) as tx, COALESCE(SUM(CASE WHEN status='completed' THEN total ELSE 0 END),0) as total, COALESCE(SUM(CASE WHEN status='cancelled' THEN 1 ELSE 0 END),0) as canceladas, COALESCE(SUM(CASE WHEN cfdi_uuid IS NOT NULL THEN 1 ELSE 0 END),0) as timbradas FROM sales WHERE DATE(created_at AT TIME ZONE 'America/Monterrey') BETWEEN $1::date AND $2::date AND (tenant_id=$3::uuid OR tenant_id IS NULL) GROUP BY dia ORDER BY dia ASC`, desde, hasta, tid)
+    if err != nil { w.WriteHeader(500); json.NewEncoder(w).Encode(map[string]string{"error":err.Error()}); return }
+    defer rowsDia.Close()
+    type DiaData struct { Dia string `json:"dia"`; Transacciones int64 `json:"transacciones"`; Total float64 `json:"total"`; Canceladas int64 `json:"canceladas"`; Timbradas int64 `json:"timbradas"` }
+    var porDia []DiaData
+    for rowsDia.Next() { var d DiaData; rowsDia.Scan(&d.Dia,&d.Transacciones,&d.Total,&d.Canceladas,&d.Timbradas); porDia=append(porDia,d) }
+    // Top productos
+    rowsProd, _ := gw.db.Query(`SELECT si.name, SUM(si.quantity) as uds, SUM(si.subtotal) as total FROM sale_items si JOIN sales s ON s.id=si.sale_id WHERE s.status='completed' AND DATE(s.created_at AT TIME ZONE 'America/Monterrey') BETWEEN $1::date AND $2::date AND (s.tenant_id=$3::uuid OR s.tenant_id IS NULL) GROUP BY si.name ORDER BY total DESC LIMIT 10`, desde, hasta, tid)
+    type ProdData struct { Nombre string `json:"nombre"`; Unidades int64 `json:"unidades"`; Total float64 `json:"total"` }
+    var topProds []ProdData
+    if rowsProd!=nil { defer rowsProd.Close(); for rowsProd.Next() { var p ProdData; rowsProd.Scan(&p.Nombre,&p.Unidades,&p.Total); topProds=append(topProds,p) } }
+    // Métodos de pago
+    rowsMet, _ := gw.db.Query(`SELECT payment_method, COUNT(*) as tx, COALESCE(SUM(CASE WHEN status='completed' THEN total ELSE 0 END),0) as total FROM sales WHERE DATE(created_at AT TIME ZONE 'America/Monterrey') BETWEEN $1::date AND $2::date AND (tenant_id=$3::uuid OR tenant_id IS NULL) GROUP BY payment_method`, desde, hasta, tid)
+    type MetData struct { Metodo string `json:"metodo"`; Transacciones int64 `json:"transacciones"`; Total float64 `json:"total"` }
+    var metodos []MetData; var grandTotal float64; var grandTx int64
+    if rowsMet!=nil { defer rowsMet.Close(); for rowsMet.Next() { var m MetData; rowsMet.Scan(&m.Metodo,&m.Transacciones,&m.Total); metodos=append(metodos,m); grandTotal+=m.Total; grandTx+=m.Transacciones } }
+    json.NewEncoder(w).Encode(map[string]interface{}{"desde":desde,"hasta":hasta,"por_dia":porDia,"top_prods":topProds,"metodos":metodos,"total":grandTotal,"transacciones":grandTx})
 }
 
 func limitSlice(s []map[string]string, n int) []map[string]string {
