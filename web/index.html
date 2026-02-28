@@ -1234,7 +1234,7 @@ function renderCart() {
   document.getElementById('cart-total').textContent = '$'+total.toFixed(2);
   document.getElementById('cart-count').textContent = cart.reduce((s,i)=>s+i.qty,0);
   if (!cart.length) {
-    el.innerHTML = ''; el.appendChild(emptyEl); emptyEl.style.display='flex';
+    el.innerHTML = '<div class="cart-empty-state" id="cart-empty" style="display:flex"><div class="cart-empty-icon">🛒</div><div class="cart-empty-txt">Ticket vacío</div><div class="cart-empty-sub">Toca un producto para agregar</div></div>';
     document.getElementById('cobrar-btn').disabled = true;
     return;
   }
@@ -1279,7 +1279,19 @@ function cobrar() {
   const total = cart.reduce((s,i)=>s+i.subtotal,0);
   const factura = document.getElementById('factura-check').checked;
   document.getElementById('rfc-row').style.display = factura ? 'block' : 'none';
-  if (!factura) document.getElementById('sale-rfc').value = '';
+  if (!factura) {
+    document.getElementById('sale-rfc').value = '';
+  } else {
+    // Autocompletar RFC si el cliente ya tiene uno registrado
+    const savedRfc = loyaltyData?.rfc || loyaltyData?.account?.rfc || '';
+    if (savedRfc) {
+      document.getElementById('sale-rfc').value = savedRfc;
+      document.getElementById('sale-rfc').style.borderColor = 'var(--green)';
+    } else {
+      document.getElementById('sale-rfc').value = '';
+      document.getElementById('sale-rfc').style.borderColor = '';
+    }
+  }
   const payLabels = {cash:'Efectivo',card:'Tarjeta',transfer:'Transferencia'};
   document.getElementById('sale-modal-sub').textContent = payLabels[payment]||payment;
   document.getElementById('sale-breakdown').innerHTML = cart.map(i=>
@@ -1308,6 +1320,16 @@ async function confirmSale() {
     if (!res.ok) throw new Error(d.error||'Error al procesar');
     closeSaleModal();
     toast('✅ Venta · $'+Number(body.total).toLocaleString('es-MX',{minimumFractionDigits:2}), 'success');
+    // Si hay RFC nuevo y teléfono, guardarlo en la cuenta de lealtad
+    const phoneVal = document.getElementById('customer-phone').value.replace(/\D/g,'');
+    const rfcVal = (document.getElementById('sale-rfc').value||'').trim().toUpperCase();
+    if (phoneVal && rfcVal && rfcVal !== 'XAXX010101000' && (!loyaltyData?.rfc)) {
+      apiFetch(API+'/loyalty/rfc', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({phone: phoneVal, rfc: rfcVal})
+      }).catch(()=>{});
+    }
     if (factura) {
       setTimeout(()=>toast('🧾 Enviando al SAT...','info'),500);
       // Poll: verificar UUID cada 5s hasta 60s
@@ -1322,7 +1344,7 @@ async function confirmSale() {
           const found = sales.find(s=>s.sale_id===saleId||s.id===saleId);
           if (found && found.cfdi_uuid) {
             clearInterval(poll);
-            toast('🧾 CFDI timbrado · '+found.cfdi_uuid.slice(0,8)+'...','success');
+            toast('CFDI timbrado ' + String(found.cfdi_uuid||'').slice(0,8) + '...', 'success');
             loadDashboard();
           }
         } catch(e){}
@@ -1627,11 +1649,22 @@ function toast(msg,type='info') {
   const icons={success:'✓',error:'✕',info:'i'};
   const el=document.createElement('div');
   el.className='toast '+type;
-  el.innerHTML=`<span class="toast-icon">${icons[type]||'i'}</span><span class="toast-msg">${msg}</span>`;
-  document.getElementById('toasts').appendChild(el);
+  const icon=document.createElement('span');
+  icon.className='toast-icon';
+  icon.textContent=icons[type]||'i';
+  const txt=document.createElement('span');
+  txt.className='toast-msg';
+  txt.textContent=String(msg||'');
+  el.appendChild(icon);
+  el.appendChild(txt);
+  const container=document.getElementById('toasts'); if(!container) return; container.appendChild(el);
   setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300);},4000);
 }
 </script>
 </body>
 </html>
+
+
+
+
 

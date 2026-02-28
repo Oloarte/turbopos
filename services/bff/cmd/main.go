@@ -1,4 +1,4 @@
-// TurboPOS v10.1 - BFF (Backend For Frontend)
+﻿// TurboPOS v10.1 - BFF (Backend For Frontend)
 package main
 
 import (
@@ -80,6 +80,7 @@ func main() {
 	mux.HandleFunc("/api/v1/corte",           gw.handleCorte)
 	mux.HandleFunc("/api/v1/loyalty",         gw.handleLoyalty)
 	mux.HandleFunc("/api/v1/loyalty/redeem",  gw.handleLoyaltyRedeem)
+    mux.HandleFunc("/api/v1/loyalty/rfc",     gw.handleLoyaltyRfc)
 	mux.HandleFunc("/api/v1/migrate/preview", gw.handleMigratePreview)
 	mux.HandleFunc("/api/v1/migrate",         gw.handleMigrate)
 	mux.HandleFunc("/api/v1/tenants",         gw.handleTenants)
@@ -177,12 +178,12 @@ func (gw *Gateway) handleCobrar(w http.ResponseWriter, r *http.Request) {
 	}
 	// Auto-timbrado: si viene ?factura=1 en la URL, timbrar como público general en background
 	if r.URL.Query().Get("factura") == "1" || r.URL.Query().Get("rfc") != "" {
-		rfcTimbrar := "XAXX010101000" // público general — siempre válido
-		go func(saleID string, total float64, rfc string) {
+		rfcTimbrar := r.URL.Query().Get("rfc"); if rfcTimbrar == "" { rfcTimbrar = "XAXX010101000" }
+            go func(saleID string, total float64, rfc string, cp string) {
 			ctxT, cancelT := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancelT()
 			tRes, err := gw.cfdiClient.Timbrar(ctxT, &pb_cfdi.FacturaRequest{
-				VentaId: saleID, Total: total, Rfc: rfc,
+                VentaId: saleID, Total: total, Rfc: rfc, CodigoPostalReceptor: cp,
 			})
 			if err != nil {
 				log.Printf("[BFF] Auto-timbrado error sale=%s: %v", saleID, err)
@@ -191,7 +192,7 @@ func (gw *Gateway) handleCobrar(w http.ResponseWriter, r *http.Request) {
 			gw.db.Exec(`UPDATE sales SET cfdi_uuid=$1, cfdi_status=$2 WHERE id=$3::uuid`,
 				tRes.GetUuid(), "timbrado", saleID)
 			log.Printf("[BFF] Auto-timbrado OK sale=%s uuid=%s", saleID, tRes.GetUuid())
-		}(res.GetSaleId(), req.Total, rfcTimbrar)
+            }(res.GetSaleId(), req.Total, rfcTimbrar, r.URL.Query().Get("cp"))
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
@@ -235,12 +236,40 @@ func (gw *Gateway) handleLoyalty(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"account": map[string]interface{}{
-			"phone": acc.GetPhone(), "customer_name": acc.GetName(),
+			"phone": acc.GetPhone(), "customer_name": acc.GetName(), "rfc": acc.GetRfc(),
 			"points": acc.GetPoints(), "tier": acc.GetTier(),
 			"total_spent": acc.GetTotalSpent(),
 		},
 		"history": history,
 	})
+}
+
+func (gw *Gateway) handleLoyaltyRfc(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodPost { w.WriteHeader(http.StatusMethodNotAllowed); return }
+    var req struct {
+        Phone string `json:"phone"`
+        RFC   string `json:"rfc"`
+    }
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        w.WriteHeader(http.StatusBadRequest); return
+    }
+    if req.Phone == "" || req.RFC == "" {
+        w.WriteHeader(http.StatusBadRequest)
+        json.NewEncoder(w).Encode(map[string]string{"error": "phone y rfc requeridos"})
+        return
+    }
+    req.RFC = strings.ToUpper(strings.TrimSpace(req.RFC))
+    _, err := gw.db.Exec(
+        `UPDATE loyalty_accounts SET rfc=$1, updated_at=now() WHERE phone=$2`,
+        req.RFC, req.Phone,
+    )
+    if err != nil {
+        w.WriteHeader(http.StatusInternalServerError)
+        json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+        return
+    }
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]string{"status": "ok", "rfc": req.RFC})
 }
 
 func (gw *Gateway) handleLoyaltyRedeem(w http.ResponseWriter, r *http.Request) {
@@ -412,6 +441,7 @@ func (gw *Gateway) handleTimbrar(w http.ResponseWriter, r *http.Request) {
 		SaleID string  `json:"sale_id"`
 		RFC    string  `json:"rfc"`
 		Total  float64 `json:"total"`
+			CP    string  `json:"cp"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -422,7 +452,7 @@ func (gw *Gateway) handleTimbrar(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	res, err := gw.cfdiClient.Timbrar(ctx, &pb_cfdi.FacturaRequest{
-		VentaId: req.SaleID, Total: req.Total, Rfc: req.RFC,
+            VentaId: req.SaleID, Total: req.Total, Rfc: req.RFC, CodigoPostalReceptor: req.CP,
 	})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -1124,3 +1154,5 @@ func parseFloat(s string) float64 {
 	v, _ := strconv.ParseFloat(s, 64)
 	return v
 }
+
+

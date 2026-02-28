@@ -1,4 +1,4 @@
-package xmlgen
+﻿package xmlgen
 
 import (
 	"crypto"
@@ -23,6 +23,7 @@ type SaleData struct {
 	Total           float64
 	FormaPago       string
 	LugarExpedicion string
+	CodigoPostalReceptor string
 }
 
 type SaleItem struct {
@@ -148,6 +149,9 @@ func GenerarXML(data SaleData, certBase64, noCert string) (string, error) {
 	lugar := data.LugarExpedicion
 	if lugar == "" { lugar = "64000" }
 
+    cpReceptor := data.CodigoPostalReceptor
+    if cpReceptor == "" { cpReceptor = lugar }
+
 	var subtotal float64
 	for _, item := range data.Items { subtotal += item.Subtotal }
 	baseIVA := subtotal / 1.16
@@ -196,7 +200,7 @@ func GenerarXML(data SaleData, certBase64, noCert string) (string, error) {
 		infoGlobalXML = ""
 		receptorXML = fmt.Sprintf(
 			`  <cfdi:Receptor Rfc="%s" Nombre="%s" DomicilioFiscalReceptor="%s" RegimenFiscalReceptor="601" UsoCFDI="G03"/>`,
-			rfcReceptor, escapeXML(nombreReceptor), lugar)
+			rfcReceptor, escapeXML(nombreReceptor), cpReceptor)
 	}
 
 	// Construir XML
@@ -372,3 +376,4 @@ func escapeXML(s string) string {
 	s = strings.ReplaceAll(s, `"`, "&quot;")
 	return s
 }
+

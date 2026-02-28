@@ -1,4 +1,4 @@
-package main
+﻿package main
 
 import (
 	"context"
@@ -39,16 +39,35 @@ func NewLoyaltyServer(db *sql.DB) *LoyaltyServer {
 
 // GetAccount obtiene o crea una cuenta de lealtad por teléfono
 func (s *LoyaltyServer) GetAccount(ctx context.Context, req *pb.GetAccountRequest) (*pb.AccountResponse, error) {
-	if req.Phone == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "phone requerido")
-	}
+    if req.Phone == "" {
+        return nil, status.Errorf(codes.InvalidArgument, "phone requerido")
+    }
 
-	account, err := s.findOrCreateAccount(ctx, req.Phone, "", "")
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "buscar cuenta: %v", err)
-	}
+    var id, name, tier, rfc string
+    var points int32
+    var totalSpent float64
 
-	return account, nil
+    err := s.db.QueryRowContext(ctx, `
+        SELECT id, COALESCE(name,''), points, total_spent, tier, COALESCE(rfc,'')
+        FROM loyalty_accounts WHERE phone = $1
+    `, req.Phone).Scan(&id, &name, &points, &totalSpent, &tier, &rfc)
+
+    if err == sql.ErrNoRows {
+        return nil, status.Errorf(codes.NotFound, "cliente no encontrado: %s", req.Phone)
+    }
+    if err != nil {
+        return nil, status.Errorf(codes.Internal, "buscar cuenta: %v", err)
+    }
+
+    return &pb.AccountResponse{
+        AccountId:  id,
+        Phone:      req.Phone,
+        Name:       name,
+        Points:     points,
+        TotalSpent: totalSpent,
+        Tier:       tier,
+        Rfc:        rfc,
+    }, nil
 }
 
 // EarnPoints agrega puntos por una venta
@@ -248,7 +267,7 @@ func (s *LoyaltyServer) GetHistory(ctx context.Context, req *pb.GetHistoryReques
 }
 
 func (s *LoyaltyServer) findOrCreateAccount(ctx context.Context, phone, name, rfc string) (*pb.AccountResponse, error) {
-	var id, accName, tier string
+    var id, accName, tier, accRfc string
 	var points int32
 	var totalSpent float64
 
@@ -256,8 +275,8 @@ func (s *LoyaltyServer) findOrCreateAccount(ctx context.Context, phone, name, rf
 		INSERT INTO loyalty_accounts (phone, name, rfc)
 		VALUES ($1, $2, $3)
 		ON CONFLICT (phone) DO UPDATE SET updated_at = NOW()
-		RETURNING id, COALESCE(name,''), points, total_spent, tier
-	`, phone, name, rfc).Scan(&id, &accName, &points, &totalSpent, &tier)
+        RETURNING id, COALESCE(name,''), points, total_spent, tier, COALESCE(rfc,'')
+    `, phone, name, rfc).Scan(&id, &accName, &points, &totalSpent, &tier, &accRfc)
 	if err != nil {
 		return nil, err
 	}
@@ -268,7 +287,8 @@ func (s *LoyaltyServer) findOrCreateAccount(ctx context.Context, phone, name, rf
 		Name:       accName,
 		Points:     points,
 		TotalSpent: totalSpent,
-		Tier:       tier,
+        Tier:       tier,
+        Rfc:        accRfc,
 	}, nil
 }
 
@@ -318,3 +338,5 @@ func main() {
 		log.Fatalf("serve: %v", err)
 	}
 }
+
+

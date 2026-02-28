@@ -1,4 +1,4 @@
-package main
+﻿package main
 
 import (
 	"encoding/json"
@@ -119,7 +119,7 @@ func (s *CFDIServer) Timbrar(ctx context.Context, req *pb.FacturaRequest) (*pb.F
 	xmlStr, err := xmlgen.GenerarXML(xmlgen.SaleData{
 		SaleID: req.VentaId, Fecha: time.Now(), RFC: req.Rfc,
 		Items: items, Total: float64(req.Total),
-		FormaPago: "01", LugarExpedicion: "64000",
+        FormaPago: "01", LugarExpedicion: "64000", CodigoPostalReceptor: req.GetCodigoPostalReceptor(),
 	}, s.certBase64, NoCert)
 	if err != nil {
 		s.mu.Lock(); s.FailedRequests++; s.mu.Unlock()

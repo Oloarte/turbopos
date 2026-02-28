@@ -1,4 +1,4 @@
-syntax = "proto3";
+﻿syntax = "proto3";
 package cfdi.v1;
 option go_package = "github.com/turbopos/turbopos/gen/go/proto/cfdi/v1;cfdiv1";
 
@@ -8,12 +8,13 @@ service CFDIService {
 }
 
 message FacturaRequest {
-  string venta_id = 1;
-  double total    = 2;
-  string rfc      = 3;
-  int32  pac_id   = 4;
-  int64  timestamp = 5;
-  string payload  = 6;
+  string venta_id                  = 1;
+  double total                     = 2;
+  string rfc                       = 3;
+  int32  pac_id                    = 4;
+  int64  timestamp                 = 5;
+  string payload                   = 6;
+  string codigo_postal_receptor    = 7;
 }
 
 message FacturaResponse {
@@ -25,9 +26,9 @@ message FacturaResponse {
 }
 
 message CancelRequest {
-  string uuid      = 1;
-  string rfc       = 2;
-  string motivo    = 3;
+  string uuid           = 1;
+  string rfc            = 2;
+  string motivo         = 3;
   string uuid_reemplazo = 4;
 }
 
