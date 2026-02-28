@@ -39,6 +39,7 @@ message AccountResponse {
   double total_spent  = 5;
   string tier         = 6;
   string rfc          = 7;
+  string cp           = 8;
 }
 
 message RedeemResponse {
@@ -61,4 +62,6 @@ message HistoryResponse {
   int32              points       = 2;
   repeated Transaction transactions = 3;
 }
+
+
 

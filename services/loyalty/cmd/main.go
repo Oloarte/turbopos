@@ -43,14 +43,14 @@ func (s *LoyaltyServer) GetAccount(ctx context.Context, req *pb.GetAccountReques
         return nil, status.Errorf(codes.InvalidArgument, "phone requerido")
     }
 
-    var id, name, tier, rfc string
+    var id, name, tier, rfc, cp string
     var points int32
     var totalSpent float64
 
     err := s.db.QueryRowContext(ctx, `
-        SELECT id, COALESCE(name,''), points, total_spent, tier, COALESCE(rfc,'')
+        SELECT id, COALESCE(name,''), points, total_spent, tier, COALESCE(rfc,''), COALESCE(cp,'')
         FROM loyalty_accounts WHERE phone = $1
-    `, req.Phone).Scan(&id, &name, &points, &totalSpent, &tier, &rfc)
+    `, req.Phone).Scan(&id, &name, &points, &totalSpent, &tier, &rfc, &cp)
 
     if err == sql.ErrNoRows {
         return nil, status.Errorf(codes.NotFound, "cliente no encontrado: %s", req.Phone)
@@ -67,6 +67,7 @@ func (s *LoyaltyServer) GetAccount(ctx context.Context, req *pb.GetAccountReques
         TotalSpent: totalSpent,
         Tier:       tier,
         Rfc:        rfc,
+        Cp:         cp,
     }, nil
 }
 
@@ -267,7 +268,7 @@ func (s *LoyaltyServer) GetHistory(ctx context.Context, req *pb.GetHistoryReques
 }
 
 func (s *LoyaltyServer) findOrCreateAccount(ctx context.Context, phone, name, rfc string) (*pb.AccountResponse, error) {
-    var id, accName, tier, accRfc string
+    var id, accName, tier, accRfc, accCp string
 	var points int32
 	var totalSpent float64
 
@@ -275,8 +276,8 @@ func (s *LoyaltyServer) findOrCreateAccount(ctx context.Context, phone, name, rf
 		INSERT INTO loyalty_accounts (phone, name, rfc)
 		VALUES ($1, $2, $3)
 		ON CONFLICT (phone) DO UPDATE SET updated_at = NOW()
-        RETURNING id, COALESCE(name,''), points, total_spent, tier, COALESCE(rfc,'')
-    `, phone, name, rfc).Scan(&id, &accName, &points, &totalSpent, &tier, &accRfc)
+        RETURNING id, COALESCE(name,''), points, total_spent, tier, COALESCE(rfc,''), COALESCE(cp,'')
+    `, phone, name, rfc).Scan(&id, &accName, &points, &totalSpent, &tier, &accRfc, &accCp)
 	if err != nil {
 		return nil, err
 	}
@@ -289,6 +290,7 @@ func (s *LoyaltyServer) findOrCreateAccount(ctx context.Context, phone, name, rf
 		TotalSpent: totalSpent,
         Tier:       tier,
         Rfc:        accRfc,
+        Cp:         accCp,
 	}, nil
 }
 
