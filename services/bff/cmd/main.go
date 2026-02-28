@@ -81,41 +81,13 @@ func main() {
 	mux.HandleFunc("/api/v1/loyalty",         gw.handleLoyalty)
 	mux.HandleFunc("/api/v1/loyalty/redeem",  gw.handleLoyaltyRedeem)
     mux.HandleFunc("/api/v1/loyalty/rfc",     gw.handleLoyaltyRfc)
+	mux.HandleFunc("/api/v1/loyalty/cp",      gw.handleLoyaltyCp)
 	mux.HandleFunc("/api/v1/migrate/preview", gw.handleMigratePreview)
 	mux.HandleFunc("/api/v1/migrate",         gw.handleMigrate)
-	mux.HandleFunc("/api/v1/tenants",         gw.handleTenants)
-	mux.HandleFunc("/api/v1/tenants/",        func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasSuffix(r.URL.Path, "/cert") {
-			gw.handleTenantCert(w, r)
-		} else {
-			w.WriteHeader(http.StatusNotFound)
-		}
-	})
-	// Frontend estático — servir desde ./web/index.html si existe, o desde embebido
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/" && r.URL.Path != "/index.html" {
-			http.NotFound(w, r)
-			return
-		}
-		indexPath := getenv("FRONTEND_PATH", "web/index.html")
-		if data, err := os.ReadFile(indexPath); err == nil {
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			w.Write(data)
-		} else {
-			http.ServeFile(w, r, indexPath)
-		}
-	})
-
-	cors := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Tenant-ID, Authorization")
-		if r.Method == "OPTIONS" { return }
-		jwtMiddleware(mux).ServeHTTP(w, r)
-	})
-
+	mux.HandleFunc("/api/v1/reportes",        gw.handleReportes)
+	mux.Handle("/", http.FileServer(http.Dir("web")))
 	log.Println("[BFF] Escuchando en :8080")
-	log.Fatal(http.ListenAndServe(":8080", cors))
+	log.Fatal(http.ListenAndServe(":8080", mux))
 }
 
 func (gw *Gateway) handleCobrar(w http.ResponseWriter, r *http.Request) {
@@ -236,12 +208,36 @@ func (gw *Gateway) handleLoyalty(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"account": map[string]interface{}{
-			"phone": acc.GetPhone(), "customer_name": acc.GetName(), "rfc": acc.GetRfc(),
+                "phone": acc.GetPhone(), "customer_name": acc.GetName(), "rfc": acc.GetRfc(), "cp": acc.GetCp(),
 			"points": acc.GetPoints(), "tier": acc.GetTier(),
 			"total_spent": acc.GetTotalSpent(),
 		},
 		"history": history,
 	})
+}
+
+func (gw *Gateway) handleLoyaltyCp(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodPost { w.WriteHeader(http.StatusMethodNotAllowed); return }
+    var req struct {
+        Phone string `json:"phone"`
+        CP    string `json:"cp"`
+    }
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        w.WriteHeader(http.StatusBadRequest); return
+    }
+    if req.Phone == "" || req.CP == "" {
+        w.WriteHeader(http.StatusBadRequest)
+        json.NewEncoder(w).Encode(map[string]string{"error": "phone y cp requeridos"})
+        return
+    }
+    _, err := gw.db.Exec(`UPDATE loyalty_accounts SET cp=$1, updated_at=now() WHERE phone=$2`, req.CP, req.Phone)
+    if err != nil {
+        w.WriteHeader(http.StatusInternalServerError)
+        json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+        return
+    }
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]string{"status": "ok", "cp": req.CP})
 }
 
 func (gw *Gateway) handleLoyaltyRfc(w http.ResponseWriter, r *http.Request) {
@@ -1017,131 +1013,141 @@ func (gw *Gateway) getTenant(r *http.Request) (*tenantInfo, error) {
 	return t, nil
 }
 
-// ─── GET /api/v1/tenants ─────────────────────────────────────────────────────
-func (gw *Gateway) handleTenants(w http.ResponseWriter, r *http.Request) {
+
+// ─── GET /api/v1/reportes ────────────────────────────────────────────────────
+// Params: periodo=semana|mes|custom  desde=YYYY-MM-DD  hasta=YYYY-MM-DD
+
+func (gw *Gateway) handleReportes(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	switch r.Method {
-	case http.MethodGet:
-		rows, err := gw.db.Query(`
-			SELECT id, nombre, rfc, razon_social, regimen_fiscal, codigo_postal,
-			       plan, active, created_at,
-			       (cert_der_b64 != '' AND cert_der_b64 IS NOT NULL) as tiene_cert
-			FROM tenants ORDER BY created_at`)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
-			return
-		}
-		defer rows.Close()
-		var tenants []map[string]interface{}
-		for rows.Next() {
-			var id, nombre, rfc, razon, regimen, cp, plan, createdAt string
-			var active, tieneCert bool
-			rows.Scan(&id, &nombre, &rfc, &razon, &regimen, &cp, &plan, &active, &createdAt, &tieneCert)
-			tenants = append(tenants, map[string]interface{}{
-				"id": id, "nombre": nombre, "rfc": rfc, "razon_social": razon,
-				"regimen_fiscal": regimen, "codigo_postal": cp, "plan": plan,
-				"active": active, "created_at": createdAt, "tiene_cert": tieneCert,
-			})
-		}
-		if tenants == nil { tenants = []map[string]interface{}{} }
-		json.NewEncoder(w).Encode(tenants)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	q := r.URL.Query()
+	periodo := q.Get("periodo")
+	desde := q.Get("desde")
+	hasta := q.Get("hasta")
 
-	case http.MethodPost:
-		var req struct {
-			Nombre        string `json:"nombre"`
-			RFC           string `json:"rfc"`
-			RazonSocial   string `json:"razon_social"`
-			RegimenFiscal string `json:"regimen_fiscal"`
-			CodigoPostal  string `json:"codigo_postal"`
-			FinkokUser    string `json:"finkok_user"`
-			FinkokPass    string `json:"finkok_pass"`
-			CertDERb64    string `json:"cert_der_b64"`
-			KeyPEMb64     string `json:"key_pem_b64"`
-			KeyPassword   string `json:"key_password"`
-			Plan          string `json:"plan"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error": "JSON invalido"})
-			return
-		}
-		if req.RFC == "" || req.RazonSocial == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error": "rfc y razon_social requeridos"})
-			return
-		}
-		if req.RegimenFiscal == "" { req.RegimenFiscal = "601" }
-		if req.CodigoPostal == "" { req.CodigoPostal = "06600" }
-		if req.Plan == "" { req.Plan = "business" }
-		if req.Nombre == "" { req.Nombre = req.RazonSocial }
-
-		var id string
-		err := gw.db.QueryRow(`
-			INSERT INTO tenants (nombre, rfc, razon_social, regimen_fiscal, codigo_postal,
-			                     finkok_user, finkok_pass, cert_der_b64, key_pem_b64, key_password, plan)
-			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id`,
-			req.Nombre, strings.ToUpper(req.RFC), req.RazonSocial, req.RegimenFiscal, req.CodigoPostal,
-			req.FinkokUser, req.FinkokPass, req.CertDERb64, req.KeyPEMb64, req.KeyPassword, req.Plan,
-		).Scan(&id)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
-			return
-		}
-		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(map[string]string{"id": id, "rfc": req.RFC, "status": "creado"})
-
+	now := time.Now()
+	switch periodo {
+	case "semana":
+		desde = now.AddDate(0, 0, -6).Format("2006-01-02")
+		hasta = now.Format("2006-01-02")
+	case "mes":
+		desde = now.AddDate(0, -1, 0).Format("2006-01-02")
+		hasta = now.Format("2006-01-02")
+	case "año":
+		desde = now.AddDate(-1, 0, 0).Format("2006-01-02")
+		hasta = now.Format("2006-01-02")
 	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
-	}
-}
-
-// ─── PUT /api/v1/tenants/{id}/cert ───────────────────────────────────────────
-func (gw *Gateway) handleTenantCert(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPut {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-
-	// Extraer tenant ID del path: /api/v1/tenants/UUID/cert
-	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/tenants/"), "/")
-	if len(parts) < 1 || parts[0] == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "tenant id requerido en path"})
-		return
-	}
-	tid := parts[0]
-
-	var req struct {
-		CertDERb64  string `json:"cert_der_b64"`
-		KeyPEMb64   string `json:"key_pem_b64"`
-		KeyPassword string `json:"key_password"`
-		FinkokUser  string `json:"finkok_user"`
-		FinkokPass  string `json:"finkok_pass"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "JSON invalido"})
-		return
+		if desde == "" { desde = now.AddDate(0, 0, -6).Format("2006-01-02") }
+		if hasta == "" { hasta = now.Format("2006-01-02") }
 	}
 
-	_, err := gw.db.Exec(`
-		UPDATE tenants SET
-		    cert_der_b64=$1, key_pem_b64=$2, key_password=$3,
-		    finkok_user=COALESCE(NULLIF($4,''), finkok_user),
-		    finkok_pass=COALESCE(NULLIF($5,''), finkok_pass),
-		    updated_at=NOW()
-		WHERE id=$6`,
-		req.CertDERb64, req.KeyPEMb64, req.KeyPassword,
-		req.FinkokUser, req.FinkokPass, tid)
+	tid := tenantID(r)
+
+	// ── Ventas por día ──────────────────────────────────────────────────────────
+	rowsDia, err := gw.db.Query(`
+		SELECT DATE(created_at AT TIME ZONE 'America/Monterrey') as dia,
+		       COUNT(*) as transacciones,
+		       COALESCE(SUM(CASE WHEN status='completed' THEN total ELSE 0 END),0) as total,
+		       COALESCE(SUM(CASE WHEN status='cancelled' THEN 1 ELSE 0 END),0) as canceladas,
+		       COALESCE(SUM(CASE WHEN cfdi_uuid IS NOT NULL THEN 1 ELSE 0 END),0) as timbradas
+		FROM sales
+		WHERE DATE(created_at AT TIME ZONE 'America/Monterrey') BETWEEN $1::date AND $2::date
+		  AND (tenant_id = $3::uuid OR tenant_id IS NULL)
+		GROUP BY dia ORDER BY dia ASC`, desde, hasta, tid)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
-	json.NewEncoder(w).Encode(map[string]string{"status": "cert actualizado", "tenant_id": tid})
+	defer rowsDia.Close()
+
+	type DiaData struct {
+		Dia           string  `json:"dia"`
+		Transacciones int64   `json:"transacciones"`
+		Total         float64 `json:"total"`
+		Canceladas    int64   `json:"canceladas"`
+		Timbradas     int64   `json:"timbradas"`
+	}
+	var porDia []DiaData
+	for rowsDia.Next() {
+		var d DiaData
+		rowsDia.Scan(&d.Dia, &d.Transacciones, &d.Total, &d.Canceladas, &d.Timbradas)
+		porDia = append(porDia, d)
+	}
+
+	// ── Top productos ────────────────────────────────────────────────────────────
+	rowsProd, err := gw.db.Query(`
+		SELECT si.name,
+		       SUM(si.quantity) as unidades,
+		       SUM(si.subtotal) as total
+		FROM sale_items si
+		JOIN sales s ON s.id = si.sale_id
+		WHERE s.status = 'completed'
+		  AND DATE(s.created_at AT TIME ZONE 'America/Monterrey') BETWEEN $1::date AND $2::date
+		  AND (s.tenant_id = $3::uuid OR s.tenant_id IS NULL)
+		GROUP BY si.name
+		ORDER BY total DESC LIMIT 10`, desde, hasta, tid)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	defer rowsProd.Close()
+
+	type ProdData struct {
+		Nombre   string  `json:"nombre"`
+		Unidades int64   `json:"unidades"`
+		Total    float64 `json:"total"`
+	}
+	var topProds []ProdData
+	for rowsProd.Next() {
+		var p ProdData
+		rowsProd.Scan(&p.Nombre, &p.Unidades, &p.Total)
+		topProds = append(topProds, p)
+	}
+
+	// ── Resumen métodos de pago ──────────────────────────────────────────────────
+	rowsMetodo, err := gw.db.Query(`
+		SELECT payment_method,
+		       COUNT(*) as transacciones,
+		       COALESCE(SUM(CASE WHEN status='completed' THEN total ELSE 0 END),0) as total
+		FROM sales
+		WHERE DATE(created_at AT TIME ZONE 'America/Monterrey') BETWEEN $1::date AND $2::date
+		  AND (tenant_id = $3::uuid OR tenant_id IS NULL)
+		GROUP BY payment_method`, desde, hasta, tid)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	defer rowsMetodo.Close()
+
+	type MetodoData struct {
+		Metodo        string  `json:"metodo"`
+		Transacciones int64   `json:"transacciones"`
+		Total         float64 `json:"total"`
+	}
+	var metodos []MetodoData
+	var grandTotal float64
+	var grandTx int64
+	for rowsMetodo.Next() {
+		var m MetodoData
+		rowsMetodo.Scan(&m.Metodo, &m.Transacciones, &m.Total)
+		metodos = append(metodos, m)
+		grandTotal += m.Total
+		grandTx += m.Transacciones
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"desde":      desde,
+		"hasta":      hasta,
+		"periodo":    periodo,
+		"por_dia":    porDia,
+		"top_prods":  topProds,
+		"metodos":    metodos,
+		"total":      grandTotal,
+		"transacciones": grandTx,
+	})
 }
 
 func limitSlice(s []map[string]string, n int) []map[string]string {
@@ -1154,5 +1160,7 @@ func parseFloat(s string) float64 {
 	v, _ := strconv.ParseFloat(s, 64)
 	return v
 }
+
+
 
 
