@@ -1,4 +1,4 @@
-syntax = "proto3";
+﻿syntax = "proto3";
 package loyalty.v1;
 option go_package = "github.com/turbopos/turbopos/gen/go/proto/loyalty/v1;loyaltyv1";
 
@@ -38,6 +38,7 @@ message AccountResponse {
   int32  points       = 4;
   double total_spent  = 5;
   string tier         = 6;
+  string rfc          = 7;
 }
 
 message RedeemResponse {
@@ -60,3 +61,4 @@ message HistoryResponse {
   int32              points       = 2;
   repeated Transaction transactions = 3;
 }
+
