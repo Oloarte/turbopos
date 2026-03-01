@@ -85,6 +85,8 @@ func main() {
 	mux.HandleFunc("/api/v1/migrate/preview", gw.handleMigratePreview)
 	mux.HandleFunc("/api/v1/migrate",         gw.handleMigrate)
 	mux.HandleFunc("/api/v1/reportes", gw.handleReportes)
+    mux.HandleFunc("/api/v1/csd",        gw.handleCSDUpload)
+    mux.HandleFunc("/api/v1/csd/info",   gw.handleCSDInfo)
 	mux.Handle("/", http.FileServer(http.Dir("web")))
 	log.Println("[BFF] Escuchando en :8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
@@ -1198,5 +1200,6 @@ func (gw *Gateway) loadTenantCSD(tenantID string) (certB64 string, keyBytes []by
         Scan(&rfc, &certB64, &keyBytes, &keyPass)
     return certB64, keyBytes, keyPass, rfc, err == nil
 }
+
 
 

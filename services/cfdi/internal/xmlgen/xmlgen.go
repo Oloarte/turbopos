@@ -8,10 +8,11 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
-	"encoding/xml"
-	"fmt"
-	"strings"
-	"time"
+    pkcs8lib "github.com/youmark/pkcs8"
+    "encoding/xml"
+    "fmt"
+    "strings"
+    "time"
 )
 
 type SaleData struct {
@@ -261,27 +262,31 @@ func CadenaOriginalDebug(xmlStr string) (string, error) {
 }
 
 func parsePrivateKey(keyBytes []byte, password string) (*rsa.PrivateKey, error) {
-	block, _ := pem.Decode(keyBytes)
-	if block == nil {
-		return nil, fmt.Errorf("no es PEM valido")
-	}
-	var derBytes []byte
-	if x509.IsEncryptedPEMBlock(block) {
-		var err error
-		derBytes, err = x509.DecryptPEMBlock(block, []byte(password))
-		if err != nil {
-			return nil, fmt.Errorf("descifrar PEM: %w", err)
-		}
-	} else {
-		derBytes = block.Bytes
-	}
-	key, err := x509.ParsePKCS8PrivateKey(derBytes)
-	if err == nil {
-		rsaKey, ok := key.(*rsa.PrivateKey)
-		if !ok { return nil, fmt.Errorf("la llave no es RSA") }
-		return rsaKey, nil
-	}
-	return x509.ParsePKCS1PrivateKey(derBytes)
+    // Intentar PEM primero
+    block, _ := pem.Decode(keyBytes)
+    if block != nil {
+        var derBytes []byte
+        if x509.IsEncryptedPEMBlock(block) {
+            var err error
+            derBytes, err = x509.DecryptPEMBlock(block, []byte(password))
+            if err != nil { return nil, fmt.Errorf("descifrar PEM: %w", err) }
+        } else {
+            derBytes = block.Bytes
+        }
+        key, err := x509.ParsePKCS8PrivateKey(derBytes)
+        if err == nil {
+            rsaKey, ok := key.(*rsa.PrivateKey)
+            if !ok { return nil, fmt.Errorf("la llave no es RSA") }
+            return rsaKey, nil
+        }
+        return x509.ParsePKCS1PrivateKey(derBytes)
+    }
+    // Formato binario .key del SAT (PKCS8 encriptado DER)
+    key, err := pkcs8lib.ParsePKCS8PrivateKey(keyBytes, []byte(password))
+    if err != nil { return nil, fmt.Errorf("parsear PKCS8 DER: %w", err) }
+    rsaKey, ok := key.(*rsa.PrivateKey)
+    if !ok { return nil, fmt.Errorf("la llave no es RSA") }
+    return rsaKey, nil
 }
 
 func generarCadenaOriginal(xmlStr string) (string, error) {
@@ -376,4 +381,6 @@ func escapeXML(s string) string {
 	s = strings.ReplaceAll(s, `"`, "&quot;")
 	return s
 }
+
+
 
