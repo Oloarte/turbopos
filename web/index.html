@@ -1428,6 +1428,7 @@ async function confirmSale() {
     if (!res.ok) throw new Error(d.error||'Error al procesar');
     closeSaleModal();
     toast('✅ Venta · $'+Number(body.total).toLocaleString('es-MX',{minimumFractionDigits:2}), 'success');
+    showTicket({...d, total:body.total, items:cart.map(i=>({name:i.name,qty:i.qty,subtotal:i.subtotal})), payment_method:payment});
     // Si hay RFC nuevo y teléfono, guardarlo en la cuenta de lealtad
     const phoneVal = document.getElementById('customer-phone').value.replace(/\D/g,'');
     const rfcVal = (document.getElementById('sale-rfc').value||'').trim().toUpperCase();
@@ -1894,7 +1895,61 @@ async function loadReportes() {
     }).join('');
 }
 
+// ── Ticket ──────────────────────────────────────────────────────────────────
+let currentTicket = null;
+function showTicket(data) {
+  currentTicket = data;
+  const c = document.getElementById('ticket-content');
+  const fecha = new Date().toLocaleString('es-MX');
+  const esFactura = !!data.cfdi_uuid;
+  let items = (data.items||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span style="color:var(--text2)">${i.name} x${i.qty}</span><span>$${Number(i.subtotal).toLocaleString('es-MX',{minimumFractionDigits:2})}</span></div>`).join('');
+  let cfdiSection = '';
+  if (esFactura && data.cfdi_uuid) {
+    cfdiSection = `<div style="margin-top:16px;padding:16px;background:var(--surface2);border-radius:8px;text-align:center"><div style="font-size:11px;color:var(--text2);margin-bottom:8px">CFDI 4.0 · Folio Fiscal</div><div style="font-size:11px;font-weight:700;word-break:break-all;color:var(--blue)">${data.cfdi_uuid}</div><div id="qr-container" style="margin-top:12px;display:flex;justify-content:center"></div><div style="font-size:10px;color:var(--text2);margin-top:8px">Verifica en sat.gob.mx</div></div>`;
+  }
+  c.innerHTML = `<div style="text-align:center;margin-bottom:20px"><div style="font-size:22px;font-weight:800">TurboPOS</div><div style="font-size:12px;color:var(--text2)">${fecha}</div>${esFactura?'<div style="margin-top:6px;padding:4px 10px;background:#1a3a1a;color:#4caf50;border-radius:20px;font-size:11px;font-weight:700;display:inline-block">✅ FACTURA ELECTRÓNICA</div>':''}</div><div style="border-top:1px dashed var(--border);padding-top:16px;margin-bottom:16px">${items}</div><div style="display:flex;justify-content:space-between;font-weight:700;font-size:16px;padding-top:12px;border-top:1px solid var(--border)"><span>Total</span><span>$${Number(data.total).toLocaleString('es-MX',{minimumFractionDigits:2})}</span></div><div style="font-size:12px;color:var(--text2);margin-top:6px">Pago: ${data.payment_method||'Efectivo'}</div>${cfdiSection}`;
+  document.getElementById('ticket-modal').style.display = 'flex';
+  if (esFactura && data.cfdi_uuid) {
+    setTimeout(()=>{
+      const qr = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent('https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?id='+data.cfdi_uuid)}`;
+      const qrEl = document.getElementById('qr-container');
+      if(qrEl) qrEl.innerHTML = `<img src="${qr}" style="border-radius:8px">`;
+    }, 200);
+  }
+}
+function closeTicket() { document.getElementById('ticket-modal').style.display='none'; }
+function printTicket() {
+  if (!currentTicket) return;
+  const d = currentTicket;
+  const fecha = new Date().toLocaleString('es-MX');
+  let txt = '================================\n         TURBOPOS\n================================\n'+fecha+'\n--------------------------------\n';
+  (d.items||[]).forEach(i=>{ txt+=i.name+' x'+i.qty+'\n  $'+Number(i.subtotal).toFixed(2)+'\n'; });
+  txt+='--------------------------------\nTOTAL: $'+Number(d.total).toFixed(2)+'\nPago: '+(d.payment_method||'Efectivo');
+  if (d.cfdi_uuid) txt+='\n--------------------------------\nFACTURA ELECTRONICA CFDI 4.0\nUUID:\n'+d.cfdi_uuid+'\nVerificar: sat.gob.mx/verificacfdi\n--------------------------------';
+  txt+='\n\n  ¡Gracias por su compra!\n\n';
+  const pa=document.getElementById('print-area');
+  pa.style.display='block';
+  pa.innerHTML='<pre style="font-family:Courier New,monospace;font-size:11px;white-space:pre">'+txt+'</pre>';
+  window.print();
+  setTimeout(()=>{pa.style.display='none';},1000);
+}
 </script>
+<!-- ── Modal Ticket ──────────────────────────────────────────────── -->
+<div id="ticket-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:16px;width:380px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.5)">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <span style="font-weight:700;font-size:16px">🧾 Comprobante</span>
+      <button onclick="closeTicket()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div id="ticket-content" style="padding:24px"></div>
+    <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px">
+      <button onclick="printTicket()" class="btn-primary" style="flex:1">🖨️ Imprimir</button>
+      <button onclick="closeTicket()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);cursor:pointer;font-weight:600">Cerrar</button>
+    </div>
+  </div>
+</div>
+<div id="print-area" style="display:none;font-family:Courier New,monospace;font-size:12px;width:280px;margin:0 auto"></div>
+<style>@media print{body>*:not(#print-area){display:none!important}#print-area{display:block!important}}</style>
 </body>
 </html>
 
