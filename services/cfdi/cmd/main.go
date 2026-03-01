@@ -28,7 +28,7 @@ const (
 	WindowDur       = 10 * time.Minute
 	HealthCheckDur  = 5 * time.Minute
 	CertPath        = "services/cfdi/certs/test/eku9003173c9.cer"
-	KeyPath         = "services/cfdi/certs/test/eku9003173c9.pem"
+	KeyPath         = "services/cfdi/certs/test/eku9003173c9.key"
 	KeyPassword     = "12345678a"
 	NoCert          = "30001000000500003416"
 	FinkokHealthURL = "https://demo-facturacion.finkok.com/servicios/soap/stamp.wsdl"
@@ -233,3 +233,4 @@ func main() {
 	log.Printf("[CFDI] gRPC en %s | HTTP en %s", GRPCPort, HTTPPort)
 	if err := grpcSrv.Serve(lis); err != nil { log.Fatalf("serve: %v", err) }
 }
+

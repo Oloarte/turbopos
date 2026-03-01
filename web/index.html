@@ -731,6 +731,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <button class="nav-item" id="nav-reportes" onclick="showView('reportes')">
       <span>📊</span><span class="nav-lbl">Reportes</span>
     </button>
+    <button class="nav-item" id="nav-config" onclick="showView('config')">
+      <span>⚙️</span><span class="nav-lbl">Config</span>
+    </button>
     <div class="nav-spacer"></div>
     <div class="nav-user" title="Cerrar sesión" onclick="logout()">👤</div>
   </aside>
@@ -1262,6 +1265,7 @@ function showView(v) {
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   const el = document.getElementById('view-'+v); if(el) el.classList.add('active');
   const btn = document.getElementById('nav-'+v); if(btn) btn.classList.add('active');
+  if(v==='config') loadCSDStatus();
   document.getElementById('view-title').textContent = viewTitles[v] || v;
   currentView = v;
   if (v==='dash') loadDashboard();
@@ -1892,6 +1896,7 @@ async function loadReportes() {
 </script>
 </body>
 </html>
+
 
 
 

@@ -151,20 +151,22 @@ func (gw *Gateway) handleCobrar(w http.ResponseWriter, r *http.Request) {
 	// Auto-timbrado: si viene ?factura=1 en la URL, timbrar como público general en background
 	if r.URL.Query().Get("factura") == "1" || r.URL.Query().Get("rfc") != "" {
 		rfcTimbrar := r.URL.Query().Get("rfc"); if rfcTimbrar == "" { rfcTimbrar = "XAXX010101000" }
-            go func(saleID string, total float64, rfc string, cp string) {
-			ctxT, cancelT := context.WithTimeout(context.Background(), 30*time.Second)
-			defer cancelT()
-			tRes, err := gw.cfdiClient.Timbrar(ctxT, &pb_cfdi.FacturaRequest{
-                VentaId: saleID, Total: total, Rfc: rfc, CodigoPostalReceptor: cp,
-			})
-			if err != nil {
-				log.Printf("[BFF] Auto-timbrado error sale=%s: %v", saleID, err)
-				return
-			}
-			gw.db.Exec(`UPDATE sales SET cfdi_uuid=$1, cfdi_status=$2 WHERE id=$3::uuid`,
-				tRes.GetUuid(), "timbrado", saleID)
-			log.Printf("[BFF] Auto-timbrado OK sale=%s uuid=%s", saleID, tRes.GetUuid())
-            }(res.GetSaleId(), req.Total, rfcTimbrar, r.URL.Query().Get("cp"))
+        go func(saleID string, total float64, rfc string, cp string, tID string) {
+                ctxT, cancelT := context.WithTimeout(context.Background(), 30*time.Second)
+                defer cancelT()
+                treq := &pb_cfdi.FacturaRequest{VentaId: saleID, Total: total, Rfc: rfc, CodigoPostalReceptor: cp}
+                if cB64, kBytes, kPass, _, csdOK := gw.loadTenantCSD(tID); csdOK {
+                    treq.CertB64 = cB64; treq.KeyBytes = kBytes; treq.KeyPassword = kPass
+                }
+                tRes, err := gw.cfdiClient.Timbrar(ctxT, treq)
+                if err != nil {
+                    log.Printf("[BFF] Auto-timbrado error sale=%s: %v", saleID, err)
+                    return
+                }
+                gw.db.Exec(`UPDATE sales SET cfdi_uuid=$1, cfdi_status=$2 WHERE id=$3::uuid`,
+                    tRes.GetUuid(), "timbrado", saleID)
+                log.Printf("[BFF] Auto-timbrado OK sale=%s uuid=%s", saleID, tRes.GetUuid())
+        }(res.GetSaleId(), req.Total, rfcTimbrar, r.URL.Query().Get("cp"), tid)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
@@ -1111,6 +1113,90 @@ func parseFloat(s string) float64 {
 	return v
 }
 
+// ─── CSD Upload ────────────────────────────────────────────────────────────
+func (gw *Gateway) handleCSDUpload(w http.ResponseWriter, r *http.Request) {
+    if r.Method == http.MethodGet { gw.handleCSDInfo(w, r); return }
+    if r.Method != http.MethodPost { w.WriteHeader(http.StatusMethodNotAllowed); return }
+    if err := r.ParseMultipartForm(10 << 20); err != nil {
+        w.WriteHeader(http.StatusBadRequest)
+        json.NewEncoder(w).Encode(map[string]string{"error": "form invalido"})
+        return
+    }
+    tid := tenantID(r)
+    rfc := r.FormValue("rfc")
+    keyPass := r.FormValue("key_password")
+    if rfc == "" || keyPass == "" {
+        w.WriteHeader(http.StatusBadRequest)
+        json.NewEncoder(w).Encode(map[string]string{"error": "rfc y key_password requeridos"})
+        return
+    }
 
+    // Leer .cer
+    cerFile, _, err := r.FormFile("cer")
+    if err != nil { w.WriteHeader(400); json.NewEncoder(w).Encode(map[string]string{"error": "archivo .cer requerido"}); return }
+    defer cerFile.Close()
+    cerBytes, _ := io.ReadAll(cerFile)
+    certB64 := base64.StdEncoding.EncodeToString(cerBytes)
+
+    // Leer .key
+    keyFile, _, err := r.FormFile("key")
+    if err != nil { w.WriteHeader(400); json.NewEncoder(w).Encode(map[string]string{"error": "archivo .key requerido"}); return }
+    defer keyFile.Close()
+    keyBytes, _ := io.ReadAll(keyFile)
+
+    // Verificar que el par es válido llamando al CFDI service
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+    _, err = gw.cfdiClient.Timbrar(ctx, &pb_cfdi.FacturaRequest{
+        VentaId: "00000000-0000-0000-0000-000000000000",
+        Total: 0.01, Rfc: rfc, CertB64: certB64,
+        KeyBytes: keyBytes, KeyPassword: keyPass,
+        CodigoPostalReceptor: "64000",
+    })
+    // Error esperado pero si es de cert/key lo rechazamos
+    if err != nil && (strings.Contains(err.Error(), "desencriptar") || strings.Contains(err.Error(), "cert") || strings.Contains(err.Error(), "key")) {
+        w.WriteHeader(400)
+        json.NewEncoder(w).Encode(map[string]string{"error": "certificado o llave invalidos: " + err.Error()})
+        return
+    }
+
+    // Guardar en DB
+    _, err = gw.db.Exec(`
+        INSERT INTO tenant_csds (tenant_id, rfc_emisor, cert_b64, key_bytes, key_password, updated_at)
+        VALUES ($1::uuid, $2, $3, $4, $5, NOW())
+        ON CONFLICT (tenant_id) DO UPDATE SET
+            rfc_emisor=EXCLUDED.rfc_emisor, cert_b64=EXCLUDED.cert_b64,
+            key_bytes=EXCLUDED.key_bytes, key_password=EXCLUDED.key_password, updated_at=NOW()
+    `, tid, rfc, certB64, keyBytes, keyPass)
+    if err != nil {
+        log.Printf("[BFF] Error guardando CSD: %v", err)
+        w.WriteHeader(500)
+        json.NewEncoder(w).Encode(map[string]string{"error": "error guardando certificado"})
+        return
+    }
+    log.Printf("[BFF] CSD registrado tenant=%s rfc=%s", tid, rfc)
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]interface{}{"ok": true, "rfc": rfc, "mensaje": "Certificado registrado correctamente"})
+}
+
+func (gw *Gateway) handleCSDInfo(w http.ResponseWriter, r *http.Request) {
+    tid := tenantID(r)
+    var rfc string
+    var updatedAt time.Time
+    err := gw.db.QueryRow(`SELECT rfc_emisor, updated_at FROM tenant_csds WHERE tenant_id=$1::uuid`, tid).Scan(&rfc, &updatedAt)
+    w.Header().Set("Content-Type", "application/json")
+    if err != nil {
+        json.NewEncoder(w).Encode(map[string]interface{}{"tiene_csd": false})
+        return
+    }
+    json.NewEncoder(w).Encode(map[string]interface{}{"tiene_csd": true, "rfc": rfc, "actualizado": updatedAt.Format("2006-01-02 15:04")})
+}
+
+// loadTenantCSD carga cert/key del tenant desde DB
+func (gw *Gateway) loadTenantCSD(tenantID string) (certB64 string, keyBytes []byte, keyPass string, rfc string, ok bool) {
+    err := gw.db.QueryRow(`SELECT rfc_emisor, cert_b64, key_bytes, key_password FROM tenant_csds WHERE tenant_id=$1::uuid`, tenantID).
+        Scan(&rfc, &certB64, &keyBytes, &keyPass)
+    return certB64, keyBytes, keyPass, rfc, err == nil
+}
 
 
