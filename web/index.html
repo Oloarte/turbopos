@@ -1453,6 +1453,7 @@ async function confirmSale() {
           if (found && found.cfdi_uuid) {
             clearInterval(poll);
             toast('CFDI timbrado ' + String(found.cfdi_uuid||'').slice(0,8) + '...', 'success');
+            if (currentTicket) { currentTicket.cfdi_uuid = found.cfdi_uuid; showTicket(currentTicket); }
             loadDashboard();
           }
         } catch(e){}
@@ -1896,6 +1897,7 @@ async function loadReportes() {
 </script>
 </body>
 </html>
+
 
 
 
