@@ -97,6 +97,8 @@ func main() {
 	mux.HandleFunc("/api/v1/migrate",         gw.handleMigrate)
 	mux.HandleFunc("/api/v1/reportes", gw.handleReportes)
 	mux.HandleFunc("/api/v1/reportes/cfdi", gw.handleReportesCFDI)
+	mux.HandleFunc("/api/v1/admin/tenants",  gw.handleAdminTenants)
+	mux.HandleFunc("/api/v1/admin/tenants/", gw.handleAdminTenantByID)
     mux.HandleFunc("/api/v1/csd",        gw.handleCSDUpload)
     mux.HandleFunc("/api/v1/csd/info",   gw.handleCSDInfo)
 	mux.Handle("/", http.FileServer(http.Dir("web")))
@@ -382,6 +384,87 @@ func (gw *Gateway) handleOpenpayWebhook(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 	w.WriteHeader(200)
+}
+
+// ADMIN PANEL
+func isAdmin(r *http.Request) bool {
+	adminKey := os.Getenv("ADMIN_KEY")
+	if adminKey == "" { adminKey = "turbopos-admin-2026" }
+	return r.Header.Get("X-Admin-Key") == adminKey
+}
+
+func (gw *Gateway) handleAdminTenants(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if !isAdmin(r) { w.WriteHeader(401); json.NewEncoder(w).Encode(map[string]string{"error": "No autorizado"}); return }
+	query := `SELECT t.id, t.nombre, t.rfc, t.plan, t.active, COALESCE(t.email,'') as email, COALESCE(t.telefono,'') as telefono, t.created_at, COALESCE(s.status,'trial') as sub_status, COALESCE(s.trial_ends_at::text,'') as trial_ends, COALESCE(s.amount,0) as amount, COALESCE(s.openpay_customer_id,'') as openpay_id, (SELECT COUNT(*) FROM sales WHERE tenant_id=t.id) as total_ventas, (SELECT COALESCE(SUM(total),0) FROM sales WHERE tenant_id=t.id AND status='completed') as monto_ventas, (SELECT COUNT(*) FROM users WHERE tenant_id=t.id) as usuarios FROM tenants t LEFT JOIN subscriptions s ON s.tenant_id=t.id ORDER BY t.created_at DESC`
+	rows, err := gw.db.QueryContext(r.Context(), query)
+	if err != nil { w.WriteHeader(500); json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}); return }
+	defer rows.Close()
+	type TR struct {
+		ID          string  `json:"id"`
+		Nombre      string  `json:"nombre"`
+		RFC         string  `json:"rfc"`
+		Plan        string  `json:"plan"`
+		Active      bool    `json:"active"`
+		Email       string  `json:"email"`
+		Telefono    string  `json:"telefono"`
+		CreatedAt   string  `json:"created_at"`
+		SubStatus   string  `json:"sub_status"`
+		TrialEnds   string  `json:"trial_ends"`
+		Amount      float64 `json:"amount"`
+		OpenpayID   string  `json:"openpay_id"`
+		TotalVentas int64   `json:"total_ventas"`
+		MontoVentas float64 `json:"monto_ventas"`
+		Usuarios    int64   `json:"usuarios"`
+	}
+	var tenants []TR
+	var mrr float64
+	for rows.Next() {
+		var t TR
+		rows.Scan(&t.ID,&t.Nombre,&t.RFC,&t.Plan,&t.Active,&t.Email,&t.Telefono,&t.CreatedAt,&t.SubStatus,&t.TrialEnds,&t.Amount,&t.OpenpayID,&t.TotalVentas,&t.MontoVentas,&t.Usuarios)
+		if t.SubStatus == "active" { mrr += t.Amount }
+		tenants = append(tenants, t)
+	}
+	if tenants == nil { tenants = []TR{} }
+	var tvTotal int64; var mvTotal float64
+	for _, t := range tenants { tvTotal += t.TotalVentas; mvTotal += t.MontoVentas }
+	activeCount := 0; trialCount := 0
+	for _, t := range tenants { if t.SubStatus=="active" { activeCount++ } else if t.SubStatus=="trial" { trialCount++ } }
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"tenants": tenants,
+		"kpis": map[string]interface{}{
+			"total_tenants": len(tenants), "active": activeCount, "trial": trialCount,
+			"mrr": mrr, "total_ventas": tvTotal, "monto_total": mvTotal,
+		},
+	})
+}
+
+func (gw *Gateway) handleAdminTenantByID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if !isAdmin(r) { w.WriteHeader(401); json.NewEncoder(w).Encode(map[string]string{"error": "No autorizado"}); return }
+	id := strings.TrimPrefix(r.URL.Path, "/api/v1/admin/tenants/")
+	if id == "" { w.WriteHeader(400); return }
+	if r.Method == http.MethodPatch {
+		var body struct {
+			Active *bool  `json:"active"`
+			Plan   string `json:"plan"`
+		}
+		json.NewDecoder(r.Body).Decode(&body)
+		if body.Active != nil { gw.db.ExecContext(r.Context(), "UPDATE tenants SET active=$1 WHERE id=$2::uuid", *body.Active, id) }
+		if body.Plan != "" {
+			gw.db.ExecContext(r.Context(), "UPDATE tenants SET plan=$1 WHERE id=$2::uuid", body.Plan, id)
+			planAmt := map[string]float64{"starter":1990,"business":4990,"pro":9990}
+			if amt, ok := planAmt[body.Plan]; ok { gw.db.ExecContext(r.Context(), "UPDATE subscriptions SET plan=$1,amount=$2 WHERE tenant_id=$3::uuid", body.Plan, amt, id) }
+		}
+		json.NewEncoder(w).Encode(map[string]interface{}{"ok": true}); return
+	}
+	rows, _ := gw.db.QueryContext(r.Context(),
+		"SELECT DATE(created_at AT TIME ZONE 'America/Monterrey') as dia, COUNT(*) as ventas, COALESCE(SUM(CASE WHEN status='completed' THEN total ELSE 0 END),0) as total FROM sales WHERE tenant_id=$1::uuid GROUP BY dia ORDER BY dia DESC LIMIT 30", id)
+	type DV struct{ Dia string `json:"dia"`; Ventas int64 `json:"ventas"`; Total float64 `json:"total"` }
+	var dias []DV
+	if rows != nil { defer rows.Close(); for rows.Next() { var d DV; rows.Scan(&d.Dia,&d.Ventas,&d.Total); dias=append(dias,d) } }
+	if dias == nil { dias = []DV{} }
+	json.NewEncoder(w).Encode(map[string]interface{}{"ventas_por_dia": dias})
 }
 
 func (gw *Gateway) handleCobrar(w http.ResponseWriter, r *http.Request) {
