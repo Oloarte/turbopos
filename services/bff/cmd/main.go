@@ -89,6 +89,7 @@ func main() {
 	mux.HandleFunc("/api/v1/migrate/preview", gw.handleMigratePreview)
 	mux.HandleFunc("/api/v1/migrate",         gw.handleMigrate)
 	mux.HandleFunc("/api/v1/reportes", gw.handleReportes)
+	mux.HandleFunc("/api/v1/reportes/cfdi", gw.handleReportesCFDI)
     mux.HandleFunc("/api/v1/csd",        gw.handleCSDUpload)
     mux.HandleFunc("/api/v1/csd/info",   gw.handleCSDInfo)
 	mux.Handle("/", http.FileServer(http.Dir("web")))
@@ -1423,6 +1424,79 @@ func parseFloat(s string) float64 {
 	s = strings.ReplaceAll(strings.ReplaceAll(strings.TrimSpace(s), "$", ""), ",", "")
 	v, _ := strconv.ParseFloat(s, 64)
 	return v
+}
+
+func (gw *Gateway) handleReportesCFDI(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	q := r.URL.Query()
+	desde := q.Get("desde")
+	hasta := q.Get("hasta")
+	periodo := q.Get("periodo")
+	now := time.Now()
+	switch periodo {
+	case "semana": desde = now.AddDate(0,0,-6).Format("2006-01-02"); hasta = now.Format("2006-01-02")
+	case "mes":    desde = now.AddDate(0,-1,0).Format("2006-01-02"); hasta = now.Format("2006-01-02")
+	default:       if desde == "" { desde = now.AddDate(0,0,-6).Format("2006-01-02") }; if hasta == "" { hasta = now.Format("2006-01-02") }
+	}
+	tid := tenantID(r)
+	rows, err := gw.db.QueryContext(r.Context(), `
+		SELECT
+			s.id,
+			DATE(s.created_at AT TIME ZONE 'America/Monterrey') as fecha,
+			s.created_at AT TIME ZONE 'America/Monterrey' as fecha_hora,
+			s.total,
+			s.payment_method,
+			COALESCE(s.cfdi_uuid,'') as uuid,
+			COALESCE(s.cfdi_rfc_receptor, '') as rfc_receptor,
+			COALESCE(s.cfdi_nombre_receptor,'') as nombre_receptor,
+			s.status,
+			COALESCE(s.cfdi_serie,'') as serie,
+			COALESCE(s.cfdi_folio,'') as folio
+		FROM sales s
+		WHERE DATE(s.created_at AT TIME ZONE 'America/Monterrey') BETWEEN $1::date AND $2::date
+		  AND (s.tenant_id = $3::uuid OR s.tenant_id IS NULL)
+		  AND s.cfdi_uuid IS NOT NULL
+		ORDER BY s.created_at DESC
+		LIMIT 500
+	`, desde, hasta, tid)
+	if err != nil {
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	defer rows.Close()
+
+	type CFDIRow struct {
+		ID            string  `json:"id"`
+		Fecha         string  `json:"fecha"`
+		FechaHora     string  `json:"fecha_hora"`
+		Total         float64 `json:"total"`
+		Metodo        string  `json:"metodo"`
+		UUID          string  `json:"uuid"`
+		RFCReceptor   string  `json:"rfc_receptor"`
+		NombreReceptor string `json:"nombre_receptor"`
+		Status        string  `json:"status"`
+		Serie         string  `json:"serie"`
+		Folio         string  `json:"folio"`
+	}
+	var cfdis []CFDIRow
+	var totalTimbrado float64
+	for rows.Next() {
+		var c CFDIRow
+		rows.Scan(&c.ID, &c.Fecha, &c.FechaHora, &c.Total, &c.Metodo,
+			&c.UUID, &c.RFCReceptor, &c.NombreReceptor, &c.Status, &c.Serie, &c.Folio)
+		cfdis = append(cfdis, c)
+		totalTimbrado += c.Total
+	}
+	if cfdis == nil { cfdis = []CFDIRow{} }
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"desde":          desde,
+		"hasta":          hasta,
+		"cfdis":          cfdis,
+		"total_timbrado": totalTimbrado,
+		"count":          len(cfdis),
+	})
 }
 
 // ─── CSD Upload ────────────────────────────────────────────────────────────
