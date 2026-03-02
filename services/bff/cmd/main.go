@@ -25,6 +25,7 @@ import (
 	pb_sales   "github.com/turbopos/turbopos/gen/go/proto/sales/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Gateway struct {
@@ -72,6 +73,7 @@ func main() {
 	mux.HandleFunc("/api/v1/products",   gw.handleProducts)
 	mux.HandleFunc("/api/v1/products/",  gw.handleProductByID)
 	mux.HandleFunc("/api/v1/login",           gw.handleLogin)
+	mux.HandleFunc("/api/v1/signup",          gw.handleSignup)
 	mux.HandleFunc("/api/v1/cobrar",          gw.handleCobrar)
 	mux.HandleFunc("/api/v1/timbrar",         gw.handleTimbrar)
 	mux.HandleFunc("/api/v1/cancelar",        gw.handleCancelar)
@@ -95,6 +97,135 @@ func main() {
 	mux.Handle("/", http.FileServer(http.Dir("web")))
 	log.Println("[BFF] Escuchando en :8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
+}
+
+func (gw *Gateway) handleSignup(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method == http.MethodOptions { w.WriteHeader(200); return }
+	if r.Method != http.MethodPost {
+		w.WriteHeader(405)
+		json.NewEncoder(w).Encode(map[string]string{"error": "method not allowed"})
+		return
+	}
+	var req struct {
+		Nombre        string `json:"nombre"`
+		RFC           string `json:"rfc"`
+		RazonSocial   string `json:"razon_social"`
+		CodigoPostal  string `json:"codigo_postal"`
+		RegimenFiscal string `json:"regimen_fiscal"`
+		Plan          string `json:"plan"`
+		Email         string `json:"email"`
+		Username      string `json:"username"`
+		Password      string `json:"password"`
+		Telefono      string `json:"telefono"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(400)
+		json.NewEncoder(w).Encode(map[string]string{"error": "JSON invalido"})
+		return
+	}
+	if req.Nombre == "" || req.RFC == "" || req.Email == "" || req.Password == "" {
+		w.WriteHeader(400)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Campos requeridos: nombre, rfc, email, password"})
+		return
+	}
+	if len(req.Password) < 8 {
+		w.WriteHeader(400)
+		json.NewEncoder(w).Encode(map[string]string{"error": "La contrasena debe tener al menos 8 caracteres"})
+		return
+	}
+	if req.Plan == "" { req.Plan = "starter" }
+	if req.RegimenFiscal == "" { req.RegimenFiscal = "612" }
+	if req.CodigoPostal == "" { req.CodigoPostal = "06600" }
+	rfc := strings.ToUpper(strings.TrimSpace(req.RFC))
+
+	planAmount := map[string]float64{"starter": 1990, "business": 4990, "pro": 9990}
+	amount, ok := planAmount[req.Plan]
+	if !ok { amount = 1990; req.Plan = "starter" }
+
+	ctx := r.Context()
+
+	// Validar RFC único
+	var count int
+	if err := gw.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM tenants WHERE rfc=$1", rfc).Scan(&count); err != nil {
+		log.Printf("[Signup] Error validando RFC: %v", err)
+		w.WriteHeader(500); json.NewEncoder(w).Encode(map[string]string{"error": "Error interno"}); return
+	}
+	if count > 0 {
+		w.WriteHeader(409)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Ya existe una cuenta con ese RFC"})
+		return
+	}
+
+	// Validar email único
+	if err := gw.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM users WHERE email=$1", req.Email).Scan(&count); err != nil {
+		log.Printf("[Signup] Error validando email: %v", err)
+		w.WriteHeader(500); json.NewEncoder(w).Encode(map[string]string{"error": "Error interno"}); return
+	}
+	if count > 0 {
+		w.WriteHeader(409)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Ese email ya esta registrado"})
+		return
+	}
+
+	// Hash password
+	pwHash, err := bcrypt.GenerateFromPassword([]byte(req.Password), 12)
+	if err != nil {
+		w.WriteHeader(500); json.NewEncoder(w).Encode(map[string]string{"error": "Error procesando contrasena"}); return
+	}
+
+	tx, err := gw.db.BeginTx(ctx, nil)
+	if err != nil {
+		w.WriteHeader(500); json.NewEncoder(w).Encode(map[string]string{"error": "Error interno"}); return
+	}
+	defer tx.Rollback()
+
+	razonSocial := req.RazonSocial
+	if razonSocial == "" { razonSocial = req.Nombre }
+
+	// Crear tenant
+	var tenantID string
+	err = tx.QueryRowContext(ctx,
+		"INSERT INTO tenants (nombre, rfc, razon_social, regimen_fiscal, codigo_postal, plan, email, telefono) "+
+		"VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id",
+		req.Nombre, rfc, razonSocial, req.RegimenFiscal,
+		req.CodigoPostal, req.Plan, req.Email, req.Telefono,
+	).Scan(&tenantID)
+	if err != nil {
+		log.Printf("[Signup] Error creando tenant: %v", err)
+		w.WriteHeader(500); json.NewEncoder(w).Encode(map[string]string{"error": "Error creando negocio"}); return
+	}
+
+	// Crear usuario admin (tabla usa email como identificador)
+	_, err = tx.ExecContext(ctx,
+		"INSERT INTO users (email, password_hash, tenant_id) VALUES ($1,$2,$3::uuid)",
+		req.Email, string(pwHash), tenantID,
+	)
+	if err != nil {
+		log.Printf("[Signup] Error creando usuario: %v", err)
+		w.WriteHeader(500); json.NewEncoder(w).Encode(map[string]string{"error": "Error creando usuario"}); return
+	}
+
+	// Suscripcion trial
+	gw.db.ExecContext(ctx,
+		"INSERT INTO subscriptions (tenant_id, plan, status, amount) VALUES ($1::uuid,$2,'trial',$3)",
+		tenantID, req.Plan, amount,
+	)
+
+	if err := tx.Commit(); err != nil {
+		w.WriteHeader(500); json.NewEncoder(w).Encode(map[string]string{"error": "Error finalizando registro"}); return
+	}
+
+	log.Printf("[Signup] Nuevo tenant: rfc=%s plan=%s email=%s", rfc, req.Plan, req.Email)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"ok":        true,
+		"tenant_id": tenantID,
+		"username":  req.Email,
+		"plan":      req.Plan,
+		"url":       "/",
+		"message":   "Cuenta creada. Tu prueba de 14 dias comienza ahora.",
+	})
 }
 
 func (gw *Gateway) handleCobrar(w http.ResponseWriter, r *http.Request) {
