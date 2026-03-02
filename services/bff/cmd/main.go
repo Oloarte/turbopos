@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
 	"database/sql"
@@ -14,6 +15,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+		"github.com/joho/godotenv"
 	"strconv"
 	"strings"
 	"time"
@@ -42,6 +44,7 @@ func getenv(key, fallback string) string {
 }
 
 func main() {
+	godotenv.Load()
 	log.Println("[BFF] Iniciando Gateway TurboPOS en :8080...")
 
 	authConn, err := grpc.Dial(getenv("AUTH_ADDR", "localhost:50051"), grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -74,6 +77,8 @@ func main() {
 	mux.HandleFunc("/api/v1/products/",  gw.handleProductByID)
 	mux.HandleFunc("/api/v1/login",           gw.handleLogin)
 	mux.HandleFunc("/api/v1/signup",          gw.handleSignup)
+	mux.HandleFunc("/api/v1/openpay/webhook", gw.handleOpenpayWebhook)
+	mux.HandleFunc("/api/v1/openpay/checkout",gw.handleOpenpayCheckout)
 	mux.HandleFunc("/api/v1/cobrar",          gw.handleCobrar)
 	mux.HandleFunc("/api/v1/timbrar",         gw.handleTimbrar)
 	mux.HandleFunc("/api/v1/cancelar",        gw.handleCancelar)
@@ -226,6 +231,157 @@ func (gw *Gateway) handleSignup(w http.ResponseWriter, r *http.Request) {
 		"url":       "/",
 		"message":   "Cuenta creada. Tu prueba de 14 dias comienza ahora.",
 	})
+}
+
+
+// OpenPay Integration
+type openpayClient struct {
+	merchantID string
+	sk         string
+	baseURL    string
+}
+
+func newOpenpayClient() *openpayClient {
+	env := os.Getenv("OPENPAY_ENV")
+	base := "https://sandbox-api.openpay.mx/v1"
+	if env == "production" { base = "https://api.openpay.mx/v1" }
+	return &openpayClient{
+		merchantID: os.Getenv("OPENPAY_MERCHANT_ID"),
+		sk: os.Getenv("OPENPAY_SK"),
+		baseURL: base,
+	}
+}
+
+func (op *openpayClient) post(path string, body interface{}) (map[string]interface{}, error) {
+	b, _ := json.Marshal(body)
+	req, _ := http.NewRequest("POST", op.baseURL+"/"+op.merchantID+path, bytes.NewReader(b))
+	req.Header.Set("Content-Type", "application/json")
+	req.SetBasicAuth(op.sk, "")
+	cli := &http.Client{Timeout: 15 * time.Second}
+	resp, err := cli.Do(req)
+	if err != nil { return nil, err }
+	defer resp.Body.Close()
+	var result map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&result)
+	if resp.StatusCode >= 400 {
+		return result, fmt.Errorf("openpay %d: %v", resp.StatusCode, result["description"])
+	}
+	return result, nil
+}
+
+func (op *openpayClient) createCustomer(name, email, phone string) (string, error) {
+	r, err := op.post("/customers", map[string]string{"name": name, "email": email, "phone_number": phone})
+	if err != nil { return "", err }
+	return r["id"].(string), nil
+}
+
+func (op *openpayClient) createCard(customerID, tokenID, deviceID string) (string, error) {
+	r, err := op.post("/customers/"+customerID+"/cards", map[string]string{"token_id": tokenID, "device_session_id": deviceID})
+	if err != nil { return "", err }
+	return r["id"].(string), nil
+}
+
+func (op *openpayClient) chargeCard(customerID, cardID string, amount float64, desc, orderID string) (string, error) {
+	r, err := op.post("/customers/"+customerID+"/charges", map[string]interface{}{
+		"source_id": cardID, "method": "card", "amount": amount,
+		"currency": "MXN", "description": desc, "order_id": orderID,
+	})
+	if err != nil { return "", err }
+	return r["id"].(string), nil
+}
+
+func (op *openpayClient) createOXXO(customerID string, amount float64, desc, orderID string) (map[string]interface{}, error) {
+	return op.post("/customers/"+customerID+"/charges", map[string]interface{}{
+		"method": "store", "amount": amount, "currency": "MXN", "description": desc, "order_id": orderID,
+	})
+}
+
+func (op *openpayClient) createSPEI(customerID string, amount float64, desc, orderID string) (map[string]interface{}, error) {
+	return op.post("/customers/"+customerID+"/charges", map[string]interface{}{
+		"method": "bank_account", "amount": amount, "currency": "MXN", "description": desc, "order_id": orderID,
+	})
+}
+
+func (gw *Gateway) handleOpenpayCheckout(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodPost { w.WriteHeader(405); return }
+	var req struct {
+		TenantID        string `json:"tenant_id"`
+		Method          string `json:"method"`
+		TokenID         string `json:"token_id"`
+		DeviceSessionID string `json:"device_session_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(400); json.NewEncoder(w).Encode(map[string]string{"error": "JSON invalido"}); return
+	}
+	var nombre, email, telefono, plan string
+	gw.db.QueryRowContext(r.Context(),
+		"SELECT nombre, COALESCE(email,''), COALESCE(telefono,''), plan FROM tenants WHERE id=$1::uuid",
+		req.TenantID).Scan(&nombre, &email, &telefono, &plan)
+
+	planAmount := map[string]float64{"starter": 1990, "business": 4990, "pro": 9990}
+	amount := planAmount[plan]
+	if amount == 0 { amount = 1990 }
+
+	op := newOpenpayClient()
+	customerID, err := op.createCustomer(nombre, email, telefono)
+	if err != nil {
+		log.Printf("[OpenPay] Error customer: %v", err)
+		w.WriteHeader(500); json.NewEncoder(w).Encode(map[string]string{"error": "Error procesador de pagos"}); return
+	}
+	gw.db.ExecContext(r.Context(), "UPDATE subscriptions SET openpay_customer_id=$1 WHERE tenant_id=$2::uuid", customerID, req.TenantID)
+
+	orderID := req.TenantID[:8] + "-" + fmt.Sprintf("%d", time.Now().Unix())
+	desc := "TurboPOS " + plan + " - " + nombre
+
+	switch req.Method {
+	case "card":
+		if req.TokenID == "" { w.WriteHeader(400); json.NewEncoder(w).Encode(map[string]string{"error": "token_id requerido"}); return }
+		cardID, err := op.createCard(customerID, req.TokenID, req.DeviceSessionID)
+		if err != nil { w.WriteHeader(400); json.NewEncoder(w).Encode(map[string]string{"error": "Tarjeta rechazada: " + err.Error()}); return }
+		chargeID, err := op.chargeCard(customerID, cardID, amount, desc, orderID)
+		if err != nil { w.WriteHeader(400); json.NewEncoder(w).Encode(map[string]string{"error": "Cargo rechazado: " + err.Error()}); return }
+		gw.db.ExecContext(r.Context(), "UPDATE subscriptions SET openpay_card_id=$1, status='active', current_period_start=NOW(), current_period_end=NOW()+INTERVAL '1 month' WHERE tenant_id=$2::uuid", cardID, req.TenantID)
+		log.Printf("[OpenPay] Cargo OK customer=%s charge=%s amount=%.2f", customerID, chargeID, amount)
+		json.NewEncoder(w).Encode(map[string]interface{}{"ok": true, "method": "card", "charge_id": chargeID})
+	case "oxxo":
+		result, err := op.createOXXO(customerID, amount, desc, orderID)
+		if err != nil { w.WriteHeader(500); json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}); return }
+		pm, _ := result["payment_method"].(map[string]interface{})
+		ref, _ := pm["reference"].(string)
+		barcode, _ := pm["barcode_url"].(string)
+		json.NewEncoder(w).Encode(map[string]interface{}{"ok": true, "method": "oxxo", "reference": ref, "barcode_url": barcode, "amount": amount})
+	case "spei":
+		result, err := op.createSPEI(customerID, amount, desc, orderID)
+		if err != nil { w.WriteHeader(500); json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}); return }
+		pm, _ := result["payment_method"].(map[string]interface{})
+		clabe, _ := pm["clabe"].(string)
+		bank, _ := pm["bank_name"].(string)
+		json.NewEncoder(w).Encode(map[string]interface{}{"ok": true, "method": "spei", "clabe": clabe, "bank": bank, "amount": amount})
+	default:
+		w.WriteHeader(400); json.NewEncoder(w).Encode(map[string]string{"error": "method: card, oxxo o spei"})
+	}
+}
+
+func (gw *Gateway) handleOpenpayWebhook(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost { w.WriteHeader(405); return }
+	var event map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&event); err != nil { w.WriteHeader(400); return }
+	eventType, _ := event["type"].(string)
+	tx, _ := event["transaction"].(map[string]interface{})
+	orderID, _ := tx["order_id"].(string)
+	log.Printf("[OpenPay] Webhook: type=%s order=%s", eventType, orderID)
+	switch eventType {
+	case "charge.succeeded":
+		if len(orderID) >= 8 {
+			gw.db.Exec("UPDATE subscriptions SET status='active', current_period_start=NOW(), current_period_end=NOW()+INTERVAL '1 month' WHERE tenant_id::text LIKE $1||'%%'", orderID[:8])
+		}
+	case "charge.failed", "subscription.charge.failed":
+		if len(orderID) >= 8 {
+			gw.db.Exec("UPDATE subscriptions SET status='past_due' WHERE tenant_id::text LIKE $1||'%%'", orderID[:8])
+		}
+	}
+	w.WriteHeader(200)
 }
 
 func (gw *Gateway) handleCobrar(w http.ResponseWriter, r *http.Request) {
