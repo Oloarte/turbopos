@@ -678,7 +678,101 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .rep-btn:hover { color:var(--text);border-color:var(--border); }
 .rep-btn.active { background:var(--amber);color:#000;border-color:var(--amber); }
 
-</style>
+
+    /* CLIENTES */
+    #view-clientes{display:none;height:calc(100vh - 58px);overflow:hidden}
+    .cli-shell{display:flex;height:100%}
+    .cli-sidebar{width:290px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--surface)}
+    .cli-sb-head{padding:16px;border-bottom:1px solid var(--border)}
+    .cli-sb-title{font-size:11px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+    .cli-search{position:relative}
+    .cli-search input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px 8px 30px;font-family:var(--font);font-size:13px;color:var(--text);outline:none;transition:border-color .2s}
+    .cli-search input:focus{border-color:var(--accent)}
+    .cli-search input::placeholder{color:var(--muted)}
+    .cli-search-ic{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
+    .cli-filters{display:flex;gap:5px;padding:10px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+    .cli-chip{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--font);transition:all .2s}
+    .cli-chip.on{background:rgba(255,181,71,.12);border-color:var(--accent);color:var(--accent)}
+    .cli-list{flex:1;overflow-y:auto;padding:6px}
+    .cli-list::-webkit-scrollbar{width:3px}
+    .cli-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    .cli-row{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;cursor:pointer;transition:all .15s;border:1px solid transparent}
+    .cli-row:hover{background:var(--surface2,#131926)}
+    .cli-row.sel{background:rgba(255,181,71,.06);border-color:rgba(255,181,71,.15)}
+    .cli-av{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+    .cli-rinfo{flex:1;min-width:0}
+    .cli-rname{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .cli-rsub{font-size:10px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--mono)}
+    .cli-rmeta{text-align:right;flex-shrink:0}
+    .cli-ramt{font-size:12px;font-weight:700;color:var(--accent);font-family:var(--mono)}
+    .cli-rvst{font-size:10px;color:var(--muted);margin-top:1px}
+    .cli-footer{padding:10px 14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+    .cli-count{font-size:11px;color:var(--muted)}
+    .cli-new-btn{display:flex;align-items:center;gap:5px;padding:6px 13px;background:var(--accent);color:#080C14;border:none;border-radius:7px;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s}
+    .cli-new-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+    .cli-detail{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px}
+    .cli-detail::-webkit-scrollbar{width:3px}
+    .cli-detail::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    .cli-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);gap:10px;min-height:200px}
+    .cli-empty-ic{font-size:40px;opacity:.25}
+    .cli-dhead{position:relative;display:flex;align-items:flex-start;gap:16px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .cli-dhead::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent)}
+    .cli-dav{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;flex-shrink:0}
+    .cli-dmeta{flex:1}
+    .cli-dname{font-size:19px;font-weight:700;letter-spacing:-.3px}
+    .cli-drfc{font-family:var(--mono);font-size:11px;color:var(--accent);margin-top:3px}
+    .cli-dtags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+    .cli-tag{padding:3px 9px;border-radius:5px;font-size:10px;font-weight:600;border:1px solid}
+    .cli-dacts{display:flex;gap:6px;align-self:flex-start}
+    .cli-btn-g{display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--surface2,#131926);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-family:var(--font);font-size:11px;font-weight:500;cursor:pointer;transition:all .2s}
+    .cli-btn-g:hover{border-color:var(--accent);color:var(--text)}
+    .cli-btn-p{display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--accent);color:#080C14;border:none;border-radius:7px;font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer}
+    .cli-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .cli-kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+    .cli-kpi-l{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:600}
+    .cli-kpi-v{font-size:20px;font-weight:700;margin-top:5px;font-family:var(--mono);letter-spacing:-1px}
+    .cli-kpi-s{font-size:10px;color:var(--muted);margin-top:3px}
+    .cli-panels{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .cli-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+    .cli-panel-full{grid-column:span 2}
+    .cli-ph{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+    .cli-ph-t{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+    .cli-ph-a{font-size:11px;color:var(--accent);cursor:pointer;font-weight:500}
+    .cli-pb{padding:14px 16px}
+    .cli-igrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .cli-il{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:600;margin-bottom:3px}
+    .cli-iv{font-size:12px;font-weight:500}
+    .cli-iv.mono{font-family:var(--mono);font-size:11px;color:var(--accent)}
+    .loy-pts{font-size:22px;font-weight:800;font-family:var(--mono);color:var(--accent)}
+    .loy-track{height:6px;background:var(--bg);border-radius:4px;overflow:hidden;margin:8px 0}
+    .loy-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),#FF8C00);transition:width .8s ease}
+    .loy-tiers{display:flex;justify-content:space-between;font-size:9px;color:var(--muted)}
+    .loy-tier-on{color:var(--accent);font-weight:700}
+    .cli-table{width:100%;border-collapse:collapse}
+    .cli-table th{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:600;padding:7px 12px;text-align:left;border-bottom:1px solid var(--border)}
+    .cli-table td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px}
+    .cli-table tr:last-child td{border-bottom:none}
+    .cli-table tr:hover td{background:var(--surface2,#131926)}
+    .tx-id-m{font-family:var(--mono);font-size:10px;color:var(--muted)}
+    .tx-amt-m{font-family:var(--mono);font-weight:700;color:var(--accent)}
+    .spill{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700}
+    .s-ok{background:rgba(46,204,113,.1);color:#2ECC71}
+    .s-pend{background:rgba(255,181,71,.1);color:var(--accent)}
+    .cli-modal-ov{position:fixed;inset:0;background:rgba(8,12,20,.85);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center}
+    .cli-modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:440px;overflow:hidden}
+    .cli-mh{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+    .cli-mh-t{font-size:15px;font-weight:700}
+    .cli-mc{width:26px;height:26px;border-radius:6px;background:var(--surface2,#131926);border:none;color:var(--muted);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+    .cli-mb{padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+    .cli-mf{display:flex;gap:10px}
+    .cli-mfg{display:flex;flex-direction:column;gap:5px;flex:1}
+    .cli-ml{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+    .cli-mi{background:var(--surface2,#131926);border:1px solid var(--border);border-radius:7px;padding:8px 11px;font-family:var(--font);font-size:12px;color:var(--text);outline:none;transition:border-color .2s}
+    .cli-mi:focus{border-color:var(--accent)}
+    .cli-mi::placeholder{color:var(--muted)}
+    .cli-mfoot{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+
+  </style>
 </head>
 <body>
 
@@ -734,7 +828,10 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <button class="nav-item" id="nav-config" onclick="showView('config')">
       <span>⚙️</span><span class="nav-lbl">Config</span>
     </button>
-    <div class="nav-spacer"></div>
+    <button class="nav-item" id="nav-clientes" onclick="showView('clientes')">
+          <span>&#128101;</span><span class="nav-lbl">CLIENTES</span>
+        </button>
+        <div class="nav-spacer"></div>
     <div class="nav-user" title="Cerrar sesión" onclick="logout()">👤</div>
   </aside>
 
@@ -1155,6 +1252,90 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
         style="width:100%;margin-top:6px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border2);
                border-radius:8px;color:var(--text);font-size:13px;font-family:var(--mono);letter-spacing:.04em;box-sizing:border-box;outline:none"/>
     </div>
+    <div id="nombre-row" style="display:none;margin-top:10px;">
+      <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Nombre o Razon Social</label>
+      <input id="sale-nombre" maxlength="254" placeholder="Nombre completo o razon social" autocomplete="off"
+        style="width:100%;margin-top:6px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border2);
+               border-radius:8px;color:var(--text);font-size:13px;font-family:var(--font);box-sizing:border-box;outline:none"/>
+    </div>
+    <div id="contacto-row" style="display:none;margin-top:10px;">
+      <div style="display:flex;gap:10px;">
+        <div style="flex:1">
+          <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Telefono</label>
+          <input id="sale-tel" maxlength="10" placeholder="5512345678" autocomplete="off"
+            style="width:100%;margin-top:6px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border2);
+                   border-radius:8px;color:var(--text);font-size:13px;font-family:var(--mono);letter-spacing:.04em;box-sizing:border-box;outline:none"/>
+        </div>
+        <div style="flex:1">
+          <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Correo electronico</label>
+          <input id="sale-email" maxlength="100" placeholder="cliente@empresa.mx" type="email" autocomplete="off"
+            style="width:100%;margin-top:6px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border2);
+                   border-radius:8px;color:var(--text);font-size:13px;font-family:var(--font);box-sizing:border-box;outline:none"/>
+        </div>
+      </div>
+      <div style="margin-top:6px;display:flex;align-items:center;gap:6px">
+        <input type="checkbox" id="save-cliente-check" style="accent-color:var(--amber);cursor:pointer">
+        <label for="save-cliente-check" style="font-size:11px;color:var(--muted);cursor:pointer">
+          Guardar datos fiscales del cliente para futuras compras
+        </label>
+      </div>
+    </div>
+    <div id="regimen-row" style="display:none;margin-top:10px;">
+      <div style="display:flex;gap:10px;">
+        <div style="flex:1">
+          <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Regimen Fiscal</label>
+          <select id="sale-regimen" style="width:100%;margin-top:6px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:var(--font);box-sizing:border-box;outline:none">
+            <option value="601">601 - General de Ley Personas Morales</option>
+            <option value="603">603 - Sin fines de lucro</option>
+            <option value="605">605 - Sueldos y Salarios</option>
+            <option value="606">606 - Arrendamiento</option>
+            <option value="607">607 - Enajenacion de bienes</option>
+            <option value="608">608 - Demas ingresos</option>
+            <option value="610">610 - Residentes en el extranjero</option>
+            <option value="611">611 - Ingresos por dividendos</option>
+            <option value="612" selected>612 - Personas Fisicas con Act. Empresariales</option>
+            <option value="614">614 - Ingresos por intereses</option>
+            <option value="616">616 - Sin obligaciones fiscales</option>
+            <option value="620">620 - Sociedades Cooperativas de Produccion</option>
+            <option value="621">621 - Incorporacion Fiscal</option>
+            <option value="622">622 - Agricola, Ganadera, Silvicola y Pesquera</option>
+            <option value="623">623 - Opcional para Grupos de Sociedades</option>
+            <option value="624">624 - Coordinados</option>
+            <option value="625">625 - Plataformas Tecnologicas</option>
+            <option value="626">626 - Simplificado de Confianza</option>
+          </select>
+        </div>
+        <div style="flex:1">
+          <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Uso CFDI</label>
+          <select id="sale-uso" style="width:100%;margin-top:6px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:var(--font);box-sizing:border-box;outline:none">
+            <option value="G01">G01 - Adquisicion de mercancias</option>
+            <option value="G02">G02 - Devoluciones y descuentos</option>
+            <option value="G03" selected>G03 - Gastos en general</option>
+            <option value="I01">I01 - Construcciones</option>
+            <option value="I02">I02 - Mobilario y equipo de oficina</option>
+            <option value="I03">I03 - Equipo de transporte</option>
+            <option value="I04">I04 - Equipo de computo y accesorios</option>
+            <option value="I05">I05 - Dados, troqueles y herramental</option>
+            <option value="I06">I06 - Comunicaciones telefonicas</option>
+            <option value="I07">I07 - Comunicaciones satelitales</option>
+            <option value="I08">I08 - Otra maquinaria y equipo</option>
+            <option value="D01">D01 - Honorarios medicos y dentales</option>
+            <option value="D02">D02 - Gastos medicos por incapacidad</option>
+            <option value="D03">D03 - Gastos funerales</option>
+            <option value="D04">D04 - Donativos</option>
+            <option value="D05">D05 - Intereses reales creditos hipotecarios</option>
+            <option value="D06">D06 - Aportaciones voluntarias al SAR</option>
+            <option value="D07">D07 - Primas por seguros de gastos medicos</option>
+            <option value="D08">D08 - Gastos de transportacion escolar</option>
+            <option value="D09">D09 - Depositos en cuentas de ahorro</option>
+            <option value="D10">D10 - Pagos por servicios educativos</option>
+            <option value="S01">S01 - Sin efectos fiscales</option>
+            <option value="CP01">CP01 - Pagos</option>
+            <option value="CN01">CN01 - Nomina</option>
+          </select>
+        </div>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeSaleModal()">Cancelar</button>
       <button class="btn-save" id="confirm-sale-btn" onclick="confirmSale()">✅ Confirmar y cobrar</button>
@@ -1260,6 +1441,7 @@ function updateClock() {
 // ─── Navigation ──────────────────────────────────────────────
 const viewTitles = {pos:'Punto de Venta',dash:'Dashboard',corte:'Corte Z',catalog:'Catálogo',migrate:'Importar datos',loyalty:'Lealtad'};
 function showView(v) {
+    if (v === 'clientes') { setTimeout(cliLoad, 50); }
   if (v === 'reportes') { setTimeout(loadReportes, 50); }
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -1378,6 +1560,18 @@ function cobrar() {
   const total = cart.reduce((s,i)=>s+i.subtotal,0);
   const factura = document.getElementById('factura-check').checked;
   document.getElementById('rfc-row').style.display = factura ? 'block' : 'none';
+      document.getElementById('cp-row').style.display = factura ? 'block' : 'none';
+      document.getElementById('nombre-row').style.display = factura ? 'block' : 'none';
+      document.getElementById('regimen-row').style.display = factura ? 'block' : 'none';
+      document.getElementById('contacto-row').style.display = factura ? 'block' : 'none';
+      if (factura) {
+        const savedTel = loyaltyData?.phone || loyaltyData?.account?.phone || '';
+        const savedEmail = loyaltyData?.email || loyaltyData?.account?.email || '';
+        if (savedTel) { document.getElementById('sale-tel').value = savedTel; document.getElementById('sale-tel').style.borderColor = 'var(--green)'; }
+        else { document.getElementById('sale-tel').value = ''; document.getElementById('sale-tel').style.borderColor = ''; }
+        if (savedEmail) { document.getElementById('sale-email').value = savedEmail; document.getElementById('sale-email').style.borderColor = 'var(--green)'; }
+        else { document.getElementById('sale-email').value = ''; document.getElementById('sale-email').style.borderColor = ''; }
+      }
   document.getElementById('cp-row').style.display = factura ? 'block' : 'none';
   if (!factura) {
     document.getElementById('sale-rfc').value = '';
@@ -1420,7 +1614,10 @@ async function confirmSale() {
   const body = { total, payment_method:payment, items:cart.map(i=>({product_id:i.id,name:i.name,quantity:i.qty,unit_price:i.price,subtotal:i.subtotal})) };
   const rfc = (document.getElementById('sale-rfc').value||'').trim().toUpperCase()||'XAXX010101000';
   let url = API+'/cobrar';
-  if (factura) url+='?factura=1&rfc='+encodeURIComponent(rfc)+'&cp='+encodeURIComponent(cp);
+  const nombre  = (document.getElementById('sale-nombre').value||'').trim();
+      const regimen = document.getElementById('sale-regimen').value||'612';
+      const uso     = document.getElementById('sale-uso').value||'G03';
+      if (factura) url+='?factura=1&rfc='+encodeURIComponent(rfc)+'&cp='+encodeURIComponent(cp)+'&nombre='+encodeURIComponent(nombre)+'&regimen='+encodeURIComponent(regimen)+'&uso='+encodeURIComponent(uso);
   if (phone) url+=(url.includes('?')?'&':'?')+'phone='+phone;
   try {
     const res = await apiFetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -1432,8 +1629,31 @@ async function confirmSale() {
     // Si hay RFC nuevo y teléfono, guardarlo en la cuenta de lealtad
     const phoneVal = document.getElementById('customer-phone').value.replace(/\D/g,'');
     const rfcVal = (document.getElementById('sale-rfc').value||'').trim().toUpperCase();
+    const telModal  = (document.getElementById('sale-tel')?.value||'').replace(/\D/g,'');
+    const emailModal = (document.getElementById('sale-email')?.value||'').trim().toLowerCase();
+    const saveCheck  = document.getElementById('save-cliente-check')?.checked;
     if (phoneVal && rfcVal && rfcVal !== 'XAXX010101000' && (!loyaltyData?.rfc)) {
       apiFetch(API+'/loyalty/rfc', {method:'POST',headers:{'Content-Type':'application/json'},body: JSON.stringify({phone: phoneVal, rfc: rfcVal})}).catch(()=>{});
+    }
+    if (saveCheck && (telModal || emailModal)) {
+      const payload = { phone: phoneVal || telModal };
+      if (telModal)  payload.tel   = telModal;
+      if (emailModal) payload.email = emailModal;
+      const nombreVal  = (document.getElementById('sale-nombre')?.value||'').trim();
+      const rfcFull    = (document.getElementById('sale-rfc')?.value||'').trim().toUpperCase();
+      const cpFull     = (document.getElementById('sale-cp')?.value||'').trim();
+      const regimenVal = document.getElementById('sale-regimen')?.value||'612';
+      const usoVal     = document.getElementById('sale-uso')?.value||'G03';
+      if (nombreVal)   payload.nombre  = nombreVal;
+      if (rfcFull)     payload.rfc     = rfcFull;
+      if (cpFull)      payload.cp      = cpFull;
+      if (regimenVal)  payload.regimen = regimenVal;
+      if (usoVal)      payload.uso     = usoVal;
+      apiFetch(API+'/loyalty/cliente', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      }).then(()=>toast('Cliente guardado','success')).catch(()=>{});
     }
     const cpVal = (document.getElementById('sale-cp').value||'').trim();
     if (phoneVal && cpVal && cpVal !== '64000' && (!loyaltyData?.cp)) {
@@ -1933,7 +2153,209 @@ function printTicket() {
   window.print();
   setTimeout(()=>{pa.style.display='none';},1000);
 }
-</script>
+
+  // ── CLIENTES ──────────────────────────────────────────────────
+  var cliData = [];
+  var cliSel = null;
+  var cliTierFilter = '';
+  var cliSearchQ = '';
+  var CLI_COLORS = [
+    ['#1E3A5F','#60A5FA'],['#3B1F45','#C084FC'],
+    ['#1A3D2E','#4ADE80'],['#3D2A1A','#FB923C'],
+    ['#3D1A2A','#F472B6'],['#1A2D3D','#38BDF8']
+  ];
+  function cliInitials(n) {
+    return n.trim().split(/\s+/).slice(0,2).map(function(w){ return w[0]; }).join('').toUpperCase();
+  }
+  function cliFmt(n) {
+    return '$' + (+n).toLocaleString('es-MX', {maximumFractionDigits:0});
+  }
+  function cliCol(i) { return CLI_COLORS[i % CLI_COLORS.length]; }
+
+  async function cliLoad() {
+    var token = localStorage.getItem('turbopos_token') || '';
+    var params = new URLSearchParams({ search: cliSearchQ, tier: cliTierFilter });
+    try {
+      var res = await fetch('/api/v1/customers?' + params, { headers: { Authorization: token } });
+      var d = await res.json();
+      cliData = d.customers || [];
+      cliRenderList();
+    } catch(e) {
+      document.getElementById('cli-list').innerHTML = '<div class="cli-empty"><div>Error al cargar</div></div>';
+    }
+  }
+
+  function cliRenderList() {
+    var list = document.getElementById('cli-list');
+    document.getElementById('cli-count').textContent = cliData.length + ' cliente' + (cliData.length !== 1 ? 's' : '');
+    if (!cliData.length) {
+      list.innerHTML = '<div class="cli-empty"><div>Sin resultados</div></div>';
+      return;
+    }
+    var tierLabel = { gold: 'Gold', silver: 'Silver', bronze: 'Bronze' };
+    list.innerHTML = cliData.map(function(c, i) {
+      var col = cliCol(i);
+      var bg = col[0]; var fg = col[1];
+      return '<div class="cli-row' + (c.id === cliSel ? ' sel' : '') + '" onclick="cliSelect(\'' + c.id + '\')">' +
+        '<div class="cli-av" style="background:' + bg + ';color:' + fg + '">' + cliInitials(c.name) + '</div>' +
+        '<div class="cli-rinfo">' +
+          '<div class="cli-rname">' + c.name + '</div>' +
+          '<div class="cli-rsub">' + (c.rfc || c.phone || '--') + '</div>' +
+        '</div>' +
+        '<div class="cli-rmeta">' +
+          '<div class="cli-ramt">' + cliFmt(c.total_spent) + '</div>' +
+          '<div class="cli-rvst">' + (tierLabel[c.tier] || c.tier) + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  async function cliSelect(id) {
+    cliSel = id;
+    cliRenderList();
+    var token = localStorage.getItem('turbopos_token') || '';
+    var det = document.getElementById('cli-detail');
+    det.innerHTML = '<div class="cli-empty"><div>Cargando...</div></div>';
+    try {
+      var res = await fetch('/api/v1/customers/' + id, { headers: { Authorization: token } });
+      var c = await res.json();
+      cliRenderDetail(c);
+    } catch(e) {
+      det.innerHTML = '<div class="cli-empty"><div>Error al cargar</div></div>';
+    }
+  }
+
+  function cliRenderDetail(c) {
+    var idx = cliData.findIndex(function(x) { return x.id === c.id; });
+    var col = cliCol(idx >= 0 ? idx : 0);
+    var bg = col[0]; var fg = col[1];
+    var tierMap = {
+      gold:   { label: 'Gold',   col: '#FFB547', bg: 'rgba(255,181,71,.12)' },
+      silver: { label: 'Silver', col: '#94A3B8', bg: 'rgba(148,163,184,.12)' },
+      bronze: { label: 'Bronze', col: '#B4783C', bg: 'rgba(180,120,60,.12)' }
+    };
+    var tier = tierMap[c.tier] || tierMap.bronze;
+    var tierMax = c.tier === 'gold' ? 5000 : c.tier === 'silver' ? 2000 : 1000;
+    var pct = Math.min(Math.round((c.points / tierMax) * 100), 100);
+    var nextPts = c.tier === 'bronze' ? 1000 : c.tier === 'silver' ? 2000 : 5000;
+
+    var txRows = (c.transactions || []).slice(0, 5).map(function(tx) {
+      return '<tr>' +
+        '<td class="tx-id-m">' + (tx.description || tx.type) + '</td>' +
+        '<td style="color:var(--muted)">' + (tx.date ? tx.date.substr(0,10) : '--') + '</td>' +
+        '<td class="tx-amt-m">' + (tx.total ? cliFmt(tx.total) : '--') + '</td>' +
+        '<td><span class="spill s-pend">pendiente</span></td>' +
+      '</tr>';
+    }).join('');
+
+    document.getElementById('cli-detail').innerHTML =
+      '<div class="cli-dhead">' +
+        '<div class="cli-dav" style="background:' + bg + ';color:' + fg + '">' + cliInitials(c.name) + '</div>' +
+        '<div class="cli-dmeta">' +
+          '<div class="cli-dname">' + c.name + '</div>' +
+          '<div class="cli-drfc">' + (c.rfc || 'Sin RFC') + '</div>' +
+          '<div class="cli-dtags"><span class="cli-tag" style="background:' + tier.bg + ';color:' + tier.col + ';border-color:' + tier.col + '44">' + tier.label + '</span></div>' +
+        '</div>' +
+        '<div class="cli-dacts">' +
+          '<button class="cli-btn-g" onclick="cliNuevaVenta(\'' + c.phone + '\')">+ Venta</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="cli-kpis">' +
+        '<div class="cli-kpi"><div class="cli-kpi-l">Consumo total</div><div class="cli-kpi-v" style="color:var(--accent)">' + cliFmt(c.total_spent) + '</div></div>' +
+        '<div class="cli-kpi"><div class="cli-kpi-l">Transacciones</div><div class="cli-kpi-v">' + (c.transactions || []).length + '</div></div>' +
+        '<div class="cli-kpi"><div class="cli-kpi-l">Puntos</div><div class="cli-kpi-v" style="color:' + tier.col + '">' + c.points.toLocaleString() + '</div></div>' +
+        '<div class="cli-kpi"><div class="cli-kpi-l">Telefono</div><div class="cli-kpi-v" style="font-size:15px">' + c.phone + '</div></div>' +
+      '</div>' +
+      '<div class="cli-panels">' +
+        '<div class="cli-panel">' +
+          '<div class="cli-ph"><span class="cli-ph-t">Datos Fiscales</span>' +
+          '<span class="cli-ph-a" onclick="cliCopyRfc(\'' + (c.rfc||'') + '\')">Copiar RFC</span></div>' +
+          '<div class="cli-pb"><div class="cli-igrid">' +
+            '<div><div class="cli-il">RFC</div><div class="cli-iv mono">' + (c.rfc || '--') + '</div></div>' +
+            '<div><div class="cli-il">Email</div><div class="cli-iv">' + (c.email || '--') + '</div></div>' +
+            '<div><div class="cli-il">Nivel</div><div class="cli-iv" style="color:' + tier.col + '">' + tier.label + '</div></div>' +
+            '<div><div class="cli-il">Total</div><div class="cli-iv">' + cliFmt(c.total_spent) + '</div></div>' +
+          '</div></div>' +
+        '</div>' +
+        '<div class="cli-panel">' +
+          '<div class="cli-ph"><span class="cli-ph-t">Lealtad</span></div>' +
+          '<div class="cli-pb">' +
+            '<div class="loy-pts">' + c.points.toLocaleString() + ' pts</div>' +
+            '<div class="loy-track"><div class="loy-fill" style="width:' + pct + '%"></div></div>' +
+            '<div class="loy-tiers">' +
+              '<span class="' + (c.tier==='bronze'?'loy-tier-on':'') + '">Bronze</span>' +
+              '<span class="' + (c.tier==='silver'?'loy-tier-on':'') + '">Silver</span>' +
+              '<span class="' + (c.tier==='gold'?'loy-tier-on':'') + '">Gold</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="cli-panel cli-panel-full">' +
+        '<div class="cli-ph"><span class="cli-ph-t">Historial</span></div>' +
+        (txRows
+          ? '<table class="cli-table"><thead><tr><th>Descripcion</th><th>Fecha</th><th>Total</th><th>CFDI</th></tr></thead><tbody>' + txRows + '</tbody></table>'
+          : '<div class="cli-empty" style="min-height:80px">Sin transacciones</div>') +
+      '</div>';
+  }
+
+  function cliSearch(q) {
+    cliSearchQ = q;
+    clearTimeout(window._cliT);
+    window._cliT = setTimeout(cliLoad, 300);
+  }
+  function cliTier(el, t) {
+    document.querySelectorAll('.cli-chip').forEach(function(c) { c.classList.remove('on'); });
+    el.classList.add('on');
+    cliTierFilter = t;
+    cliLoad();
+  }
+  function cliOpenModal() {
+    document.getElementById('cli-modal').style.display = 'flex';
+    setTimeout(function() { document.getElementById('cm-nombre').focus(); }, 50);
+  }
+  function cliCloseModal() {
+    document.getElementById('cli-modal').style.display = 'none';
+    ['cm-nombre','cm-phone','cm-rfc','cm-email'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+  }
+  function cliCopyRfc(rfc) {
+    if (rfc) navigator.clipboard.writeText(rfc).then(function() { showToast('RFC copiado'); });
+  }
+  function cliNuevaVenta(phone) {
+    showView('pos');
+    setTimeout(function() {
+      var inp = document.getElementById('customer-phone');
+      if (inp) { inp.value = phone; inp.dispatchEvent(new Event('input')); }
+    }, 200);
+  }
+  async function cliSave() {
+    var nombre = document.getElementById('cm-nombre').value.trim();
+    var phone  = document.getElementById('cm-phone').value.trim();
+    if (!nombre || !phone) { showToast('Nombre y telefono requeridos'); return; }
+    var token = localStorage.getItem('turbopos_token') || '';
+    try {
+      var res = await fetch('/api/v1/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: token },
+        body: JSON.stringify({
+          name:  nombre,
+          phone: phone,
+          rfc:   document.getElementById('cm-rfc').value.trim().toUpperCase(),
+          email: document.getElementById('cm-email').value.trim()
+        })
+      });
+      var d = await res.json();
+      if (!res.ok) { showToast('Error: ' + (d.error || res.status)); return; }
+      cliCloseModal();
+      await cliLoad();
+      if (d.id) cliSelect(d.id);
+      showToast('Cliente guardado');
+    } catch(e) { showToast('Error de red'); }
+  }
+
+  </script>
 <!-- ── Modal Ticket ──────────────────────────────────────────────── -->
 <div id="ticket-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center">
   <div style="background:var(--surface);border-radius:16px;width:380px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.5)">
@@ -1949,7 +2371,101 @@ function printTicket() {
   </div>
 </div>
 <div id="print-area" style="display:none;font-family:Courier New,monospace;font-size:12px;width:280px;margin:0 auto"></div>
-<style>@media print{body>*:not(#print-area){display:none!important}#print-area{display:block!important}}</style>
+<style>@media print{body>*:not(#print-area){display:none!important}#print-area{display:block!important}}
+    /* CLIENTES */
+    #view-clientes{display:none;height:calc(100vh - 58px);overflow:hidden}
+    .cli-shell{display:flex;height:100%}
+    .cli-sidebar{width:290px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--surface)}
+    .cli-sb-head{padding:16px;border-bottom:1px solid var(--border)}
+    .cli-sb-title{font-size:11px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+    .cli-search{position:relative}
+    .cli-search input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px 8px 30px;font-family:var(--font);font-size:13px;color:var(--text);outline:none;transition:border-color .2s}
+    .cli-search input:focus{border-color:var(--accent)}
+    .cli-search input::placeholder{color:var(--muted)}
+    .cli-search-ic{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
+    .cli-filters{display:flex;gap:5px;padding:10px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+    .cli-chip{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--font);transition:all .2s}
+    .cli-chip.on{background:rgba(255,181,71,.12);border-color:var(--accent);color:var(--accent)}
+    .cli-list{flex:1;overflow-y:auto;padding:6px}
+    .cli-list::-webkit-scrollbar{width:3px}
+    .cli-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    .cli-row{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;cursor:pointer;transition:all .15s;border:1px solid transparent}
+    .cli-row:hover{background:var(--surface2,#131926)}
+    .cli-row.sel{background:rgba(255,181,71,.06);border-color:rgba(255,181,71,.15)}
+    .cli-av{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+    .cli-rinfo{flex:1;min-width:0}
+    .cli-rname{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .cli-rsub{font-size:10px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--mono)}
+    .cli-rmeta{text-align:right;flex-shrink:0}
+    .cli-ramt{font-size:12px;font-weight:700;color:var(--accent);font-family:var(--mono)}
+    .cli-rvst{font-size:10px;color:var(--muted);margin-top:1px}
+    .cli-footer{padding:10px 14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+    .cli-count{font-size:11px;color:var(--muted)}
+    .cli-new-btn{display:flex;align-items:center;gap:5px;padding:6px 13px;background:var(--accent);color:#080C14;border:none;border-radius:7px;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s}
+    .cli-new-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+    .cli-detail{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px}
+    .cli-detail::-webkit-scrollbar{width:3px}
+    .cli-detail::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    .cli-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);gap:10px;min-height:200px}
+    .cli-empty-ic{font-size:40px;opacity:.25}
+    .cli-dhead{position:relative;display:flex;align-items:flex-start;gap:16px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .cli-dhead::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent)}
+    .cli-dav{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;flex-shrink:0}
+    .cli-dmeta{flex:1}
+    .cli-dname{font-size:19px;font-weight:700;letter-spacing:-.3px}
+    .cli-drfc{font-family:var(--mono);font-size:11px;color:var(--accent);margin-top:3px}
+    .cli-dtags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+    .cli-tag{padding:3px 9px;border-radius:5px;font-size:10px;font-weight:600;border:1px solid}
+    .cli-dacts{display:flex;gap:6px;align-self:flex-start}
+    .cli-btn-g{display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--surface2,#131926);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-family:var(--font);font-size:11px;font-weight:500;cursor:pointer;transition:all .2s}
+    .cli-btn-g:hover{border-color:var(--accent);color:var(--text)}
+    .cli-btn-p{display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--accent);color:#080C14;border:none;border-radius:7px;font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer}
+    .cli-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .cli-kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+    .cli-kpi-l{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:600}
+    .cli-kpi-v{font-size:20px;font-weight:700;margin-top:5px;font-family:var(--mono);letter-spacing:-1px}
+    .cli-kpi-s{font-size:10px;color:var(--muted);margin-top:3px}
+    .cli-panels{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .cli-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+    .cli-panel-full{grid-column:span 2}
+    .cli-ph{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+    .cli-ph-t{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+    .cli-ph-a{font-size:11px;color:var(--accent);cursor:pointer;font-weight:500}
+    .cli-pb{padding:14px 16px}
+    .cli-igrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .cli-il{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:600;margin-bottom:3px}
+    .cli-iv{font-size:12px;font-weight:500}
+    .cli-iv.mono{font-family:var(--mono);font-size:11px;color:var(--accent)}
+    .loy-pts{font-size:22px;font-weight:800;font-family:var(--mono);color:var(--accent)}
+    .loy-track{height:6px;background:var(--bg);border-radius:4px;overflow:hidden;margin:8px 0}
+    .loy-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),#FF8C00);transition:width .8s ease}
+    .loy-tiers{display:flex;justify-content:space-between;font-size:9px;color:var(--muted)}
+    .loy-tier-on{color:var(--accent);font-weight:700}
+    .cli-table{width:100%;border-collapse:collapse}
+    .cli-table th{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:600;padding:7px 12px;text-align:left;border-bottom:1px solid var(--border)}
+    .cli-table td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px}
+    .cli-table tr:last-child td{border-bottom:none}
+    .cli-table tr:hover td{background:var(--surface2,#131926)}
+    .tx-id-m{font-family:var(--mono);font-size:10px;color:var(--muted)}
+    .tx-amt-m{font-family:var(--mono);font-weight:700;color:var(--accent)}
+    .spill{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700}
+    .s-ok{background:rgba(46,204,113,.1);color:#2ECC71}
+    .s-pend{background:rgba(255,181,71,.1);color:var(--accent)}
+    .cli-modal-ov{position:fixed;inset:0;background:rgba(8,12,20,.85);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center}
+    .cli-modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:440px;overflow:hidden}
+    .cli-mh{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+    .cli-mh-t{font-size:15px;font-weight:700}
+    .cli-mc{width:26px;height:26px;border-radius:6px;background:var(--surface2,#131926);border:none;color:var(--muted);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+    .cli-mb{padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+    .cli-mf{display:flex;gap:10px}
+    .cli-mfg{display:flex;flex-direction:column;gap:5px;flex:1}
+    .cli-ml{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+    .cli-mi{background:var(--surface2,#131926);border:1px solid var(--border);border-radius:7px;padding:8px 11px;font-family:var(--font);font-size:12px;color:var(--text);outline:none;transition:border-color .2s}
+    .cli-mi:focus{border-color:var(--accent)}
+    .cli-mi::placeholder{color:var(--muted)}
+    .cli-mfoot{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+
+  </style>
 </body>
 </html>
 

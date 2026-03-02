@@ -1,4 +1,4 @@
-﻿// Package finkok implementa el cliente SOAP para timbrado real con Finkok
+// Package finkok implementa el cliente SOAP para timbrado real con Finkok
 package finkok
 
 import (

@@ -1,4 +1,4 @@
-﻿syntax = "proto3";
+syntax = "proto3";
 package cfdi.v1;
 option go_package = "github.com/turbopos/turbopos/gen/go/proto/cfdi/v1;cfdiv1";
 service CFDIService {
@@ -17,6 +17,9 @@ message FacturaRequest {
   bytes  key_bytes                 = 9;
   string key_password              = 10;
   string tenant_id                 = 11;
+  string nombre_receptor            = 12;
+  string regimen_fiscal_receptor    = 13;
+  string uso_cfdi                   = 14;
 }
 message FacturaResponse {
   string status    = 1;

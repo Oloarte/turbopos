@@ -1,4 +1,4 @@
-﻿package main
+package main
 
 import (
 	"encoding/json"
@@ -101,7 +101,7 @@ func (s *CFDIServer) checkFailover() {
 	if s.TotalRequests < 5 { return }
 	ratio := float64(s.FailedRequests) / float64(s.TotalRequests)
 	if ratio > MaxErrorRatio && s.CurrentPAC == 0 {
-		log.Printf("[Kill-Switch] %.2f%% errores — cambiando a PAC Secundario", ratio*100)
+		log.Printf("[Kill-Switch] %.2f%% errores Ã¢â‚¬â€ cambiando a PAC Secundario", ratio*100)
 		s.CurrentPAC = 1; s.TotalRequests = 0; s.FailedRequests = 0
 	}
 }
@@ -149,8 +149,8 @@ func (s *CFDIServer) Timbrar(ctx context.Context, req *pb.FacturaRequest) (*pb.F
 	}, nil
 }
 
-// ─── HTTP handler para cancelación ──────────────────────────────────────────
-// GET/POST :50055/cancelar — llamado directamente por el BFF via HTTP
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ HTTP handler para cancelaciÃƒÂ³n Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// GET/POST :50055/cancelar Ã¢â‚¬â€ llamado directamente por el BFF via HTTP
 
 func (s *CFDIServer) serveCancelar(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -174,7 +174,7 @@ func (s *CFDIServer) serveCancelar(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.RFC == ""    { req.RFC = "EKU9003173C9" }
 	if req.Motivo == "" { req.Motivo = "02" }
-	// UUID en mayúsculas (formato SAT)
+	// UUID en mayÃƒÂºsculas (formato SAT)
 	req.UUID = strings.ToUpper(req.UUID)
 
 	log.Printf("[CFDI] Cancelando UUID=%s RFC=%s Motivo=%s", req.UUID, req.RFC, req.Motivo)
@@ -194,7 +194,7 @@ func (s *CFDIServer) serveCancelar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("[CFDI] Cancelación OK UUID=%s Status=%s", req.UUID, result.Status)
+	log.Printf("[CFDI] CancelaciÃƒÂ³n OK UUID=%s Status=%s", req.UUID, result.Status)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"ok":      true,
@@ -215,7 +215,7 @@ func main() {
 	pb.RegisterCFDIServiceServer(grpcSrv, srv)
 	reflection.Register(grpcSrv)
 
-	// HTTP en :50055 para cancelación
+	// HTTP en :50055 para cancelaciÃƒÂ³n
 	mux := http.NewServeMux()
 	mux.HandleFunc("/cancelar", srv.serveCancelar)
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -224,7 +224,7 @@ func main() {
 	})
 
 	go func() {
-		log.Printf("[CFDI] HTTP cancelación en %s", HTTPPort)
+		log.Printf("[CFDI] HTTP cancelaciÃƒÂ³n en %s", HTTPPort)
 		if err := http.ListenAndServe(HTTPPort, mux); err != nil {
 			log.Fatalf("HTTP server: %v", err)
 		}

@@ -43,14 +43,15 @@ func (s *LoyaltyServer) GetAccount(ctx context.Context, req *pb.GetAccountReques
         return nil, status.Errorf(codes.InvalidArgument, "phone requerido")
     }
 
-    var id, name, tier, rfc, cp string
+    var id, name, tier, rfc, cp, regimenFiscal, nombreFiscal string
     var points int32
     var totalSpent float64
-
     err := s.db.QueryRowContext(ctx, `
-        SELECT id, COALESCE(name,''), points, total_spent, tier, COALESCE(rfc,''), COALESCE(cp,'')
+        SELECT id, COALESCE(name,''), points, total_spent, tier,
+               COALESCE(rfc,''), COALESCE(cp,''),
+               COALESCE(regimen_fiscal,''), COALESCE(nombre_fiscal,'')
         FROM loyalty_accounts WHERE phone = $1
-    `, req.Phone).Scan(&id, &name, &points, &totalSpent, &tier, &rfc, &cp)
+    `, req.Phone).Scan(&id, &name, &points, &totalSpent, &tier, &rfc, &cp, &regimenFiscal, &nombreFiscal)
 
     if err == sql.ErrNoRows {
         return nil, status.Errorf(codes.NotFound, "cliente no encontrado: %s", req.Phone)
@@ -60,14 +61,16 @@ func (s *LoyaltyServer) GetAccount(ctx context.Context, req *pb.GetAccountReques
     }
 
     return &pb.AccountResponse{
-        AccountId:  id,
-        Phone:      req.Phone,
-        Name:       name,
-        Points:     points,
-        TotalSpent: totalSpent,
-        Tier:       tier,
-        Rfc:        rfc,
-        Cp:         cp,
+        AccountId:     id,
+        Phone:         req.Phone,
+        Name:          name,
+        Points:        points,
+        TotalSpent:    totalSpent,
+        Tier:          tier,
+        Rfc:           rfc,
+        Cp:            cp,
+        RegimenFiscal: regimenFiscal,
+        NombreFiscal:  nombreFiscal,
     }, nil
 }
 

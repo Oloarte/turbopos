@@ -1,4 +1,4 @@
-﻿// TurboPOS v10.1 - BFF (Backend For Frontend)
+// TurboPOS v10.1 - BFF (Backend For Frontend)
 package main
 
 import (
@@ -82,6 +82,10 @@ func main() {
 	mux.HandleFunc("/api/v1/loyalty/redeem",  gw.handleLoyaltyRedeem)
     mux.HandleFunc("/api/v1/loyalty/rfc",     gw.handleLoyaltyRfc)
 	mux.HandleFunc("/api/v1/loyalty/cp",      gw.handleLoyaltyCp)
+    mux.HandleFunc("/api/v1/loyalty/fiscal",   gw.handleLoyaltyFiscal)
+	mux.HandleFunc("/api/v1/loyalty/cliente",  gw.handleLoyaltyCliente)
+	mux.HandleFunc("/api/v1/customers", gw.handleCustomers)
+	mux.HandleFunc("/api/v1/customers/", gw.handleCustomerByID)
 	mux.HandleFunc("/api/v1/migrate/preview", gw.handleMigratePreview)
 	mux.HandleFunc("/api/v1/migrate",         gw.handleMigrate)
 	mux.HandleFunc("/api/v1/reportes", gw.handleReportes)
@@ -152,11 +156,28 @@ func (gw *Gateway) handleCobrar(w http.ResponseWriter, r *http.Request) {
 	}
 	// Auto-timbrado: si viene ?factura=1 en la URL, timbrar como público general en background
 	if r.URL.Query().Get("factura") == "1" || r.URL.Query().Get("rfc") != "" {
-		rfcTimbrar := r.URL.Query().Get("rfc"); if rfcTimbrar == "" { rfcTimbrar = "XAXX010101000" }
-        go func(saleID string, total float64, rfc string, cp string, tID string) {
+		rfcTimbrar := strings.ToUpper(strings.TrimSpace(r.URL.Query().Get("rfc")))
+        if rfcTimbrar == "" { rfcTimbrar = "XAXX010101000" }
+        nombreTimbrar := strings.ToUpper(strings.TrimSpace(r.URL.Query().Get("nombre")))
+        regimenTimbrar := r.URL.Query().Get("regimen")
+        if regimenTimbrar == "" {
+                if len(rfcTimbrar) == 13 { regimenTimbrar = "612" } else { regimenTimbrar = "601" }
+        }
+        if rfcTimbrar != "XAXX010101000" && nombreTimbrar == "" {
+                var nombre, regimen string
+                row := gw.db.QueryRow(
+                        `SELECT COALESCE(nombre,''), COALESCE(regimen_fiscal,'') FROM loyalty_accounts WHERE rfc = $1 LIMIT 1`,
+                        rfcTimbrar)
+                if err := row.Scan(&nombre, &regimen); err == nil {
+                        if nombreTimbrar == "" { nombreTimbrar = nombre }
+                        if regimenTimbrar == "" { regimenTimbrar = regimen }
+                }
+        }
+        go func(saleID string, total float64, rfc, cp, nombre, regimen, tID string) {
                 ctxT, cancelT := context.WithTimeout(context.Background(), 30*time.Second)
                 defer cancelT()
-                treq := &pb_cfdi.FacturaRequest{VentaId: saleID, Total: total, Rfc: rfc, CodigoPostalReceptor: cp}
+                treq := &pb_cfdi.FacturaRequest{VentaId: saleID, Total: total, Rfc: rfc,
+                        CodigoPostalReceptor: cp, NombreReceptor: nombre, RegimenFiscalReceptor: regimen}
                 if cB64, kBytes, kPass, _, csdOK := gw.loadTenantCSD(tID); csdOK {
                     treq.CertB64 = cB64; treq.KeyBytes = kBytes; treq.KeyPassword = kPass
                 }
@@ -168,13 +189,224 @@ func (gw *Gateway) handleCobrar(w http.ResponseWriter, r *http.Request) {
                 gw.db.Exec(`UPDATE sales SET cfdi_uuid=$1, cfdi_status=$2 WHERE id=$3::uuid`,
                     tRes.GetUuid(), "timbrado", saleID)
                 log.Printf("[BFF] Auto-timbrado OK sale=%s uuid=%s", saleID, tRes.GetUuid())
-        }(res.GetSaleId(), req.Total, rfcTimbrar, r.URL.Query().Get("cp"), tid)
+        }(res.GetSaleId(), req.Total, rfcTimbrar, r.URL.Query().Get("cp"), nombreTimbrar, regimenTimbrar, tid)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"sale_id": res.GetSaleId(), "status": res.GetStatus(),
 		"total": res.GetTotal(), "created_at": res.GetCreatedAt(),
 	})
+}
+
+
+// ── CUSTOMERS ─────────────────────────────────────────────────────────────────
+
+func (gw *Gateway) handleCustomers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	token := r.Header.Get("Authorization")
+	if token == "" {
+		token = r.URL.Query().Get("token")
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		search := r.URL.Query().Get("search")
+		tier := r.URL.Query().Get("tier")
+
+		rows, err := gw.db.QueryContext(r.Context(), `
+			SELECT id, phone, COALESCE(rfc,''), name, COALESCE(email,''),
+			       points, total_spent, tier, created_at
+			FROM   loyalty_accounts
+			WHERE  ($1 = '' OR name ILIKE '%' || $1 || '%'
+			        OR COALESCE(rfc,'') ILIKE '%' || $1 || '%'
+			        OR phone ILIKE '%' || $1 || '%')
+			  AND  ($2 = '' OR tier = $2)
+			ORDER  BY total_spent DESC
+			LIMIT  100`,
+			search, tier)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+		defer rows.Close()
+
+		type CRow struct {
+			ID         string  `json:"id"`
+			Phone      string  `json:"phone"`
+			RFC        string  `json:"rfc"`
+			Name       string  `json:"name"`
+			Email      string  `json:"email"`
+			Points     int     `json:"points"`
+			TotalSpent float64 `json:"total_spent"`
+			Tier       string  `json:"tier"`
+			CreatedAt  string  `json:"created_at"`
+		}
+		var list []CRow
+		for rows.Next() {
+			var c CRow
+			var createdAt interface{}
+			if err2 := rows.Scan(&c.ID, &c.Phone, &c.RFC, &c.Name, &c.Email,
+				&c.Points, &c.TotalSpent, &c.Tier, &createdAt); err2 == nil {
+				if createdAt != nil {
+					c.CreatedAt = fmt.Sprintf("%v", createdAt)
+				}
+				list = append(list, c)
+			}
+		}
+		if list == nil {
+			list = []CRow{}
+		}
+		json.NewEncoder(w).Encode(map[string]interface{}{"customers": list, "total": len(list)})
+
+	case http.MethodPost:
+		var req struct {
+			Phone   string `json:"phone"`
+			Name    string `json:"name"`
+			RFC     string `json:"rfc"`
+			Email   string `json:"email"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Phone == "" || req.Name == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "phone y name son requeridos"})
+			return
+		}
+		var id string
+		err := gw.db.QueryRowContext(r.Context(), `
+			INSERT INTO loyalty_accounts (phone, name, rfc, email, points, total_spent, tier)
+			VALUES ($1, $2, NULLIF($3,''), NULLIF($4,''), 0, 0, 'bronze')
+			ON CONFLICT (phone) DO UPDATE SET
+			    name       = EXCLUDED.name,
+			    rfc        = COALESCE(EXCLUDED.rfc, loyalty_accounts.rfc),
+			    email      = COALESCE(EXCLUDED.email, loyalty_accounts.email),
+			    updated_at = now()
+			RETURNING id`,
+			req.Phone, req.Name, req.RFC, req.Email).Scan(&id)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(map[string]string{"id": id, "status": "created"})
+
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func (gw *Gateway) handleCustomerByID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, DELETE, OPTIONS")
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	id := strings.TrimPrefix(r.URL.Path, "/api/v1/customers/")
+	if id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "ID requerido"})
+		return
+	}
+	token := r.Header.Get("Authorization")
+	if token == "" {
+		token = r.URL.Query().Get("token")
+	}
+	_ = token
+
+	switch r.Method {
+	case http.MethodGet:
+		var c struct {
+			ID         string  `json:"id"`
+			Phone      string  `json:"phone"`
+			RFC        string  `json:"rfc"`
+			Name       string  `json:"name"`
+			Email      string  `json:"email"`
+			Points     int     `json:"points"`
+			TotalSpent float64 `json:"total_spent"`
+			Tier       string  `json:"tier"`
+		}
+		err := gw.db.QueryRowContext(r.Context(), `
+			SELECT id, phone, COALESCE(rfc,''), name, COALESCE(email,''),
+			       points, total_spent, tier
+			FROM   loyalty_accounts WHERE id = $1`, id).Scan(
+			&c.ID, &c.Phone, &c.RFC, &c.Name, &c.Email,
+			&c.Points, &c.TotalSpent, &c.Tier)
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]string{"error": "cliente no encontrado"})
+			return
+		}
+
+		rows, _ := gw.db.QueryContext(r.Context(), `
+			SELECT type, points, COALESCE(description,''), created_at
+			FROM   loyalty_transactions
+			WHERE  account_id = $1
+			ORDER  BY created_at DESC LIMIT 20`, id)
+
+		type TxRow struct {
+			Type        string `json:"type"`
+			Points      int    `json:"points"`
+			Description string `json:"description"`
+			Date        string `json:"date"`
+		}
+		var txs []TxRow
+		if rows != nil {
+			defer rows.Close()
+			for rows.Next() {
+				var tx TxRow
+				var createdAt interface{}
+				rows.Scan(&tx.Type, &tx.Points, &tx.Description, &createdAt)
+				if createdAt != nil {
+					tx.Date = fmt.Sprintf("%v", createdAt)
+				}
+				txs = append(txs, tx)
+			}
+		}
+		if txs == nil {
+			txs = []TxRow{}
+		}
+
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"id": c.ID, "phone": c.Phone, "rfc": c.RFC,
+			"name": c.Name, "email": c.Email,
+			"points": c.Points, "total_spent": c.TotalSpent,
+			"tier": c.Tier, "transactions": txs,
+		})
+
+	case http.MethodPut:
+		var req struct {
+			Name  string `json:"name"`
+			RFC   string `json:"rfc"`
+			Email string `json:"email"`
+		}
+		json.NewDecoder(r.Body).Decode(&req)
+		gw.db.ExecContext(r.Context(), `
+			UPDATE loyalty_accounts
+			SET    name       = COALESCE(NULLIF($1,''), name),
+			       rfc        = COALESCE(NULLIF($2,''), rfc),
+			       email      = COALESCE(NULLIF($3,''), email),
+			       updated_at = now()
+			WHERE  id = $4`, req.Name, req.RFC, req.Email, id)
+		json.NewEncoder(w).Encode(map[string]string{"status": "updated"})
+
+	case http.MethodDelete:
+		gw.db.ExecContext(r.Context(), `DELETE FROM loyalty_accounts WHERE id = $1`, id)
+		json.NewEncoder(w).Encode(map[string]string{"status": "deleted"})
+
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
 }
 
 func (gw *Gateway) handleLoyalty(w http.ResponseWriter, r *http.Request) {
@@ -215,6 +447,7 @@ func (gw *Gateway) handleLoyalty(w http.ResponseWriter, r *http.Request) {
                 "phone": acc.GetPhone(), "customer_name": acc.GetName(), "rfc": acc.GetRfc(), "cp": acc.GetCp(),
 			"points": acc.GetPoints(), "tier": acc.GetTier(),
 			"total_spent": acc.GetTotalSpent(),
+                "regimen_fiscal": acc.GetRegimenFiscal(), "nombre_fiscal": acc.GetNombreFiscal(),
 		},
 		"history": history,
 	})
@@ -270,6 +503,83 @@ func (gw *Gateway) handleLoyaltyRfc(w http.ResponseWriter, r *http.Request) {
     }
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(map[string]string{"status": "ok", "rfc": req.RFC})
+}
+func (gw *Gateway) handleLoyaltyFiscal(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodPost { w.WriteHeader(http.StatusMethodNotAllowed); return }
+    var req struct {
+        Phone         string `json:"phone"`
+        RegimenFiscal string `json:"regimen_fiscal"`
+        NombreFiscal  string `json:"nombre_fiscal"`
+    }
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        w.WriteHeader(http.StatusBadRequest); return
+    }
+    if req.Phone == "" {
+        w.WriteHeader(http.StatusBadRequest)
+        json.NewEncoder(w).Encode(map[string]string{"error": "phone requerido"})
+        return
+    }
+    req.NombreFiscal = strings.ToUpper(strings.TrimSpace(req.NombreFiscal))
+    _, err := gw.db.Exec(
+        `UPDATE loyalty_accounts SET regimen_fiscal=$1, nombre_fiscal=$2, updated_at=now() WHERE phone=$3`,
+        req.RegimenFiscal, req.NombreFiscal, req.Phone)
+    if err != nil {
+        w.WriteHeader(http.StatusInternalServerError)
+        json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+        return
+    }
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+func (gw *Gateway) handleLoyaltyCliente(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		Phone   string `json:"phone"`
+		Tel     string `json:"tel"`
+		Email   string `json:"email"`
+		Nombre  string `json:"nombre"`
+		Rfc     string `json:"rfc"`
+		Cp      string `json:"cp"`
+		Regimen string `json:"regimen"`
+		Uso     string `json:"uso"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "json invalido", http.StatusBadRequest)
+		return
+	}
+	phone := req.Phone
+	if phone == "" {
+		phone = req.Tel
+	}
+	if phone == "" {
+		http.Error(w, "phone requerido", http.StatusBadRequest)
+		return
+	}
+	_, err := gw.db.ExecContext(r.Context(),
+		"INSERT INTO loyalty_accounts (phone, name, rfc, cp, email, regimen_fiscal, nombre_fiscal, uso_cfdi, points, total_spent, tier) "+
+		"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, 0, 'bronze') "+
+		"ON CONFLICT (phone) DO UPDATE SET "+
+		"name           = CASE WHEN $2 != '' THEN $2 ELSE loyalty_accounts.name END, "+
+		"rfc            = CASE WHEN $3 != '' THEN $3 ELSE loyalty_accounts.rfc END, "+
+		"cp             = CASE WHEN $4 != '' THEN $4 ELSE loyalty_accounts.cp END, "+
+		"email          = CASE WHEN $5 != '' THEN $5 ELSE loyalty_accounts.email END, "+
+		"regimen_fiscal = CASE WHEN $6 != '' THEN $6 ELSE loyalty_accounts.regimen_fiscal END, "+
+		"nombre_fiscal  = CASE WHEN $7 != '' THEN $7 ELSE loyalty_accounts.nombre_fiscal END, "+
+		"uso_cfdi       = CASE WHEN $8 != '' THEN $8 ELSE loyalty_accounts.uso_cfdi END, "+
+		"updated_at     = NOW()",
+		phone, req.Nombre, req.Rfc, req.Cp, req.Email, req.Regimen, req.Nombre, req.Uso,
+	)
+	if err != nil {
+		log.Printf("[BFF] handleLoyaltyCliente error: %v", err)
+		http.Error(w, "error guardando cliente", http.StatusInternalServerError)
+		return
+	}
+	log.Printf("[BFF] Cliente guardado phone=%s rfc=%s email=%s", phone, req.Rfc, req.Email)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"ok":true,"message":"Cliente guardado"}`))
 }
 
 func (gw *Gateway) handleLoyaltyRedeem(w http.ResponseWriter, r *http.Request) {

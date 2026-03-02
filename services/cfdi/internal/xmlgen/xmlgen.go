@@ -1,4 +1,4 @@
-﻿package xmlgen
+package xmlgen
 
 import (
 	"crypto"
