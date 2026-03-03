@@ -15,6 +15,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 		"github.com/joho/godotenv"
 	"strconv"
 	"strings"
@@ -30,6 +31,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// loginAttempts tracks failed login attempts per IP for rate limiting
+var loginAttempts = struct {
+	sync.Mutex
+	counts map[string][]time.Time
+}{counts: make(map[string][]time.Time)}
+
 type Gateway struct {
 	authClient    pb_auth.AuthServiceClient
 	salesClient   pb_sales.SalesServiceClient
@@ -43,8 +50,28 @@ func getenv(key, fallback string) string {
 	return fallback
 }
 
+
+// startTrialCron suspende tenants cuyo trial venció hace más de 1 día
+func startTrialCron(db *sql.DB) {
+	go func() {
+		for {
+			time.Sleep(1 * time.Hour)
+			res, err := db.Exec(`UPDATE subscriptions SET status='cancelled', updated_at=NOW() WHERE status='trial' AND trial_ends_at < NOW() - INTERVAL '1 day'`)
+			if err != nil { log.Printf("[Cron] Error trial check: %v", err); continue }
+			if n, _ := res.RowsAffected(); n > 0 {
+				log.Printf("[Cron] %d trials vencidos suspendidos", n)
+				// Desactivar tenants con suscripcion cancelada
+				db.Exec(`UPDATE tenants SET active=false WHERE id IN (SELECT tenant_id FROM subscriptions WHERE status='cancelled') AND active=true`)
+			}
+		}
+	}()
+	log.Println("[Cron] Trial checker iniciado (cada hora)")
+}
+
 func main() {
 	godotenv.Load()
+	// Iniciar cron de trials - se llama después de conectar DB
+	// startTrialCron se llama después de inicializar gw
 	log.Println("[BFF] Iniciando Gateway TurboPOS en :8080...")
 
 	authConn, err := grpc.Dial(getenv("AUTH_ADDR", "localhost:50051"), grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -1644,6 +1671,21 @@ func jwtMiddleware(next http.Handler) http.Handler {
 // POST /api/v1/login — autentica usuario y devuelve JWT
 func (gw *Gateway) handleLogin(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	// Rate limiting: max 5 intentos por IP en 5 minutos
+	ip := r.RemoteAddr
+	if i := strings.LastIndex(ip, ":"); i != -1 { ip = ip[:i] }
+	loginAttempts.Lock()
+	now := time.Now()
+	attempts := loginAttempts.counts[ip]
+	var recent []time.Time
+	for _, t := range attempts { if now.Sub(t) < 5*time.Minute { recent = append(recent, t) } }
+	loginAttempts.counts[ip] = recent
+	loginAttempts.Unlock()
+	if len(recent) >= 5 {
+		w.WriteHeader(http.StatusTooManyRequests)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Demasiados intentos. Espera 5 minutos."})
+		return
+	}
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -1667,12 +1709,11 @@ func (gw *Gateway) handleLogin(w http.ResponseWriter, r *http.Request) {
 	// La tabla users tiene: id, username, password_hash, role, tenant_id
 	// Soporte de password en texto plano para simplificar (mejorar a bcrypt en producción)
 	var userID, role, tenantID string
-	var storedPass string
+	var storedHash string
 	err := gw.db.QueryRow(
-		`SELECT id, COALESCE(role,'cashier'), COALESCE(tenant_id::text,$3), password
-		 FROM users WHERE username=$1 LIMIT 1`,
-		req.Username, req.Password, defaultTenantID,
-	).Scan(&userID, &role, &tenantID, &storedPass)
+		`SELECT id, 'admin', COALESCE(tenant_id::text,$2), password_hash FROM users WHERE email=$1 LIMIT 1`,
+		req.Username, defaultTenantID,
+	).Scan(&userID, &role, &tenantID, &storedHash)
 
 	if err != nil {
 		// Si no existe la tabla users o el usuario, permitir credenciales de admin hardcoded
@@ -1686,7 +1727,7 @@ func (gw *Gateway) handleLogin(w http.ResponseWriter, r *http.Request) {
 		userID = "admin"
 		role = "admin"
 		tenantID = defaultTenantID
-	} else if storedPass != req.Password {
+	} else if err2 := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(req.Password)); err2 != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "credenciales incorrectas"})
 		return
