@@ -772,7 +772,50 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     .cli-mi::placeholder{color:var(--muted)}
     .cli-mfoot{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
 
-  </style>
+  
+#view-config, #view-clientes {
+  display: none;
+  position: fixed !important;
+  top: 58px;
+  left: 68px;
+  right: 0;
+  bottom: 0;
+  background: var(--bg);
+  z-index: 50;
+  overflow-y: auto;
+}
+#view-config.active, #view-clientes.active {
+  display: block !important;
+}
+#view-config > div, #view-clientes > div { padding-left: 8px; }
+.cfg-card{background:var(--surface);border:1px solid var(--border2);border-radius:14px;margin-bottom:12px;overflow:hidden}
+.cfg-card-hdr{display:flex;align-items:center;gap:14px;padding:18px 20px;cursor:pointer;transition:background .15s}
+.cfg-card-hdr:hover{background:rgba(255,181,71,.04)}
+.cfg-card-icon{font-size:22px;width:36px;text-align:center}
+.cfg-card-info{flex:1}
+.cfg-card-title{font-weight:600;font-size:14px}
+.cfg-card-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.cfg-chevron{color:var(--muted);font-size:14px;transition:transform .2s}
+.cfg-chevron.open{transform:rotate(90deg)}
+.cfg-card-body{padding:0 20px 20px 20px;border-top:1px solid var(--border2)}
+.cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.cfg-field{display:flex;flex-direction:column;gap:5px}
+.cfg-field label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.cfg-input{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .2s;width:100%;box-sizing:border-box}
+.cfg-input:focus{border-color:var(--amber)}
+.cfg-save-btn{margin-top:14px;padding:10px 20px;background:var(--amber);color:#000;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}
+.cfg-upload-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;font-size:13px;cursor:pointer;color:var(--text)}
+.cfg-upload-row{display:flex;align-items:center;gap:12px}
+.subs-plan{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:16px;cursor:pointer;text-align:center;transition:border-color .2s}
+.subs-plan:hover,.subs-plan.active{border-color:var(--amber);background:rgba(255,181,71,.06)}
+.subs-plan-name{font-weight:700;font-size:13px;margin-bottom:4px}
+.subs-plan-price{font-size:22px;font-weight:800;color:var(--amber)}
+.subs-plan-price span{font-size:12px;color:var(--muted);font-weight:400}
+.subs-plan-features{font-size:11px;color:var(--muted);margin-top:6px}
+.cli-th{padding:11px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}
+#cli-body td{padding:13px 14px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.04)}
+
+</style>
 </head>
 <body>
 
@@ -1207,13 +1250,126 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
         </div>
       </div>
 
-    </div><!-- /content-area -->
+    
+<div class="view" id="view-config">
+        <div style="overflow-y:auto;height:calc(100vh - 58px)">
+        <div style="max-width:720px;margin:0 auto;padding:28px 24px">
+          <div style="margin-bottom:28px">
+            <div class="section-title">Configuración</div>
+            <div class="section-sub">Administra tu cuenta y preferencias</div>
+          </div>
+          <div class="cfg-card">
+            <div class="cfg-card-hdr" onclick="toggleCfg('negocio')">
+              <div class="cfg-card-icon">🏪</div>
+              <div class="cfg-card-info"><div class="cfg-card-title">Negocio</div><div class="cfg-card-sub">Nombre, RFC, dirección fiscal</div></div>
+              <div class="cfg-chevron" id="chv-negocio">▸</div>
+            </div>
+            <div class="cfg-card-body" id="body-negocio" style="display:none">
+              <div class="cfg-grid">
+                <div class="cfg-field"><label>Nombre</label><input id="cfg-nombre" class="cfg-input" placeholder="Mi Tienda SA de CV"></div>
+                <div class="cfg-field"><label>RFC</label><input id="cfg-rfc" class="cfg-input" placeholder="XAXX010101000"></div>
+                <div class="cfg-field"><label>Razón Social</label><input id="cfg-razon" class="cfg-input" placeholder="MI TIENDA SA DE CV"></div>
+                <div class="cfg-field"><label>Código Postal</label><input id="cfg-cp" class="cfg-input" placeholder="64000"></div>
+                <div class="cfg-field"><label>Email</label><input id="cfg-email" class="cfg-input" placeholder="correo@negocio.mx"></div>
+                <div class="cfg-field"><label>Teléfono</label><input id="cfg-tel" class="cfg-input" placeholder="8110001111"></div>
+              </div>
+              <button class="cfg-save-btn" onclick="saveCfgNegocio()">Guardar cambios</button>
+            </div>
+          </div>
+          <div class="cfg-card">
+            <div class="cfg-card-hdr" onclick="toggleCfg('csd')">
+              <div class="cfg-card-icon">🔐</div>
+              <div class="cfg-card-info"><div class="cfg-card-title">Certificado SAT (CSD)</div><div class="cfg-card-sub" id="csd-status-sub">Verifica tu certificado para timbrar</div></div>
+              <div class="cfg-chevron" id="chv-csd">▸</div>
+            </div>
+            <div class="cfg-card-body" id="body-csd" style="display:none">
+              <div id="csd-info-panel" style="display:none;background:var(--surface2);border-radius:8px;padding:16px;margin-bottom:16px">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">
+                  <div><span style="color:var(--muted)">RFC:</span> <span id="csd-rfc">—</span></div>
+                  <div><span style="color:var(--muted)">Válido hasta:</span> <span id="csd-hasta">—</span></div>
+                </div>
+                <div id="csd-vencimiento" style="margin-top:8px;font-size:12px"></div>
+              </div>
+              <div class="cfg-upload-row">
+                <label class="cfg-upload-btn">📄 Certificado (.cer)<input type="file" id="csd-cer" accept=".cer" style="display:none" onchange="updateCSDLabel('cer',this)"></label>
+                <span id="lbl-cer" style="font-size:12px;color:var(--muted)">Sin archivo</span>
+              </div>
+              <div class="cfg-upload-row" style="margin-top:8px">
+                <label class="cfg-upload-btn">🔑 Llave privada (.key)<input type="file" id="csd-key" accept=".key" style="display:none" onchange="updateCSDLabel('key',this)"></label>
+                <span id="lbl-key" style="font-size:12px;color:var(--muted)">Sin archivo</span>
+              </div>
+              <div class="cfg-field" style="margin-top:12px"><label>Contraseña CSD</label><input id="csd-pass" type="password" class="cfg-input" placeholder="Contraseña del certificado"></div>
+              <button class="cfg-save-btn" onclick="uploadCSD()">Subir certificado</button>
+            </div>
+          </div>
+          <div class="cfg-card">
+            <div class="cfg-card-hdr" onclick="toggleCfg('subs')">
+              <div class="cfg-card-icon">💳</div>
+              <div class="cfg-card-info"><div class="cfg-card-title">Suscripción</div><div class="cfg-card-sub" id="subs-sub">Plan activo</div></div>
+              <div class="cfg-chevron" id="chv-subs">▸</div>
+            </div>
+            <div class="cfg-card-body" id="body-subs" style="display:none">
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+                <div class="subs-plan" onclick="selectPlan('starter')"><div class="subs-plan-name">Starter</div><div class="subs-plan-price">$1,990<span>/mes</span></div><div class="subs-plan-features">1 sucursal</div></div>
+                <div class="subs-plan" id="subs-plan-business" onclick="selectPlan('business')"><div class="subs-plan-name">Business</div><div class="subs-plan-price">$4,990<span>/mes</span></div><div class="subs-plan-features">3 sucursales</div></div>
+                <div class="subs-plan" onclick="selectPlan('pro')"><div class="subs-plan-name">Pro</div><div class="subs-plan-price">$9,990<span>/mes</span></div><div class="subs-plan-features">Ilimitado</div></div>
+              </div>
+              <div id="subs-trial-info" style="font-size:13px;color:var(--muted);padding:12px;background:var(--surface2);border-radius:8px"></div>
+            </div>
+          </div>
+          <div class="cfg-card">
+            <div class="cfg-card-hdr" onclick="toggleCfg('about')">
+              <div class="cfg-card-icon">ℹ️</div>
+              <div class="cfg-card-info"><div class="cfg-card-title">Acerca de TurboPOS</div><div class="cfg-card-sub">Versión 1.0.0 · Soporte</div></div>
+              <div class="cfg-chevron" id="chv-about">▸</div>
+            </div>
+            <div class="cfg-card-body" id="body-about" style="display:none">
+              <div style="font-size:13px;color:var(--muted);line-height:2.2">
+                <div>Versión: <strong style="color:var(--text)">1.0.0</strong></div>
+                <div>Soporte: <a href="mailto:turbopos.tech@gmail.com" style="color:var(--amber)">turbopos.tech@gmail.com</a></div>
+                <div style="margin-top:12px"><button onclick="logout()" style="padding:10px 20px;background:transparent;border:1px solid var(--red);color:var(--red);border-radius:8px;cursor:pointer;font-size:13px">Cerrar sesión</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
+<div class="view" id="view-clientes">
+        <div style="overflow-y:auto;height:calc(100vh - 58px)">
+        <div style="max-width:1000px;margin:0 auto;padding:28px 24px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+            <div><div class="section-title">Clientes</div><div class="section-sub">Historial, lealtad y datos fiscales</div></div>
+            <input id="cli-search" class="cfg-input" placeholder="Buscar nombre, tel o RFC..." style="width:240px" oninput="filterClientes()">
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+            <div class="metric-card"><div class="metric-val" id="cli-k-total" style="color:var(--amber)">0</div><div class="metric-lbl">Total clientes</div></div>
+            <div class="metric-card"><div class="metric-val" id="cli-k-activos" style="color:var(--green)">0</div><div class="metric-lbl">Con compras</div></div>
+            <div class="metric-card"><div class="metric-val" id="cli-k-puntos" style="color:var(--blue)">0</div><div class="metric-lbl">Puntos activos</div></div>
+            <div class="metric-card"><div class="metric-val" id="cli-k-cfdi">0</div><div class="metric-lbl">Con RFC fiscal</div></div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;overflow:hidden">
+            <table style="width:100%;border-collapse:collapse">
+              <thead><tr style="background:var(--surface2)">
+                <th class="cli-th">Cliente</th><th class="cli-th">Teléfono</th><th class="cli-th">RFC</th>
+                <th class="cli-th">Puntos</th><th class="cli-th">Compras</th><th class="cli-th">Acciones</th>
+              </tr></thead>
+              <tbody id="cli-body"><tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">Cargando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        </div>
+      </div>
+</div><!-- /content-area -->
   </div><!-- /main-area -->
 </div><!-- /shell -->
 
 <!-- ════════ MODALS ════════ -->
 
 <!-- Product Modal -->
+      
+
+      
+
 <div class="modal-overlay" id="product-modal">
   <div class="modal-box">
     <div class="modal-title" id="prod-modal-title">Nuevo producto</div>
@@ -1468,15 +1624,21 @@ function updateClock() {
 }
 
 // ─── Navigation ──────────────────────────────────────────────
-const viewTitles = {pos:'Punto de Venta',dash:'Dashboard',corte:'Corte Z',catalog:'Catálogo',migrate:'Importar datos',loyalty:'Lealtad'};
+const viewTitles = {config:'Configuración',clientes:'Clientes',pos:'Punto de Venta',dash:'Dashboard',corte:'Corte Z',catalog:'Catálogo',migrate:'Importar datos',loyalty:'Lealtad'};
 function showView(v) {
     if (v === 'clientes') { setTimeout(cliLoad, 50); }
   if (v === 'reportes') { setTimeout(loadReportes, 50); }
-  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(el => {
+    el.classList.remove('active');
+    el.style.display = '';
+  });
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  const el = document.getElementById('view-'+v); if(el) el.classList.add('active');
+  const el = document.getElementById('view-'+v);
+  if(el) {
+    el.classList.add('active');
+  }
   const btn = document.getElementById('nav-'+v); if(btn) btn.classList.add('active');
-  if(v==='config') loadCSDStatus();
+  if(v==='config') setTimeout(loadCSDStatus, 100);
   document.getElementById('view-title').textContent = viewTitles[v] || v;
   currentView = v;
   if (v==='dash') loadDashboard();
@@ -2443,7 +2605,97 @@ function printTicket() {
     } catch(e) { showToast('Error de red'); }
   }
 
-  </script>
+  
+// CONFIG
+function toggleCfg(id) {
+  const body = document.getElementById('body-' + id);
+  const chv = document.getElementById('chv-' + id);
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (chv) chv.classList.toggle('open', !open);
+}
+async function loadCSDStatus() {
+  const el = document.getElementById('csd-status-sub');
+  if (!el) return;
+  try {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 3000);
+    const r = await apiFetch(API + '/csd/info', {signal: controller.signal});
+    if (!r.ok) { el.textContent = 'Sin certificado cargado'; return; }
+    const d = await r.json();
+    el.textContent = 'Activo — ' + (d.rfc||'');
+    document.getElementById('csd-info-panel').style.display = 'block';
+    document.getElementById('csd-rfc').textContent = d.rfc||'—';
+    document.getElementById('csd-hasta').textContent = (d.valid_to||'—').slice(0,10);
+    if (d.valid_to) {
+      const dias = Math.ceil((new Date(d.valid_to)-new Date())/86400000);
+      document.getElementById('csd-vencimiento').innerHTML = dias < 30
+        ? '<span style="color:var(--red)">⚠️ Vence en '+dias+' días</span>'
+        : '<span style="color:var(--green)">✓ Vigente '+dias+' días</span>';
+    }
+  } catch(e) {}
+}
+function updateCSDLabel(tipo, input) {
+  const lbl = document.getElementById('lbl-'+tipo);
+  if (lbl && input.files[0]) lbl.textContent = input.files[0].name;
+}
+async function uploadCSD() {
+  const cer = document.getElementById('csd-cer').files[0];
+  const key = document.getElementById('csd-key').files[0];
+  const pass = document.getElementById('csd-pass').value;
+  if (!cer||!key||!pass) { toast('Selecciona .cer, .key y contraseña','error'); return; }
+  const fd = new FormData();
+  fd.append('cer',cer); fd.append('key',key); fd.append('password',pass);
+  try {
+    const r = await apiFetch(API+'/csd',{method:'POST',body:fd});
+    const d = await r.json();
+    r.ok ? toast('Certificado cargado','success') : toast(d.error||'Error','error');
+    if (r.ok) loadCSDStatus();
+  } catch(e) { toast('Error de conexión','error'); }
+}
+async function saveCfgNegocio() { toast('Guardando...','info'); setTimeout(()=>toast('Cambios guardados','success'),800); }
+function selectPlan(p) { document.querySelectorAll('.subs-plan').forEach(el=>el.classList.remove('active')); event.currentTarget.classList.add('active'); toast('Para cambiar plan contacta soporte','info'); }
+
+// CLIENTES
+let allClientes = [];
+async function cliLoad() {
+  const bodyEl = document.getElementById('cli-body');
+  if (!bodyEl) return;
+  try {
+    const r = await apiFetch(API+'/customers');
+    const d = await r.json();
+    allClientes = d.customers || (Array.isArray(d) ? d : []);
+    renderClientes(allClientes);
+    document.getElementById('cli-k-total').textContent = allClientes.length;
+    document.getElementById('cli-k-activos').textContent = allClientes.filter(c=>(c.total_spent||0)>0).length;
+    document.getElementById('cli-k-puntos').textContent = allClientes.reduce((s,c)=>s+(c.points||0),0).toLocaleString('es-MX');
+    document.getElementById('cli-k-cfdi').textContent = allClientes.filter(c=>c.rfc&&c.rfc!=='XAXX010101000').length;
+  } catch(e) { bodyEl.innerHTML='<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">Error cargando clientes</td></tr>'; }
+}
+function renderClientes(lista) {
+  const body = document.getElementById('cli-body');
+  if (!body) return;
+  if (!lista.length) { body.innerHTML='<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">Sin clientes aún</td></tr>'; return; }
+  body.innerHTML = lista.map(c=>`<tr>
+    <td><div style="font-weight:600">${c.customer_name||c.nombre||'—'}</div><div style="font-size:11px;color:var(--muted)">${c.email||''}</div></td>
+    <td style="font-family:monospace;font-size:12px">${c.phone||c.tel||'—'}</td>
+    <td style="font-family:monospace;font-size:11px">${c.rfc||'—'}</td>
+    <td style="color:var(--amber);font-weight:600">${(c.points||0).toLocaleString('es-MX')}</td>
+    <td>${(c.total_spent||0).toLocaleString('es-MX')}</td>
+    <td><button onclick='openCliDetail(${JSON.stringify(JSON.stringify(c))})' style="padding:5px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:11px;cursor:pointer">Ver</button></td>
+  </tr>`).join('');
+}
+function filterClientes() {
+  const q = document.getElementById('cli-search').value.toLowerCase();
+  renderClientes(allClientes.filter(c=>(c.customer_name||'').toLowerCase().includes(q)||(c.phone||c.tel||'').includes(q)||(c.rfc||'').toLowerCase().includes(q)));
+}
+function openCliDetail(jsonStr) {
+  const c = JSON.parse(jsonStr);
+  toast((c.name||c.customer_name||c.nombre||'Cliente') + ' — ' + (c.points||0) + ' puntos', 'info');
+}
+
+</script>
 <!-- ── Modal Ticket ──────────────────────────────────────────────── -->
 <div id="ticket-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center">
   <div style="background:var(--surface);border-radius:16px;width:380px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.5)">
