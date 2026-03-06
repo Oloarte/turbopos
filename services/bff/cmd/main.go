@@ -14,6 +14,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/smtp"
 	"os"
 	"sync"
 		"github.com/joho/godotenv"
@@ -52,6 +53,27 @@ func getenv(key, fallback string) string {
 
 
 // startTrialCron suspende tenants cuyo trial venció hace más de 1 día
+
+func cronAvisarTrials(db *sql.DB) {
+	rows, err := db.Query(`
+		SELECT t.nombre, t.email, s.trial_ends_at
+		FROM tenants t JOIN subscriptions s ON s.tenant_id=t.id
+		WHERE s.status='trial'
+		  AND s.trial_ends_at BETWEEN NOW() AND NOW()+INTERVAL '3 days'
+			  AND t.email != ''
+	`)
+	if err != nil { return }
+	defer rows.Close()
+	for rows.Next() {
+		var nombre, email string
+		var trialEnds time.Time
+		rows.Scan(&nombre, &email, &trialEnds)
+		dias := int(time.Until(trialEnds).Hours()/24) + 1
+		emailTrialVenciendo(email, nombre, dias)
+		log.Printf("[Cron] Aviso trial a %s (%d dias)", email, dias)
+	}
+}
+
 func startTrialCron(db *sql.DB) {
 	go func() {
 		for {
@@ -60,6 +82,8 @@ func startTrialCron(db *sql.DB) {
 			if err != nil { log.Printf("[Cron] Error trial check: %v", err); continue }
 			if n, _ := res.RowsAffected(); n > 0 {
 				log.Printf("[Cron] %d trials vencidos suspendidos", n)
+				// Avisar a tenants que vencen en 3 dias
+				cronAvisarTrials(db)
 				// Desactivar tenants con suscripcion cancelada
 				db.Exec(`UPDATE tenants SET active=false WHERE id IN (SELECT tenant_id FROM subscriptions WHERE status='cancelled') AND active=true`)
 			}
@@ -103,7 +127,9 @@ func main() {
 	mux.HandleFunc("/api/v1/products",   gw.handleProducts)
 	mux.HandleFunc("/api/v1/products/",  gw.handleProductByID)
 	mux.HandleFunc("/api/v1/login",           gw.handleLogin)
-	mux.HandleFunc("/api/v1/signup",          gw.handleSignup)
+	mux.HandleFunc("/api/v1/signup",            gw.handleSignup)
+	mux.HandleFunc("/api/v1/forgot-password",  gw.handleForgotPassword)
+	mux.HandleFunc("/api/v1/reset-password",   gw.handleResetPassword)
 	mux.HandleFunc("/api/v1/openpay/webhook", gw.handleOpenpayWebhook)
 	mux.HandleFunc("/api/v1/openpay/checkout",gw.handleOpenpayCheckout)
 	mux.HandleFunc("/api/v1/cobrar",          gw.handleCobrar)
@@ -252,6 +278,7 @@ func (gw *Gateway) handleSignup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("[Signup] Nuevo tenant: rfc=%s plan=%s email=%s", rfc, req.Plan, req.Email)
+	emailBienvenida(req.Email, req.Nombre, req.Plan, req.Email)
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"ok":        true,
 		"tenant_id": tenantID,
@@ -492,6 +519,126 @@ func (gw *Gateway) handleAdminTenantByID(w http.ResponseWriter, r *http.Request)
 	if rows != nil { defer rows.Close(); for rows.Next() { var d DV; rows.Scan(&d.Dia,&d.Ventas,&d.Total); dias=append(dias,d) } }
 	if dias == nil { dias = []DV{} }
 	json.NewEncoder(w).Encode(map[string]interface{}{"ventas_por_dia": dias})
+}
+
+
+// ═══════════════════════════════════════════════════════
+// EMAIL SYSTEM
+// ═══════════════════════════════════════════════════════
+
+func sendEmail(to, subject, htmlBody string) error {
+	host := getenv("SMTP_HOST", "smtp.gmail.com")
+	port := getenv("SMTP_PORT", "587")
+	user := getenv("SMTP_USER", "")
+	pass := getenv("SMTP_PASS", "")
+	from := getenv("SMTP_FROM", user)
+	if user == "" || pass == "" {
+		log.Printf("[Email] SMTP no configurado, saltando email a %s", to)
+		return nil
+	}
+	headers := "MIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n"
+	msg := "From: " + from + "\r\nTo: " + to + "\r\nSubject: " + subject + "\r\n" + headers + "\r\n" + htmlBody
+	auth := smtp.PlainAuth("", user, pass, host)
+	err := smtp.SendMail(host+":"+port, auth, user, []string{to}, []byte(msg))
+	if err != nil { log.Printf("[Email] Error enviando a %s: %v", to, err) }
+	return err
+}
+
+func emailBienvenida(to, nombre, plan, username string) {
+	planPrecio := map[string]string{"starter":"$1,990","business":"$4,990","pro":"$9,990"}
+	precio := planPrecio[plan]
+	if precio == "" { precio = "$1,990" }
+	body := `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#07090F;color:#EDF2FF;padding:40px">
+	<div style="max-width:520px;margin:0 auto;background:#0D1018;border:1px solid #1C2535;border-radius:16px;padding:40px">
+	<h1 style="color:#FFB547;font-size:28px;margin-bottom:8px">¡Bienvenido a TurboPOS!</h1>
+	<p style="color:#8896B0;margin-bottom:24px">Tu cuenta está lista. Empieza a vender ahora.</p>
+	<div style="background:#131820;border-radius:10px;padding:20px;margin-bottom:24px">
+	<p style="margin:0 0 8px 0"><strong>Negocio:</strong> ` + nombre + `</p>
+	<p style="margin:0 0 8px 0"><strong>Plan:</strong> ` + plan + ` (` + precio + `/mes)</p>
+	<p style="margin:0 0 8px 0"><strong>Usuario:</strong> ` + username + `</p>
+	<p style="margin:0;color:#00D68F"><strong>✓ 14 días de prueba gratis</strong></p>
+	</div>
+	<a href="https://turbopos.mx" style="display:inline-block;padding:14px 28px;background:#FFB547;color:#000;text-decoration:none;border-radius:10px;font-weight:700">Ir a mi TurboPOS →</a>
+	<p style="color:#4A5568;font-size:12px;margin-top:24px">Si tienes dudas escríbenos a turbopos.tech@gmail.com</p>
+	</div></body></html>`
+	go sendEmail(to, "¡Bienvenido a TurboPOS! Tu cuenta está lista", body)
+}
+
+func emailRecuperacion(to, token string) {
+	link := getenv("APP_URL", "https://turbopos.mx") + "/reset-password?token=" + token
+	body := `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#07090F;color:#EDF2FF;padding:40px">
+	<div style="max-width:520px;margin:0 auto;background:#0D1018;border:1px solid #1C2535;border-radius:16px;padding:40px">
+	<h1 style="color:#FFB547;font-size:24px">Recuperar contraseña</h1>
+	<p style="color:#8896B0">Haz clic en el botón para crear una nueva contraseña. Este enlace expira en 1 hora.</p>
+	<a href="` + link + `" style="display:inline-block;padding:14px 28px;background:#FFB547;color:#000;text-decoration:none;border-radius:10px;font-weight:700;margin:24px 0">Crear nueva contraseña →</a>
+	<p style="color:#4A5568;font-size:12px">Si no solicitaste esto, ignora este correo.</p>
+	</div></body></html>`
+	go sendEmail(to, "TurboPOS — Recuperar contraseña", body)
+}
+
+func emailTrialVenciendo(to, nombre string, diasRestantes int) {
+	body := `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#07090F;color:#EDF2FF;padding:40px">
+	<div style="max-width:520px;margin:0 auto;background:#0D1018;border:1px solid #1C2535;border-radius:16px;padding:40px">
+	<h1 style="color:#FFB547;font-size:24px">Tu prueba vence pronto</h1>
+	<p style="color:#8896B0">Hola ` + nombre + `, tu periodo de prueba de TurboPOS vence en <strong style="color:#FFB547">` + fmt.Sprintf("%d días", diasRestantes) + `</strong>.</p>
+	<p style="color:#8896B0">Para continuar sin interrupciones agrega tu método de pago.</p>
+	<a href="https://turbopos.mx/billing" style="display:inline-block;padding:14px 28px;background:#FFB547;color:#000;text-decoration:none;border-radius:10px;font-weight:700;margin:24px 0">Agregar método de pago →</a>
+	</div></body></html>`
+	go sendEmail(to, fmt.Sprintf("TurboPOS — Tu prueba vence en %d días", diasRestantes), body)
+}
+
+// handleForgotPassword — solicitar recuperacion de contrasena
+func (gw *Gateway) handleForgotPassword(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodPost { w.WriteHeader(405); return }
+	var req struct { Email string `json:"email"` }
+	json.NewDecoder(r.Body).Decode(&req)
+	if req.Email == "" { w.WriteHeader(400); json.NewEncoder(w).Encode(map[string]string{"error": "email requerido"}); return }
+
+	// Verificar que el email existe
+	var userID string
+	err := gw.db.QueryRowContext(r.Context(), "SELECT id FROM users WHERE email=$1", req.Email).Scan(&userID)
+	if err != nil {
+		// No revelar si el email existe o no
+		json.NewEncoder(w).Encode(map[string]interface{}{"ok": true, "message": "Si el email existe recibirás instrucciones"})
+		return
+	}
+
+	// Crear token de recuperacion (simple UUID)
+	var token string
+	gw.db.QueryRowContext(r.Context(), "SELECT gen_random_uuid()::text").Scan(&token)
+
+	// Guardar token en DB (expira en 1 hora)
+	// Guardar token en DB (expira en 1 hora)
+	gw.db.ExecContext(r.Context(), "INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES ($1::uuid, $2, NOW()+INTERVAL '1 hour') ON CONFLICT (user_id) DO UPDATE SET token=$2, expires_at=NOW()+INTERVAL '1 hour'", userID, token)
+
+	emailRecuperacion(req.Email, token)
+	log.Printf("[Email] Reset password solicitado para %s", req.Email)
+	json.NewEncoder(w).Encode(map[string]interface{}{"ok": true, "message": "Si el email existe recibirás instrucciones"})
+}
+
+// handleResetPassword — establecer nueva contrasena
+func (gw *Gateway) handleResetPassword(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodPost { w.WriteHeader(405); return }
+	var req struct {
+		Token    string `json:"token"`
+		Password string `json:"password"`
+	}
+	json.NewDecoder(r.Body).Decode(&req)
+	if req.Token == "" || req.Password == "" { w.WriteHeader(400); json.NewEncoder(w).Encode(map[string]string{"error": "token y password requeridos"}); return }
+	if len(req.Password) < 8 { w.WriteHeader(400); json.NewEncoder(w).Encode(map[string]string{"error": "password minimo 8 caracteres"}); return }
+
+	var userID string
+	err := gw.db.QueryRowContext(r.Context(),
+		"SELECT user_id FROM password_reset_tokens WHERE token=$1 AND expires_at > NOW()", req.Token).Scan(&userID)
+	if err != nil { w.WriteHeader(400); json.NewEncoder(w).Encode(map[string]string{"error": "Token invalido o expirado"}); return }
+
+	hash, _ := bcrypt.GenerateFromPassword([]byte(req.Password), 12)
+	gw.db.ExecContext(r.Context(), "UPDATE users SET password_hash=$1 WHERE id=$2::uuid", string(hash), userID)
+	gw.db.ExecContext(r.Context(), "DELETE FROM password_reset_tokens WHERE token=$1", req.Token)
+	log.Printf("[Email] Password actualizado para userID=%s", userID)
+	json.NewEncoder(w).Encode(map[string]interface{}{"ok": true, "message": "Contraseña actualizada"})
 }
 
 func (gw *Gateway) handleCobrar(w http.ResponseWriter, r *http.Request) {
