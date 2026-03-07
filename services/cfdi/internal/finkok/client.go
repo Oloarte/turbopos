@@ -209,7 +209,7 @@ func LoadCertificate(path string) (string, string, error) {
 	if err != nil { return "", "", fmt.Errorf("leer cert: %w", err) }
 	cert, err := x509.ParseCertificate(data)
 	if err != nil { return "", "", fmt.Errorf("parsear cert: %w", err) }
-	noCert := cert.SerialNumber.String()
+	noCert := string(cert.SerialNumber.Bytes())
 	// handled above
 	return base64.StdEncoding.EncodeToString(data), noCert, nil
 }
@@ -295,3 +295,7 @@ func findTag(xml, tag string) int {
 	}
 	return -1
 }
+
+
+
+
