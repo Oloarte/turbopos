@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head><link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta charset="UTF-8">
@@ -28,6 +28,8 @@
   --red-dim: rgba(248,113,113,.12);
   --cyan: #22D3EE;
   --ff: 'Outfit', sans-serif;
+  --nav-h: 60px;
+  --top-h: 48px;
   --mono: 'JetBrains Mono', monospace;
   --r: 12px;
   --sidebar-w: 68px;
@@ -160,7 +162,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   position: relative; z-index: 1;
   background: var(--surface);
   border: 1px solid var(--border2);
-  border-radius: 20px; padding: 44px 40px; width: 400px;
+  border-radius: 20px; padding: 44px 40px; width: min(400px, calc(100vw - 32px));
   box-shadow: 0 32px 80px rgba(0,0,0,.6);
   animation: slideUp .4s cubic-bezier(.22,1,.36,1);
 }
@@ -346,6 +348,10 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 }
 .cobrar-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(255,181,71,.35); }
 .cobrar-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* -- Fab & overlay: hidden by default (JS/media shows on mobile) -- */
+#fab-ticket { display: none; }
+#ticket-overlay { display: none; }
 
 /* ----------------------------------------
    DASHBOARD VIEW
@@ -815,9 +821,279 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .cli-th{padding:11px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}
 #cli-body td{padding:13px 14px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.04)}
 
+
+/* ================================================
+   TURBOPOS — RESPONSIVE MOBILE/TABLET
+   v3.0 — patch limpio, un solo bloque
+   ================================================ */
+
+/* ===== MOBILE < 768px ===== */
+@media screen and (max-width: 767px) {
+
+  html, body { overflow: hidden !important; }
+
+  /* SHELL → columna */
+  .shell { flex-direction: column !important; height: 100vh !important; }
+
+  /* SIDEBAR → bottom nav fijo */
+  .sidebar {
+    position: fixed !important;
+    bottom: 0 !important; left: 0 !important; right: 0 !important; top: auto !important;
+    width: 100vw !important; height: var(--nav-h) !important;
+    flex-direction: row !important;
+    padding: 0 !important; gap: 0 !important;
+    border-right: none !important;
+    border-top: 1px solid var(--border2) !important;
+    justify-content: space-around !important;
+    align-items: stretch !important;
+    z-index: 100 !important;
+  }
+  .sidebar::after { display: none !important; }
+  .logo-mark { display: none !important; }
+  .nav-sep, .nav-spacer { display: none !important; }
+  .nav-item {
+    flex: 1 !important; width: auto !important; height: 100% !important;
+    border-radius: 0 !important;
+    flex-direction: column !important;
+    padding: 8px 2px 6px !important; gap: 3px !important;
+    font-size: 18px !important;
+  }
+  .nav-item .nav-lbl { font-size: 9px !important; display: block !important; }
+  .nav-user {
+    position: fixed !important;
+    top: 9px !important; right: 10px !important;
+    z-index: 200 !important;
+    width: 30px !important; height: 30px !important;
+  }
+
+  /* MAIN AREA */
+  .main-area { width: 100% !important; height: 100vh !important; overflow: hidden !important; }
+
+  /* TOPBAR */
+  .topbar {
+    height: var(--top-h) !important;
+    padding: 0 46px 0 12px !important;
+    flex-shrink: 0 !important;
+  }
+  .topbar-title { font-size: 14px !important; font-weight: 700 !important; }
+  .topbar-breadcrumb { font-size: 11px !important; }
+  /* Ocultar status pills */
+  #status-dot, #btn-corte,
+  .topbar > button:not(#btn-corte),
+  .topbar > a { display: none !important; }
+
+  /* CONTENT AREA */
+  .content-area {
+    height: calc(100vh - var(--top-h) - var(--nav-h)) !important;
+    overflow: hidden !important;
+  }
+
+  .view { height: 100% !important; overflow: hidden !important; }
+
+  /* ===== POS ===== */
+  .pos-shell {
+    flex-direction: column !important;
+    height: 100% !important;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+
+  /* Productos: full width */
+  .prod-panel {
+    flex: 1 !important; width: 100% !important;
+    max-width: 100% !important; min-width: 0 !important;
+    border-right: none !important;
+    display: flex !important; flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  .prod-header { padding: 8px 10px 6px !important; }
+  .prod-search { margin-bottom: 6px !important; }
+  .prod-search input { height: 38px !important; font-size: 14px !important; }
+
+  .cats-row {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+  .cats-row::-webkit-scrollbar { display: none !important; }
+
+  /* Grid 2 columnas */
+  .prod-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    padding: 8px !important;
+    padding-bottom: 80px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+  }
+
+  .p-card { min-height: 88px !important; }
+  .p-icon { height: 50px !important; font-size: 26px !important; }
+  .p-body { padding: 6px 8px !important; }
+  .p-name { font-size: 11px !important; }
+  .p-price { font-size: 13px !important; }
+
+  /* TICKET: drawer desde abajo */
+  .ticket-panel {
+    position: fixed !important;
+    bottom: var(--nav-h) !important;
+    left: 0 !important; right: 0 !important;
+    width: 100% !important; height: 78vh !important;
+    border-left: none !important;
+    border-top: 2px solid var(--amber) !important;
+    border-radius: 18px 18px 0 0 !important;
+    z-index: 80 !important;
+    transform: translateY(100%) !important;
+    transition: transform .3s cubic-bezier(.4,0,.2,1) !important;
+    box-shadow: 0 -16px 48px rgba(0,0,0,.65) !important;
+    flex-direction: column !important;
+    background: var(--surface) !important;
+  }
+  .ticket-panel.open { transform: translateY(0) !important; }
+  .ticket-panel::before {
+    content: '' !important;
+    display: block !important;
+    width: 40px !important; height: 4px !important;
+    background: var(--border2) !important;
+    border-radius: 2px !important;
+    margin: 10px auto 0 !important;
+    flex-shrink: 0 !important;
+  }
+  .ticket-top { padding: 8px 14px !important; flex-shrink: 0 !important; }
+  .cart-area { flex: 1 !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; }
+  .ticket-bottom {
+    padding: 10px 12px 14px !important;
+    flex-shrink: 0 !important;
+    border-top: 1px solid var(--border) !important;
+  }
+  .pay-methods { gap: 6px !important; }
+  .pay-btn { padding: 8px 4px !important; font-size: 11px !important; flex: 1 !important; }
+  .totals-val { font-size: 22px !important; color: var(--amber) !important; }
+  .cobrar-btn {
+    height: 50px !important; font-size: 16px !important;
+    font-weight: 800 !important; border-radius: 12px !important; width: 100% !important;
+  }
+
+  /* FAB botón ticket */
+  #fab-ticket {
+    position: fixed !important;
+    bottom: calc(var(--nav-h) + 10px) !important;
+    right: 14px !important;
+    width: 54px !important; height: 54px !important;
+    background: linear-gradient(135deg, var(--amber), var(--amber2)) !important;
+    color: #080C14 !important;
+    border: none !important; border-radius: 50% !important;
+    font-size: 22px !important;
+    cursor: pointer !important;
+    z-index: 85 !important;
+    box-shadow: 0 4px 24px rgba(255,181,71,.55) !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: transform .15s !important;
+    display: none;
+  }
+  #fab-ticket.visible { display: flex !important; }
+  #fab-ticket:active { transform: scale(.9) !important; }
+  .fab-badge {
+    position: absolute !important;
+    top: -3px !important; right: -3px !important;
+    background: var(--red) !important;
+    color: #fff !important; font-size: 10px !important; font-weight: 800 !important;
+    width: 20px !important; height: 20px !important;
+    border-radius: 50% !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    border: 2px solid var(--bg) !important;
+  }
+  .fab-badge.hidden { display: none !important; }
+
+  /* Overlay drawer */
+  #ticket-overlay {
+    position: fixed !important; inset: 0 !important;
+    background: rgba(8,12,20,.7) !important;
+    backdrop-filter: blur(2px) !important;
+    z-index: 79 !important;
+    display: none !important;
+  }
+  #ticket-overlay.visible { display: block !important; }
+
+  /* DASHBOARD */
+  .dash-view { overflow: hidden !important; }
+  .dash-view > div {
+    padding: 10px !important;
+    height: 100% !important; overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 80px !important;
+    touch-action: pan-y !important;
+  }
+  .metrics-row { grid-template-columns: repeat(2,1fr) !important; gap: 8px !important; }
+  .metric-card { padding: 12px !important; }
+  .metric-val { font-size: 18px !important; }
+
+  /* REPORTES / CONFIG / CLIENTES */
+  /* Fix fixed-positioned views on mobile: override desktop left/top */
+  #view-config, #view-clientes {
+    left: 0 !important;
+    top: var(--top-h) !important;
+    height: calc(100vh - var(--top-h) - var(--nav-h)) !important;
+  }
+
+  #view-reportes > div,
+  #view-config > div,
+  #view-clientes {
+    padding: 10px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: 100% !important;
+    padding-bottom: 16px !important;
+  }
+
+  /* MODALES */
+  .modal-overlay { align-items: flex-end !important; padding: 0 !important; }
+  .modal-box {
+    width: 100vw !important; max-width: 100vw !important;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 92vh !important;
+  }
+
+  /* Tablas */
+  table { font-size: 11px !important; }
+  td, th { padding: 8px 6px !important; }
+}
+
+  /* CORTE Z - grids */
+  .corte-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .corte-view > div { padding: 10px !important; overflow-y: auto !important; height: 100% !important; padding-bottom: 80px !important; touch-action: pan-y !important; }
+
+/* ===== TABLET 768-1024px ===== */
+@media screen and (min-width: 768px) and (max-width: 1024px) {
+  :root { --sidebar-w: 58px; }
+  .prod-grid { grid-template-columns: repeat(3,1fr) !important; }
+  .ticket-panel { width: 270px !important; min-width: 270px !important; }
+  .metrics-row { grid-template-columns: repeat(2,1fr) !important; }
+}
+
+
+/* LOGIN MOBILE */
+@media screen and (max-width: 767px) {
+  .login-card { padding: 32px 24px !important; }
+  .login-logo { font-size: 28px !important; }
+  .login-logo-wrap { margin-bottom: 24px !important; }
+  .login-input { padding: 12px !important; font-size: 16px !important; }
+  .login-btn { padding: 14px !important; font-size: 16px !important; }
+}
+
 </style>
 </head>
 <body>
+<!-- Mobile FAB + overlay -->
+<button id="fab-ticket" onclick="toggleTicketDrawer()">
+  🛒<span class="fab-badge hidden" id="fab-badge">0</span>
+</button>
+<div id="ticket-overlay" onclick="toggleTicketDrawer()"></div>
+
 
 <!-- -------- LOGIN -------- -->
 <div class="login-screen" id="login-overlay">
@@ -1326,7 +1602,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
             <div class="cfg-card-body" id="body-about" style="display:none">
               <div style="font-size:13px;color:var(--muted);line-height:2.2">
                 <div>Versión: <strong style="color:var(--text)">1.0.0</strong></div>
-                <div>Soporte: <a href="mailto:turbopos.tech@gmail.com" style="color:var(--amber)">turbopos.tech@gmail.com</a></div>
+                <div>Soporte: <a href="/cdn-cgi/l/email-protection#c9bdbcbbaba6b9a6bae7bdacaaa189aea4a8a0a5e7aaa6a4" style="color:var(--amber)"><span class="__cf_email__" data-cfemail="10646562727f607f633e6475737850777d71797c3e737f7d">[email&#160;protected]</span></a></div>
                 <div style="margin-top:12px"><button onclick="logout()" style="padding:10px 20px;background:transparent;border:1px solid var(--red);color:var(--red);border-radius:8px;cursor:pointer;font-size:13px">Cerrar sesión</button></div>
               </div>
             </div>
@@ -1531,8 +1807,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <!-- Toasts -->
 <div id="toasts"></div>
 
-<script>
-const API = 'http://localhost:8080/api/v1';
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+const API = window.location.origin + '/api/v1';
 
 // --- State --------------------------------------------------
 let cart = [];
@@ -1601,6 +1877,7 @@ const DEMO_PRODUCTS = [
 ];
 
 function initApp() {
+  initMobileUI();
   products = [...DEMO_PRODUCTS];
   renderProducts(); renderCategories();
   loadDashboard();
@@ -1704,7 +1981,9 @@ function renderCart() {
   const emptyEl = document.getElementById('cart-empty');
   const total = cart.reduce((s,i)=>s+i.subtotal,0);
   document.getElementById('cart-total').textContent = '$'+total.toFixed(2);
-  document.getElementById('cart-count').textContent = cart.reduce((s,i)=>s+i.qty,0);
+  const _qty=cart.reduce((s,i)=>s+i.qty,0);
+  document.getElementById('cart-count').textContent=_qty;
+  updateFabBadge(_qty);
   if (!cart.length) {
     el.innerHTML = '<div class="cart-empty-state" id="cart-empty" style="display:flex"><div class="cart-empty-icon">🛒</div><div class="cart-empty-txt">Ticket vacío</div><div class="cart-empty-sub">Toca un producto para agregar</div></div>';
     document.getElementById('cobrar-btn').disabled = true;
@@ -2695,6 +2974,37 @@ function openCliDetail(jsonStr) {
   toast((c.name||c.customer_name||c.nombre||'Cliente') + ' — ' + (c.points||0) + ' puntos', 'info');
 }
 
+
+// ===== MOBILE TICKET DRAWER =====
+function toggleTicketDrawer() {
+  const panel = document.querySelector('.ticket-panel');
+  const overlay = document.getElementById('ticket-overlay');
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  overlay.classList.toggle('visible', !isOpen);
+}
+
+function updateFabBadge(n) {
+  const b = document.getElementById('fab-badge');
+  if (b) { b.textContent = n; b.classList.toggle('hidden', n === 0); }
+}
+
+function initMobileUI() {
+  const fab = document.getElementById('fab-ticket');
+  if (!fab) return;
+  const check = () => {
+    if (window.innerWidth < 768) fab.classList.add('visible');
+    else {
+      fab.classList.remove('visible');
+      document.querySelector('.ticket-panel').classList.remove('open');
+      const ov = document.getElementById('ticket-overlay');
+      if (ov) ov.classList.remove('visible');
+    }
+  };
+  check();
+  window.addEventListener('resize', check);
+}
+
 </script>
 <!-- -- Modal Ticket ------------------------------------------------ -->
 <div id="ticket-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center">
@@ -2800,19 +3110,4 @@ function openCliDetail(jsonStr) {
     .cli-mf{display:flex;gap:10px}
     .cli-mfg{display:flex;flex-direction:column;gap:5px;flex:1}
     .cli-ml{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
-    .cli-mi{background:var(--surface2,#131926);border:1px solid var(--border);border-radius:7px;padding:8px 11px;font-family:var(--font);font-size:12px;color:var(--text);outline:none;transition:border-color .2s}
-    .cli-mi:focus{border-color:var(--accent)}
-    .cli-mi::placeholder{color:var(--muted)}
-    .cli-mfoot{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
-
-  </style>
-</body>
-</html>
-
-
-
-
-
-
-
-
+    .cli-mi{background:var(--surface2,#131926);border:1px solid var(--border);border-radius:7px;padding:8px 11px;font-family:var(--font);font-size:12px;color:var(--text);outline:none;transition:border-col
