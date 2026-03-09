@@ -349,10 +349,6 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .cobrar-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(255,181,71,.35); }
 .cobrar-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
 
-/* -- Fab & overlay: hidden by default (JS/media shows on mobile) -- */
-#fab-ticket { display: none; }
-#ticket-overlay { display: none; }
-
 /* ----------------------------------------
    DASHBOARD VIEW
 ---------------------------------------- */
@@ -823,19 +819,24 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 
 /* ================================================
-   TURBOPOS — RESPONSIVE MOBILE/TABLET
-   v3.0 — patch limpio, un solo bloque
+   TURBOPOS â€” RESPONSIVE MOBILE/TABLET
+   v3.0 â€” patch limpio, un solo bloque
    ================================================ */
+
+:root {
+  --nav-h: 60px;
+  --top-h: 48px;
+}
 
 /* ===== MOBILE < 768px ===== */
 @media screen and (max-width: 767px) {
 
   html, body { overflow: hidden !important; }
 
-  /* SHELL → columna */
+  /* SHELL â†’ columna */
   .shell { flex-direction: column !important; height: 100vh !important; }
 
-  /* SIDEBAR → bottom nav fijo */
+  /* SIDEBAR â†’ bottom nav fijo */
   .sidebar {
     position: fixed !important;
     bottom: 0 !important; left: 0 !important; right: 0 !important; top: auto !important;
@@ -924,10 +925,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px !important;
     padding: 8px !important;
-    padding-bottom: 80px !important;
+    padding-bottom: 72px !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
-    touch-action: pan-y !important;
   }
 
   .p-card { min-height: 88px !important; }
@@ -977,7 +977,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     font-weight: 800 !important; border-radius: 12px !important; width: 100% !important;
   }
 
-  /* FAB botón ticket */
+  /* FAB botÃ³n ticket */
+  /* FAB solo se muestra en POS - controlado por JS via .visible */
   #fab-ticket {
     position: fixed !important;
     bottom: calc(var(--nav-h) + 10px) !important;
@@ -1020,26 +1021,17 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   #ticket-overlay.visible { display: block !important; }
 
   /* DASHBOARD */
-  .dash-view { overflow: hidden !important; }
   .dash-view > div {
     padding: 10px !important;
     height: 100% !important; overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
-    padding-bottom: 80px !important;
-    touch-action: pan-y !important;
+    padding-bottom: 16px !important;
   }
   .metrics-row { grid-template-columns: repeat(2,1fr) !important; gap: 8px !important; }
   .metric-card { padding: 12px !important; }
   .metric-val { font-size: 18px !important; }
 
   /* REPORTES / CONFIG / CLIENTES */
-  /* Fix fixed-positioned views on mobile: override desktop left/top */
-  #view-config, #view-clientes {
-    left: 0 !important;
-    top: var(--top-h) !important;
-    height: calc(100vh - var(--top-h) - var(--nav-h)) !important;
-  }
-
   #view-reportes > div,
   #view-config > div,
   #view-clientes {
@@ -1051,7 +1043,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   }
 
   /* MODALES */
-  .modal-overlay { align-items: flex-end !important; padding: 0 !important; }
+  .modal-ov { align-items: flex-end !important; padding: 0 !important; }
   .modal-box {
     width: 100vw !important; max-width: 100vw !important;
     border-radius: 20px 20px 0 0 !important;
@@ -1062,10 +1054,6 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   table { font-size: 11px !important; }
   td, th { padding: 8px 6px !important; }
 }
-
-  /* CORTE Z - grids */
-  .corte-grid { grid-template-columns: repeat(2, 1fr) !important; }
-  .corte-view > div { padding: 10px !important; overflow-y: auto !important; height: 100% !important; padding-bottom: 80px !important; touch-action: pan-y !important; }
 
 /* ===== TABLET 768-1024px ===== */
 @media screen and (min-width: 768px) and (max-width: 1024px) {
@@ -1090,7 +1078,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <body>
 <!-- Mobile FAB + overlay -->
 <button id="fab-ticket" onclick="toggleTicketDrawer()">
-  🛒<span class="fab-badge hidden" id="fab-badge">0</span>
+  ðŸ›’<span class="fab-badge hidden" id="fab-badge">0</span>
 </button>
 <div id="ticket-overlay" onclick="toggleTicketDrawer()"></div>
 
@@ -1101,17 +1089,17 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   <div class="login-card">
     <div class="login-logo-wrap">
       <div class="login-logo">TurboPOS</div>
-      <div class="login-version">Sistema de Punto de Venta · v10.1</div>
+      <div class="login-version">Sistema de Punto de Venta Â· v10.1</div>
     </div>
     <label class="login-label">Usuario</label>
     <input class="login-input" id="login-user" type="text" placeholder="admin" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()">
-    <label class="login-label">Contraseña</label>
+    <label class="login-label">ContraseÃ±a</label>
     <div style="position:relative">
-      <input class="login-input" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:40px;width:100%">
-      <button type="button" onclick="var i=document.getElementById('login-pass');i.type=i.type==='password'?'text':'password'" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px">✕</button>
+      <input class="login-input" id="login-pass" type="password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:40px;width:100%">
+      <button type="button" onclick="var i=document.getElementById('login-pass');i.type=i.type==='password'?'text':'password'" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px">âœ•</button>
     </div>
     <div class="login-error" id="login-error"></div>
-    <button type="button" class="login-btn" id="login-btn" onclick="doLogin()">Iniciar sesión</button>
+    <button type="button" class="login-btn" id="login-btn" onclick="doLogin()">Iniciar sesiÃ³n</button>
     <div class="login-hint">Credenciales: admin / turbopos2026</div>
   </div>
 </div>
@@ -1123,35 +1111,35 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   <aside class="sidebar">
     <div class="logo-mark" onclick="showView('pos')">T</div>
     <button class="nav-item active" id="nav-pos" onclick="showView('pos')">
-      <span>🏠</span><span class="nav-lbl">Venta</span>
+      <span>ðŸ </span><span class="nav-lbl">Venta</span>
     </button>
     <button class="nav-item" id="nav-dash" onclick="showView('dash')">
-      <span>📊</span><span class="nav-lbl">Dash</span>
+      <span>ðŸ“Š</span><span class="nav-lbl">Dash</span>
     </button>
     <button class="nav-item" id="nav-corte" onclick="showView('corte')">
-      <span>🧾</span><span class="nav-lbl">Corte</span>
+      <span>ðŸ§¾</span><span class="nav-lbl">Corte</span>
     </button>
     <button class="nav-item" id="nav-catalog" onclick="showView('catalog')">
-      <span>📦</span><span class="nav-lbl">Catálogo</span>
+      <span>ðŸ“¦</span><span class="nav-lbl">CatÃ¡logo</span>
     </button>
     <div class="nav-sep"></div>
     <button class="nav-item" id="nav-migrate" onclick="showView('migrate')">
-      <span>⬆️</span><span class="nav-lbl">Import</span>
+      <span>â¬†ï¸</span><span class="nav-lbl">Import</span>
     </button>
     <button class="nav-item" id="nav-loyalty" onclick="showView('loyalty')">
-      <span>⭐</span><span class="nav-lbl">Lealtad</span>
+      <span>â­</span><span class="nav-lbl">Lealtad</span>
     </button>
     <button class="nav-item" id="nav-reportes" onclick="showView('reportes')">
-      <span>📈</span><span class="nav-lbl">Reportes</span>
+      <span>ðŸ“ˆ</span><span class="nav-lbl">Reportes</span>
     </button>
     <button class="nav-item" id="nav-config" onclick="showView('config')">
-      <span>⚙️</span><span class="nav-lbl">Config</span>
+      <span>âš™ï¸</span><span class="nav-lbl">Config</span>
     </button>
     <button class="nav-item" id="nav-clientes" onclick="showView('clientes')">
           <span>&#128101;</span><span class="nav-lbl">CLIENTES</span>
         </button>
         <div class="nav-spacer"></div>
-    <div class="nav-user" title="Cerrar sesión" onclick="logout()">→</div>
+    <div class="nav-user" title="Cerrar sesiÃ³n" onclick="logout()">â†’</div>
   </aside>
 
   <!-- Main -->
@@ -1166,7 +1154,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
       <div class="topbar-spacer"></div>
       <div class="status-pill">
         <div class="status-dot"></div>
-        En línea
+        En lÃ­nea
       </div>
       <div class="rfc-chip" id="tenant-rfc">EKU9003173C9</div>
       <div class="clock-display" id="clock">--:--</div>
@@ -1182,8 +1170,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
         <div class="prod-panel">
           <div class="prod-header">
             <div class="prod-search">
-              <span class="s-icon">🔍</span>
-              <input type="text" id="product-search" placeholder="Buscar producto, SKU o código..." oninput="filterProducts()">
+              <span class="s-icon">ðŸ”</span>
+              <input type="text" id="product-search" placeholder="Buscar producto, SKU o cÃ³digo..." oninput="filterProducts()">
             </div>
             <div class="cats-row" id="categories"></div>
           </div>
@@ -1199,31 +1187,31 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
           </div>
           <div class="cart-area" id="cart-items">
             <div class="cart-empty-state" id="cart-empty">
-              <div class="cart-empty-icon">🛒</div>
-              <div class="cart-empty-txt">Ticket vacío</div>
+              <div class="cart-empty-icon">ðŸ›’</div>
+              <div class="cart-empty-txt">Ticket vacÃ­o</div>
               <div class="cart-empty-sub">Toca un producto para agregar</div>
             </div>
           </div>
           <div class="ticket-bottom">
             <div class="loyalty-row">
-              <span class="l-icon">📱</span>
-              <input type="tel" id="customer-phone" placeholder="Teléfono del cliente (lealtad)" maxlength="10" oninput="checkLoyalty(this.value)">
+              <span class="l-icon">ðŸ“±</span>
+              <input type="tel" id="customer-phone" placeholder="TelÃ©fono del cliente (lealtad)" maxlength="10" oninput="checkLoyalty(this.value)">
             </div>
             <div class="loyalty-badge" id="loyalty-display"></div>
             <div class="pay-methods" id="pay-methods">
               <button class="pay-btn active" id="pay-cash" onclick="setPayment('cash')">
-                <span class="pay-icon">💵</span>Efectivo
+                <span class="pay-icon">ðŸ’µ</span>Efectivo
               </button>
               <button class="pay-btn" id="pay-card" onclick="setPayment('card')">
-                <span class="pay-icon">💳</span>Tarjeta
+                <span class="pay-icon">ðŸ’³</span>Tarjeta
               </button>
               <button class="pay-btn" id="pay-transfer" onclick="setPayment('transfer')">
-                <span class="pay-icon">🏦</span>Transfer
+                <span class="pay-icon">ðŸ¦</span>Transfer
               </button>
             </div>
             <label class="cfdi-row" for="factura-check">
               <input type="checkbox" class="cfdi-check" id="factura-check" checked>
-              <span class="cfdi-lbl">🧾 Generar CFDI 4.0</span>
+              <span class="cfdi-lbl">ðŸ§¾ Generar CFDI 4.0</span>
               <span class="cfdi-sub">SAT</span>
             </label>
             <div class="totals-row">
@@ -1231,7 +1219,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
               <span class="totals-val" id="cart-total">$0.00</span>
             </div>
             <button class="cobrar-btn" id="cobrar-btn" onclick="cobrar()">
-              ⚡ Cobrar
+              âš¡ Cobrar
             </button>
           </div>
         </div>
@@ -1245,43 +1233,43 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
               <div class="section-title">Dashboard</div>
               <div class="section-sub" id="dash-date">Hoy</div>
             </div>
-            <button class="btn btn-ghost" onclick="loadDashboard()" style="font-size:12px">🔄 Actualizar</button>
+            <button class="btn btn-ghost" onclick="loadDashboard()" style="font-size:12px">ðŸ”„ Actualizar</button>
           </div>
           <div class="metrics-row" style="margin-bottom:20px">
             <div class="metric-card">
               <div class="metric-top">
-                <span class="metric-icon">📊</span>
+                <span class="metric-icon">ðŸ“Š</span>
                 <span class="metric-badge badge-up" id="m-ventas-sub">0 ventas</span>
               </div>
               <div class="metric-val" id="m-ventas">$0</div>
-              <div class="metric-lbl">Ventas del día</div>
+              <div class="metric-lbl">Ventas del dÃ­a</div>
             </div>
             <div class="metric-card">
               <div class="metric-top">
-                <span class="metric-icon">💰</span>
+                <span class="metric-icon">ðŸ’°</span>
                 <span class="metric-badge badge-blue">CFDI 4.0</span>
               </div>
               <div class="metric-val" style="color:var(--blue)" id="m-timbradas">0</div>
               <div class="metric-lbl">Facturas timbradas</div>
             </div>
             <div class="metric-card">
-              <div class="metric-top"><span class="metric-icon">👥</span></div>
+              <div class="metric-top"><span class="metric-icon">ðŸ‘¥</span></div>
               <div class="metric-val" style="color:var(--cyan)" id="m-clientes">0</div>
               <div class="metric-lbl">Clientes activos</div>
             </div>
             <div class="metric-card">
               <div class="metric-top">
-                <span class="metric-icon">🚫</span>
+                <span class="metric-icon">ðŸš«</span>
                 <span class="metric-badge badge-red">Cancel.</span>
               </div>
               <div class="metric-val" style="color:var(--red)" id="m-cancel">0</div>
               <div class="metric-lbl">Canceladas</div>
             </div>
           </div>
-          <div class="section-head"><div class="section-title">Últimas ventas</div></div>
+          <div class="section-head"><div class="section-title">Ãšltimas ventas</div></div>
           <div class="tx-table">
             <div class="tx-head">
-              <span>ID venta</span><span>Total</span><span>Método</span><span>CFDI</span><span>Hora</span>
+              <span>ID venta</span><span>Total</span><span>MÃ©todo</span><span>CFDI</span><span>Hora</span>
             </div>
             <div id="transactions-body">
               <div style="padding:28px;text-align:center;color:var(--muted);font-size:13px">Cargando...</div>
@@ -1297,11 +1285,11 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
             <div>
               <div class="section-title" style="margin-bottom:2px">Corte Z</div>
-              <div class="section-sub" id="corte-fecha">—</div>
+              <div class="section-sub" id="corte-fecha">â€”</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center">
               <input type="date" id="corte-fecha-sel" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12px" onchange="loadCorte()">
-              <button class="btn btn-primary" onclick="loadCorte()" style="font-size:12px">🔄 Actualizar</button>
+              <button class="btn btn-primary" onclick="loadCorte()" style="font-size:12px">ðŸ”„ Actualizar</button>
             </div>
           </div>
 
@@ -1309,22 +1297,22 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
           <div class="corte-grid" id="corte-cards" style="margin-bottom:16px"></div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-            <!-- Gráfica por hora -->
+            <!-- GrÃ¡fica por hora -->
             <div class="corte-card" style="padding:20px">
               <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Ventas por hora</div>
               <div id="corte-hora-chart" style="display:flex;align-items:flex-end;gap:3px;height:100px;padding-bottom:16px"></div>
             </div>
 
-            <!-- Métodos de pago con dona -->
+            <!-- MÃ©todos de pago con dona -->
             <div class="corte-card" style="padding:20px">
-              <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Métodos de pago</div>
+              <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">MÃ©todos de pago</div>
               <div id="corte-methods"></div>
             </div>
           </div>
 
-          <!-- Top productos del día -->
+          <!-- Top productos del dÃ­a -->
           <div class="corte-card" style="padding:20px">
-            <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Top productos del día</div>
+            <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Top productos del dÃ­a</div>
             <div id="corte-top-prods"></div>
           </div>
         </div>
@@ -1334,24 +1322,24 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
       <div class="view catalog-view" id="view-catalog">
         <div class="cat-top">
           <div class="cat-top-row">
-            <span class="cat-title">Catálogo</span>
+            <span class="cat-title">CatÃ¡logo</span>
             <span class="cat-count" id="catalog-count">0</span>
             <div class="cat-spacer"></div>
             <button class="btn-new" onclick="openProductModal()">+ Nuevo producto</button>
           </div>
           <div class="cat-filters">
             <div class="cat-search">
-              <span class="si">🔍</span>
-              <input type="text" id="catalog-search" placeholder="Nombre, SKU, código de barras..." oninput="filterCatalog()">
+              <span class="si">ðŸ”</span>
+              <input type="text" id="catalog-search" placeholder="Nombre, SKU, cÃ³digo de barras..." oninput="filterCatalog()">
             </div>
             <select class="cat-sel" id="catalog-cat-filter" onchange="filterCatalog()">
-              <option value="">Todas las categorías</option>
+              <option value="">Todas las categorÃ­as</option>
             </select>
           </div>
         </div>
         <div class="cat-list">
           <div class="cat-list-head">
-            <span></span><span>Producto</span><span>Precio</span><span>Unidad</span><span>Categoría</span><span>Acciones</span>
+            <span></span><span>Producto</span><span>Precio</span><span>Unidad</span><span>CategorÃ­a</span><span>Acciones</span>
           </div>
           <div id="catalog-body">
             <div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Cargando...</div>
@@ -1363,7 +1351,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
       <div class="view migrate-view" id="view-migrate">
         <div class="migrate-inner">
           <div>
-            <div class="section-title" style="margin-bottom:4px">Importar catálogo</div>
+            <div class="section-title" style="margin-bottom:4px">Importar catÃ¡logo</div>
             <div class="section-sub">Migra desde Formato Aspel, Formato Bind, CONTPAQi/CSV o cualquier CSV</div>
           </div>
           <div class="steps-row">
@@ -1375,14 +1363,14 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
           </div>
           <div id="migrate-step-1">
             <div class="drop-zone" id="drop-zone" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)" onclick="document.getElementById('file-input').click()">
-              <div class="drop-icon">📂</div>
-              <div class="drop-title">Arrastra tu archivo aquí</div>
+              <div class="drop-icon">ðŸ“‚</div>
+              <div class="drop-title">Arrastra tu archivo aquÃ­</div>
               <div class="drop-sub">O haz clic para seleccionarlo</div>
               <div class="format-chips">
                 <span class="fmt-chip">Formato Aspel</span>
                 <span class="fmt-chip">Formato Bind</span>
                 <span class="fmt-chip">CONTPAQi/CSV</span>
-                <span class="fmt-chip">CSV genérico</span>
+                <span class="fmt-chip">CSV genÃ©rico</span>
               </div>
               <input type="file" id="file-input" accept=".csv,.txt" style="display:none" onchange="handleFileSelect(event)">
             </div>
@@ -1392,7 +1380,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
               <div class="preview-stats">
                 <div class="ps-card"><div class="ps-val" id="ps-products">0</div><div class="ps-lbl">Productos detectados</div></div>
                 <div class="ps-card"><div class="ps-val" id="ps-customers">0</div><div class="ps-lbl">Clientes detectados</div></div>
-                <div class="ps-card"><div class="ps-val" id="ps-format">—</div><div class="ps-lbl">Formato</div></div>
+                <div class="ps-card"><div class="ps-val" id="ps-format">â€”</div><div class="ps-lbl">Formato</div></div>
               </div>
               <table class="preview-table">
                 <thead id="preview-head"></thead>
@@ -1400,14 +1388,14 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
               </table>
             </div>
             <div style="display:flex;gap:10px;margin-top:12px">
-              <button class="btn btn-ghost" onclick="resetMigration()">🔹 Volver</button>
-              <button class="btn btn-primary" id="btn-import" onclick="doImport()" style="flex:1">🔹 Importar todo</button>
+              <button class="btn btn-ghost" onclick="resetMigration()">ðŸ”¹ Volver</button>
+              <button class="btn btn-primary" id="btn-import" onclick="doImport()" style="flex:1">ðŸ”¹ Importar todo</button>
             </div>
           </div>
           <div id="migrate-step-3" style="display:none">
             <div style="text-align:center;padding:40px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
               <div style="font-size:48px;margin-bottom:12px">?</div>
-              <div style="font-size:18px;font-weight:800;margin-bottom:8px">Importación completada</div>
+              <div style="font-size:18px;font-weight:800;margin-bottom:8px">ImportaciÃ³n completada</div>
               <div style="font-size:13px;color:var(--muted);margin-bottom:20px" id="import-result"></div>
               <button class="btn btn-primary" onclick="resetMigration()">Importar otro archivo</button>
             </div>
@@ -1423,16 +1411,16 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
             <div class="section-sub">Consulta puntos y historial de cualquier cliente</div>
           </div>
           <div class="loyalty-search-wrap">
-            <span style="font-size:18px">📱</span>
-            <input type="tel" id="loyalty-search" placeholder="Ingresa el teléfono del cliente (10 dígitos)" maxlength="10" onkeydown="if(event.key==='Enter')searchLoyalty()">
+            <span style="font-size:18px">ðŸ“±</span>
+            <input type="tel" id="loyalty-search" placeholder="Ingresa el telÃ©fono del cliente (10 dÃ­gitos)" maxlength="10" onkeydown="if(event.key==='Enter')searchLoyalty()">
             <button class="btn-search" onclick="searchLoyalty()">Buscar</button>
           </div>
           <div class="loyalty-card" id="loyalty-result">
             <div class="loy-header">
-              <div class="loy-avatar">👤</div>
+              <div class="loy-avatar">ðŸ‘¤</div>
               <div class="loy-info">
-                <div class="loy-name" id="loy-name">—</div>
-                <div class="loy-phone" id="loy-phone">—</div>
+                <div class="loy-name" id="loy-name">â€”</div>
+                <div class="loy-phone" id="loy-phone">â€”</div>
               </div>
               <div class="tier-badge" id="loy-tier" style="background:var(--amber-dim);color:var(--amber)">Bronze</div>
             </div>
@@ -1449,7 +1437,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
           </div>
           <div class="loy-empty" id="loyalty-empty">
             <div class="loy-empty-icon">?</div>
-            <div class="loy-empty-txt">Busca un cliente por teléfono</div>
+            <div class="loy-empty-txt">Busca un cliente por telÃ©fono</div>
           </div>
         </div>
       </div>
@@ -1460,12 +1448,12 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
             <div>
               <div class="section-title" style="margin-bottom:2px">Reportes</div>
-              <div class="section-sub">Análisis de ventas por período</div>
+              <div class="section-sub">AnÃ¡lisis de ventas por perÃ­odo</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <button class="rep-btn active" id="rep-semana" onclick="setRepPeriodo('semana')">7 días</button>
-              <button class="rep-btn" id="rep-mes" onclick="setRepPeriodo('mes')">30 días</button>
-              <button class="rep-btn" id="rep-año" onclick="setRepPeriodo('año')">1 año</button>
+              <button class="rep-btn active" id="rep-semana" onclick="setRepPeriodo('semana')">7 dÃ­as</button>
+              <button class="rep-btn" id="rep-mes" onclick="setRepPeriodo('mes')">30 dÃ­as</button>
+              <button class="rep-btn" id="rep-aÃ±o" onclick="setRepPeriodo('aÃ±o')">1 aÃ±o</button>
               <input type="date" id="rep-desde" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12px">
               <input type="date" id="rep-hasta" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12px">
               <button class="rep-btn" onclick="setRepPeriodo('custom')">Aplicar</button>
@@ -1479,11 +1467,11 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
             <div class="corte-card" style="padding:20px">
-              <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px">Ventas por día</div>
+              <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px">Ventas por dÃ­a</div>
               <div id="rep-chart" style="display:flex;align-items:flex-end;gap:4px;height:140px;padding-bottom:20px"></div>
             </div>
             <div class="corte-card" style="padding:20px">
-              <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px">Métodos de pago</div>
+              <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px">MÃ©todos de pago</div>
               <div id="rep-metodos"></div>
             </div>
           </div>
@@ -1501,7 +1489,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
               <div style="display:flex;gap:8px;align-items:center">
                 <span id="rep-cfdi-count" style="font-size:11px;color:var(--muted)">0 facturas</span>
                 <span id="rep-cfdi-total" style="font-size:12px;font-weight:700;color:var(--amber)">$0</span>
-                <button onclick="exportCFDIcsv()" style="padding:5px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer">🔹 CSV</button>
+                <button onclick="exportCFDIcsv()" style="padding:5px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer">ðŸ”¹ CSV</button>
               </div>
             </div>
             <div style="overflow-x:auto">
@@ -1512,13 +1500,13 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
                     <th style="text-align:left;padding:8px 10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:10px">UUID</th>
                     <th style="text-align:left;padding:8px 10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:10px">RFC Receptor</th>
                     <th style="text-align:left;padding:8px 10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:10px">Receptor</th>
-                    <th style="text-align:left;padding:8px 10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:10px">Método</th>
+                    <th style="text-align:left;padding:8px 10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:10px">MÃ©todo</th>
                     <th style="text-align:right;padding:8px 10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:10px">Total</th>
                     <th style="text-align:center;padding:8px 10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:10px">Estado</th>
                   </tr>
                 </thead>
                 <tbody id="rep-cfdi-body">
-                  <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px;font-size:13px">Sin facturas en el período</td></tr>
+                  <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px;font-size:13px">Sin facturas en el perÃ­odo</td></tr>
                 </tbody>
               </table>
             </div>
@@ -1531,30 +1519,30 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
         <div style="overflow-y:auto;height:calc(100vh - 58px)">
         <div style="max-width:720px;margin:0 auto;padding:28px 24px">
           <div style="margin-bottom:28px">
-            <div class="section-title">Configuración</div>
+            <div class="section-title">ConfiguraciÃ³n</div>
             <div class="section-sub">Administra tu cuenta y preferencias</div>
           </div>
           <div class="cfg-card">
             <div class="cfg-card-hdr" onclick="toggleCfg('negocio')">
-              <div class="cfg-card-icon">🏪</div>
-              <div class="cfg-card-info"><div class="cfg-card-title">Negocio</div><div class="cfg-card-sub">Nombre, RFC, dirección fiscal</div></div>
+              <div class="cfg-card-icon">ðŸª</div>
+              <div class="cfg-card-info"><div class="cfg-card-title">Negocio</div><div class="cfg-card-sub">Nombre, RFC, direcciÃ³n fiscal</div></div>
               <div class="cfg-chevron" id="chv-negocio">?</div>
             </div>
             <div class="cfg-card-body" id="body-negocio" style="display:none">
               <div class="cfg-grid">
                 <div class="cfg-field"><label>Nombre</label><input id="cfg-nombre" class="cfg-input" placeholder="Mi Tienda SA de CV"></div>
                 <div class="cfg-field"><label>RFC</label><input id="cfg-rfc" class="cfg-input" placeholder="XAXX010101000"></div>
-                <div class="cfg-field"><label>Razón Social</label><input id="cfg-razon" class="cfg-input" placeholder="MI TIENDA SA DE CV"></div>
-                <div class="cfg-field"><label>Código Postal</label><input id="cfg-cp" class="cfg-input" placeholder="64000"></div>
+                <div class="cfg-field"><label>RazÃ³n Social</label><input id="cfg-razon" class="cfg-input" placeholder="MI TIENDA SA DE CV"></div>
+                <div class="cfg-field"><label>CÃ³digo Postal</label><input id="cfg-cp" class="cfg-input" placeholder="64000"></div>
                 <div class="cfg-field"><label>Email</label><input id="cfg-email" class="cfg-input" placeholder="correo@negocio.mx"></div>
-                <div class="cfg-field"><label>Teléfono</label><input id="cfg-tel" class="cfg-input" placeholder="8110001111"></div>
+                <div class="cfg-field"><label>TelÃ©fono</label><input id="cfg-tel" class="cfg-input" placeholder="8110001111"></div>
               </div>
               <button class="cfg-save-btn" onclick="saveCfgNegocio()">Guardar cambios</button>
             </div>
           </div>
           <div class="cfg-card">
             <div class="cfg-card-hdr" onclick="toggleCfg('csd')">
-              <div class="cfg-card-icon">🔐</div>
+              <div class="cfg-card-icon">ðŸ”</div>
               <div class="cfg-card-info"><div class="cfg-card-title">Certificado SAT (CSD)</div><div class="cfg-card-sub" id="csd-status-sub">Verifica tu certificado para timbrar</div></div>
               <div class="cfg-chevron" id="chv-csd">?</div>
             </div>
@@ -1562,26 +1550,26 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
               <div id="csd-info-panel" style="display:none;background:var(--surface2);border-radius:8px;padding:16px;margin-bottom:16px">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">
                   <div><span style="color:var(--muted)">RFC:</span> <span id="csd-rfc">0</span></div>
-                  <div><span style="color:var(--muted)">Válido hasta:</span> <span id="csd-hasta">0</span></div>
+                  <div><span style="color:var(--muted)">VÃ¡lido hasta:</span> <span id="csd-hasta">0</span></div>
                 </div>
                 <div id="csd-vencimiento" style="margin-top:8px;font-size:12px"></div>
               </div>
               <div class="cfg-upload-row">
-                <label class="cfg-upload-btn">📄 Certificado (.cer)<input type="file" id="csd-cer" accept=".cer" style="display:none" onchange="updateCSDLabel('cer',this)"></label>
+                <label class="cfg-upload-btn">ðŸ“„ Certificado (.cer)<input type="file" id="csd-cer" accept=".cer" style="display:none" onchange="updateCSDLabel('cer',this)"></label>
                 <span id="lbl-cer" style="font-size:12px;color:var(--muted)">Sin archivo</span>
               </div>
               <div class="cfg-upload-row" style="margin-top:8px">
-                <label class="cfg-upload-btn">🔑 Llave privada (.key)<input type="file" id="csd-key" accept=".key" style="display:none" onchange="updateCSDLabel('key',this)"></label>
+                <label class="cfg-upload-btn">ðŸ”‘ Llave privada (.key)<input type="file" id="csd-key" accept=".key" style="display:none" onchange="updateCSDLabel('key',this)"></label>
                 <span id="lbl-key" style="font-size:12px;color:var(--muted)">Sin archivo</span>
               </div>
-              <div class="cfg-field" style="margin-top:12px"><label>Contraseña CSD</label><input id="csd-pass" type="password" class="cfg-input" placeholder="Contraseña del certificado"></div>
+              <div class="cfg-field" style="margin-top:12px"><label>ContraseÃ±a CSD</label><input id="csd-pass" type="password" class="cfg-input" placeholder="ContraseÃ±a del certificado"></div>
               <button class="cfg-save-btn" onclick="uploadCSD()">Subir certificado</button>
             </div>
           </div>
           <div class="cfg-card">
             <div class="cfg-card-hdr" onclick="toggleCfg('subs')">
-              <div class="cfg-card-icon">💳</div>
-              <div class="cfg-card-info"><div class="cfg-card-title">Suscripción</div><div class="cfg-card-sub" id="subs-sub">Plan activo</div></div>
+              <div class="cfg-card-icon">ðŸ’³</div>
+              <div class="cfg-card-info"><div class="cfg-card-title">SuscripciÃ³n</div><div class="cfg-card-sub" id="subs-sub">Plan activo</div></div>
               <div class="cfg-chevron" id="chv-subs">?</div>
             </div>
             <div class="cfg-card-body" id="body-subs" style="display:none">
@@ -1595,15 +1583,15 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
           </div>
           <div class="cfg-card">
             <div class="cfg-card-hdr" onclick="toggleCfg('about')">
-              <div class="cfg-card-icon">ℹ️</div>
-              <div class="cfg-card-info"><div class="cfg-card-title">Acerca de TurboPOS</div><div class="cfg-card-sub">Versión 1.0.0 · Soporte</div></div>
+              <div class="cfg-card-icon">â„¹ï¸</div>
+              <div class="cfg-card-info"><div class="cfg-card-title">Acerca de TurboPOS</div><div class="cfg-card-sub">VersiÃ³n 1.0.0 Â· Soporte</div></div>
               <div class="cfg-chevron" id="chv-about">?</div>
             </div>
             <div class="cfg-card-body" id="body-about" style="display:none">
               <div style="font-size:13px;color:var(--muted);line-height:2.2">
-                <div>Versión: <strong style="color:var(--text)">1.0.0</strong></div>
-                <div>Soporte: <a href="/cdn-cgi/l/email-protection#c9bdbcbbaba6b9a6bae7bdacaaa189aea4a8a0a5e7aaa6a4" style="color:var(--amber)"><span class="__cf_email__" data-cfemail="10646562727f607f633e6475737850777d71797c3e737f7d">[email&#160;protected]</span></a></div>
-                <div style="margin-top:12px"><button onclick="logout()" style="padding:10px 20px;background:transparent;border:1px solid var(--red);color:var(--red);border-radius:8px;cursor:pointer;font-size:13px">Cerrar sesión</button></div>
+                <div>VersiÃ³n: <strong style="color:var(--text)">1.0.0</strong></div>
+                <div>Soporte: <a href="/cdn-cgi/l/email-protection#cdb9b8bfafa2bda2bee3b9a8aea58daaa0aca4a1e3aea2a0" style="color:var(--amber)"><span class="__cf_email__" data-cfemail="61151413030e110e124f1504020921060c00080d4f020e0c">[email&#160;protected]</span></a></div>
+                <div style="margin-top:12px"><button onclick="logout()" style="padding:10px 20px;background:transparent;border:1px solid var(--red);color:var(--red);border-radius:8px;cursor:pointer;font-size:13px">Cerrar sesiÃ³n</button></div>
               </div>
             </div>
           </div>
@@ -1626,7 +1614,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
           <div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;overflow:hidden">
             <table style="width:100%;border-collapse:collapse">
               <thead><tr style="background:var(--surface2)">
-                <th class="cli-th">Cliente</th><th class="cli-th">Teléfono</th><th class="cli-th">RFC</th>
+                <th class="cli-th">Cliente</th><th class="cli-th">TelÃ©fono</th><th class="cli-th">RFC</th>
                 <th class="cli-th">Puntos</th><th class="cli-th">Compras</th><th class="cli-th">Acciones</th>
               </tr></thead>
               <tbody id="cli-body"><tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">Cargando...</td></tr></tbody>
@@ -1649,7 +1637,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div class="modal-overlay" id="product-modal">
   <div class="modal-box">
     <div class="modal-title" id="prod-modal-title">Nuevo producto</div>
-    <div class="modal-sub">Completa la información del producto</div>
+    <div class="modal-sub">Completa la informaciÃ³n del producto</div>
     <input type="hidden" id="prod-id">
     <div class="fg"><label>Nombre *</label><input type="text" id="prod-name" placeholder="Ej. Coca Cola 600ml"></div>
     <div class="fg-row">
@@ -1657,11 +1645,11 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
         <label>Precio de venta *</label>
         <div class="price-wrap"><input type="number" id="prod-price" placeholder="0.00" min="0.01" step="0.01"></div>
       </div>
-      <div class="fg"><label>Categoría</label><input type="text" id="prod-category" placeholder="Bebidas, Alimentos..."></div>
+      <div class="fg"><label>CategorÃ­a</label><input type="text" id="prod-category" placeholder="Bebidas, Alimentos..."></div>
     </div>
     <div class="fg-row">
       <div class="fg"><label>SKU / Clave</label><input type="text" id="prod-sku" placeholder="PROD-001"></div>
-      <div class="fg"><label>Código de barras</label><input type="text" id="prod-barcode" placeholder="7501234567890"></div>
+      <div class="fg"><label>CÃ³digo de barras</label><input type="text" id="prod-barcode" placeholder="7501234567890"></div>
     </div>
     <div class="fg">
       <label>Unidad de medida</label>
@@ -1685,8 +1673,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 <div class="modal-overlay" id="delete-modal">
   <div class="modal-box" style="width:360px">
     <div class="modal-title" style="color:var(--red)">Eliminar producto</div>
-    <div class="modal-sub" id="delete-modal-name">┐Seguro?</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6">El producto se desactivará y dejará de aparecer en el POS. Puedes reactivarlo desde la base de datos.</p>
+    <div class="modal-sub" id="delete-modal-name">â”Seguro?</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6">El producto se desactivarÃ¡ y dejarÃ¡ de aparecer en el POS. Puedes reactivarlo desde la base de datos.</p>
     <input type="hidden" id="delete-product-id">
     <div class="modal-actions">
       <button class="btn-cancel" onclick="document.getElementById('delete-modal').classList.remove('open')">Cancelar</button>
@@ -1799,7 +1787,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeSaleModal()">Cancelar</button>
-      <button class="btn-save" id="confirm-sale-btn" onclick="confirmSale()">⚡ Confirmar y cobrar</button>
+      <button class="btn-save" id="confirm-sale-btn" onclick="confirmSale()">âš¡ Confirmar y cobrar</button>
     </div>
   </div>
 </div>
@@ -1827,12 +1815,12 @@ async function doLogin() {
   const errEl = document.getElementById('login-error');
   const user = document.getElementById('login-user').value.trim();
   const pass = document.getElementById('login-pass').value;
-  if (!user || !pass) { errEl.textContent = 'Ingresa usuario y contraseña'; return; }
+  if (!user || !pass) { errEl.textContent = 'Ingresa usuario y contraseÃ±a'; return; }
   btn.disabled = true; btn.textContent = 'Verificando...'; errEl.textContent = '';
   try {
     const res = await fetch(API + '/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username:user,password:pass}) });
     const d = await res.json();
-    if (!res.ok) throw new Error(d.error || 'Error de autenticación');
+    if (!res.ok) throw new Error(d.error || 'Error de autenticaciÃ³n');
     authToken = d.token; authUser = d.user;
     sessionStorage.setItem('turbopos_token', authToken);
     sessionStorage.setItem('turbopos_user', authUser);
@@ -1841,7 +1829,7 @@ async function doLogin() {
     initApp();
     toast('Bienvenido, ' + authUser, 'success');
   } catch(e) { errEl.textContent = e.message; }
-  finally { btn.disabled = false; btn.textContent = 'Iniciar sesión'; }
+  finally { btn.disabled = false; btn.textContent = 'Iniciar sesiÃ³n'; }
 }
 
 function logout() {
@@ -1856,24 +1844,24 @@ async function apiFetch(url, opts={}) {
   opts.headers = opts.headers || {};
   if (authToken) opts.headers['Authorization'] = 'Bearer ' + authToken;
   const res = await fetch(url, opts);
-  if (res.status === 401) { logout(); throw new Error('Sesión expirada'); }
+  if (res.status === 401) { logout(); throw new Error('SesiÃ³n expirada'); }
   return res;
 }
 
 // --- Products demo -------------------------------------------
 const DEMO_PRODUCTS = [
-  {id:'1',name:'Coca Cola 600ml',price:18,icon:'🥤',cat:'Bebidas'},
-  {id:'2',name:'Agua Natural 1L',price:12,icon:'💧',cat:'Bebidas'},
-  {id:'3',name:'Pan Bimbo',price:45,icon:'🍞',cat:'Alimentos'},
-  {id:'4',name:'Leche 1L',price:28,icon:'🥛',cat:'Alimentos'},
-  {id:'5',name:'Sabritas Original',price:22,icon:'🍿',cat:'Botanas'},
-  {id:'6',name:'Chicles',price:5,icon:'🍬',cat:'Botanas'},
-  {id:'7',name:'Jabón Palmolive',price:35,icon:'🧴',cat:'Higiene'},
-  {id:'8',name:'Papel Higiénico',price:68,icon:'🧻',cat:'Higiene'},
-  {id:'9',name:'Cigarros Marlboro',price:75,icon:'📦',cat:'Otros'},
-  {id:'10',name:'Boing Mango',price:14,icon:'🥭',cat:'Bebidas'},
-  {id:'11',name:'Galletas Marías',price:18,icon:'🍪',cat:'Alimentos'},
-  {id:'12',name:'Trident',price:12,icon:'🍬',cat:'Botanas'},
+  {id:'1',name:'Coca Cola 600ml',price:18,icon:'ðŸ¥¤',cat:'Bebidas'},
+  {id:'2',name:'Agua Natural 1L',price:12,icon:'ðŸ’§',cat:'Bebidas'},
+  {id:'3',name:'Pan Bimbo',price:45,icon:'ðŸž',cat:'Alimentos'},
+  {id:'4',name:'Leche 1L',price:28,icon:'ðŸ¥›',cat:'Alimentos'},
+  {id:'5',name:'Sabritas Original',price:22,icon:'ðŸ¿',cat:'Botanas'},
+  {id:'6',name:'Chicles',price:5,icon:'ðŸ¬',cat:'Botanas'},
+  {id:'7',name:'JabÃ³n Palmolive',price:35,icon:'ðŸ§´',cat:'Higiene'},
+  {id:'8',name:'Papel HigiÃ©nico',price:68,icon:'ðŸ§»',cat:'Higiene'},
+  {id:'9',name:'Cigarros Marlboro',price:75,icon:'ðŸ“¦',cat:'Otros'},
+  {id:'10',name:'Boing Mango',price:14,icon:'ðŸ¥­',cat:'Bebidas'},
+  {id:'11',name:'Galletas MarÃ­as',price:18,icon:'ðŸª',cat:'Alimentos'},
+  {id:'12',name:'Trident',price:12,icon:'ðŸ¬',cat:'Botanas'},
 ];
 
 function initApp() {
@@ -1901,7 +1889,7 @@ function updateClock() {
 }
 
 // --- Navigation ----------------------------------------------
-const viewTitles = {config:'Configuración',clientes:'Clientes',pos:'Punto de Venta',dash:'Dashboard',corte:'Corte Z',catalog:'Catálogo',migrate:'Importar datos',loyalty:'Lealtad'};
+const viewTitles = {config:'ConfiguraciÃ³n',clientes:'Clientes',pos:'Punto de Venta',dash:'Dashboard',corte:'Corte Z',catalog:'CatÃ¡logo',migrate:'Importar datos',loyalty:'Lealtad'};
 function showView(v) {
     if (v === 'clientes') { setTimeout(cliLoad, 50); }
   if (v === 'reportes') { setTimeout(loadReportes, 50); }
@@ -1916,6 +1904,19 @@ function showView(v) {
   }
   const btn = document.getElementById('nav-'+v); if(btn) btn.classList.add('active');
   if(v==='config') setTimeout(loadCSDStatus, 100);
+  // Mobile: FAB y ticket solo en vista POS
+  if (window.innerWidth < 768) {
+    const fab = document.getElementById('fab-ticket');
+    const panel = document.querySelector('.ticket-panel');
+    const overlay = document.getElementById('ticket-overlay');
+    if (v === 'pos') {
+      if (fab) fab.classList.add('visible');
+    } else {
+      if (fab) fab.classList.remove('visible');
+      if (panel) { panel.classList.remove('open'); }
+      if (overlay) { overlay.classList.remove('visible'); }
+    }
+  }
   document.getElementById('view-title').textContent = viewTitles[v] || v;
   currentView = v;
   if (v==='dash') loadDashboard();
@@ -1945,7 +1946,7 @@ function filterProducts() {
   }
   grid.innerHTML = filtered.map(p=>`
     <div class="p-card" onclick="addToCart('${p.id}')">
-      <div class="p-icon">${p.icon||'📦'}</div>
+      <div class="p-icon">${p.icon||'ðŸ“¦'}</div>
       <div class="p-body">
         <div class="p-name">${p.name}</div>
         <div class="p-price">$${Number(p.price||0).toFixed(2)}</div>
@@ -1985,7 +1986,7 @@ function renderCart() {
   document.getElementById('cart-count').textContent=_qty;
   updateFabBadge(_qty);
   if (!cart.length) {
-    el.innerHTML = '<div class="cart-empty-state" id="cart-empty" style="display:flex"><div class="cart-empty-icon">🛒</div><div class="cart-empty-txt">Ticket vacío</div><div class="cart-empty-sub">Toca un producto para agregar</div></div>';
+    el.innerHTML = '<div class="cart-empty-state" id="cart-empty" style="display:flex"><div class="cart-empty-icon">ðŸ›’</div><div class="cart-empty-txt">Ticket vacÃ­o</div><div class="cart-empty-sub">Toca un producto para agregar</div></div>';
     document.getElementById('cobrar-btn').disabled = true;
     return;
   }
@@ -2020,7 +2021,7 @@ async function checkLoyalty(phone) {
     const d = await res.json();
     loyaltyData = d;
     const acc = d.account || d;
-    el.textContent = `? ${acc.customer_name||'Cliente'} · ${acc.points||0} puntos · ${acc.tier||'Bronze'}`;
+    el.textContent = `? ${acc.customer_name||'Cliente'} Â· ${acc.points||0} puntos Â· ${acc.tier||'Bronze'}`;
     el.classList.add('show');
   } catch(e) { el.classList.remove('show'); }
 }
@@ -2069,7 +2070,7 @@ function cobrar() {
   document.getElementById('sale-breakdown').innerHTML = cart.map(i=>
     `<div class="sb-row"><span class="sl">${i.name} x${i.qty}</span><span class="sv">$${i.subtotal.toFixed(2)}</span></div>`
   ).join('') + `<div class="sb-row sb-total"><span class="sl">Total</span><span class="sv">$${total.toFixed(2)}</span></div>` +
-  (factura ? '<div class="sb-row"><span class="sl" style="color:var(--blue)">🧾 CFDI 4.0 al SAT</span><span class="sv" style="color:var(--blue)">Auto</span></div>' : '');
+  (factura ? '<div class="sb-row"><span class="sl" style="color:var(--blue)">ðŸ§¾ CFDI 4.0 al SAT</span><span class="sv" style="color:var(--blue)">Auto</span></div>' : '');
   document.getElementById('sale-modal').classList.add('open');
 }
 
@@ -2094,9 +2095,9 @@ async function confirmSale() {
     const d = await res.json();
     if (!res.ok) throw new Error(d.error||'Error al procesar');
     closeSaleModal();
-    toast('✅ Venta · $'+Number(body.total).toLocaleString('es-MX',{minimumFractionDigits:2}), 'success');
+    toast('âœ… Venta Â· $'+Number(body.total).toLocaleString('es-MX',{minimumFractionDigits:2}), 'success');
     showTicket({...d, total:body.total, items:cart.map(i=>({name:i.name,qty:i.qty,subtotal:i.subtotal})), payment_method:payment});
-    // Si hay RFC nuevo y teléfono, guardarlo en la cuenta de lealtad
+    // Si hay RFC nuevo y telÃ©fono, guardarlo en la cuenta de lealtad
     const phoneVal = document.getElementById('customer-phone').value.replace(/\D/g,'');
     const rfcVal = (document.getElementById('sale-rfc').value||'').trim().toUpperCase();
     const telModal  = (document.getElementById('sale-tel')?.value||'').replace(/\D/g,'');
@@ -2130,7 +2131,7 @@ async function confirmSale() {
       apiFetch(API+'/loyalty/cp', {method:'POST',headers:{'Content-Type':'application/json'},body: JSON.stringify({phone: phoneVal, cp: cpVal})}).catch(()=>{});
     }
     if (factura) {
-      setTimeout(()=>toast('🧾 Enviando al SAT...','info'),500);
+      setTimeout(()=>toast('ðŸ§¾ Enviando al SAT...','info'),500);
       // Poll: verificar UUID cada 5s hasta 60s
       let tries = 0;
       const saleId = d.sale_id;
@@ -2153,7 +2154,7 @@ async function confirmSale() {
     }
     clearCart();
   } catch(e) { toast('? '+e.message,'error'); }
-  finally { btn.disabled=false; btn.innerHTML='⚡ Confirmar y cobrar'; }
+  finally { btn.disabled=false; btn.innerHTML='âš¡ Confirmar y cobrar'; }
 }
 
 // --- Dashboard -----------------------------------------------
@@ -2177,7 +2178,7 @@ async function loadTransactions() {
     const el = document.getElementById('transactions-body');
     if (!sales.length) { el.innerHTML='<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px">Sin ventas hoy</div>'; return; }
     el.innerHTML = sales.slice(0,10).map(s=>{
-      const cfdi = s.cfdi_uuid ? `<span class="badge ok">🔹 Timbrado</span>` : `<span class="badge pending">Pendiente</span>`;
+      const cfdi = s.cfdi_uuid ? `<span class="badge ok">ðŸ”¹ Timbrado</span>` : `<span class="badge pending">Pendiente</span>`;
       const hora = s.time ? new Date(s.time).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}) : '--:--';
       return `<div class="tx-row">
         <span class="tx-id">${(s.sale_id||s.id||'').slice(0,8)}</span>
@@ -2210,7 +2211,7 @@ async function loadCorte() {
       `<div class="corte-card"><h3>Canceladas</h3><div class="big" style="color:var(--red)">${d.total_canceladas||0}</div></div>` +
       `<div class="corte-card"><h3>Hora corte</h3><div class="big" style="font-size:22px">${new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}</div></div>`;
 
-    // Gráfica por hora
+    // GrÃ¡fica por hora
     const porHora = d.por_hora || [];
     const chartEl = document.getElementById('corte-hora-chart');
     chartEl.innerHTML = '';
@@ -2222,7 +2223,7 @@ async function loadCorte() {
         const pct = Math.max((h.total/maxV)*80, 4);
         const col = document.createElement('div');
         col.style.cssText = 'display:flex;flex-direction:column;align-items:center;flex:1;min-width:18px;gap:2px;cursor:default';
-        col.title = h.hora+'h: $'+Number(h.total).toLocaleString('es-MX',{minimumFractionDigits:2})+' · '+h.tx+' ventas';
+        col.title = h.hora+'h: $'+Number(h.total).toLocaleString('es-MX',{minimumFractionDigits:2})+' Â· '+h.tx+' ventas';
         col.innerHTML =
           '<div style="width:100%;background:var(--amber);border-radius:3px 3px 0 0;height:'+pct+'px;opacity:'+(h.total>0?'1':'.2')+'"></div>'+
           '<div style="font-size:8px;color:var(--muted)">'+h.hora+'h</div>';
@@ -2230,8 +2231,8 @@ async function loadCorte() {
       });
     }
 
-    // Métodos de pago
-    const icons = {cash:'💵',card:'💳',transfer:'🏦'};
+    // MÃ©todos de pago
+    const icons = {cash:'ðŸ’µ',card:'ðŸ’³',transfer:'ðŸ¦'};
     const methods = d.por_metodo||[];
     const totalNeto = d.total_neto || 1;
     document.getElementById('corte-methods').innerHTML = methods.length
@@ -2239,13 +2240,13 @@ async function loadCorte() {
           const pct = ((m.neto||0)/totalNeto*100).toFixed(1);
           return '<div style="margin-bottom:12px">'+
             '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'+
-              '<span style="font-size:13px">'+(icons[m.metodo]||'💰')+' '+(m.metodo||'-')+'</span>'+
+              '<span style="font-size:13px">'+(icons[m.metodo]||'ðŸ’°')+' '+(m.metodo||'-')+'</span>'+
               '<span style="font-size:13px;font-weight:700">$'+Number(m.neto||0).toLocaleString('es-MX',{minimumFractionDigits:2})+'</span>'+
             '</div>'+
             '<div style="background:var(--surface3);border-radius:4px;height:6px">'+
               '<div style="background:var(--amber);height:6px;border-radius:4px;width:'+pct+'%"></div>'+
             '</div>'+
-            '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+pct+'% · '+m.transacciones+' ventas</div>'+
+            '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+pct+'% Â· '+m.transacciones+' ventas</div>'+
           '</div>';
         }).join('')
       : '<div style="color:var(--muted);font-size:13px;padding:20px 0">Sin ventas</div>';
@@ -2281,18 +2282,18 @@ let editingProductId = null;
 
 async function loadCatalog() {
   try {
-    const res = await apiFetch(API+'/products'); if(!res.ok){toast('Error cargando catálogo','error');return;}
+    const res = await apiFetch(API+'/products'); if(!res.ok){toast('Error cargando catÃ¡logo','error');return;}
     allProducts = await res.json();
     renderCatalog();
     updateCategoryFilter();
     document.getElementById('catalog-count').textContent = allProducts.length+' productos';
-  } catch(e) { toast('Error de conexión','error'); }
+  } catch(e) { toast('Error de conexiÃ³n','error'); }
 }
 function updateCategoryFilter() {
   const cats = [...new Set(allProducts.map(p=>p.category||'General'))].sort();
   const sel = document.getElementById('catalog-cat-filter');
   const val = sel.value;
-  sel.innerHTML = '<option value="">Todas las categorías</option>'+cats.map(c=>`<option value="${c}"${c===val?' selected':''}>${c}</option>`).join('');
+  sel.innerHTML = '<option value="">Todas las categorÃ­as</option>'+cats.map(c=>`<option value="${c}"${c===val?' selected':''}>${c}</option>`).join('');
 }
 function filterCatalog() {
   const q = document.getElementById('catalog-search').value.toLowerCase();
@@ -2305,17 +2306,17 @@ function filterCatalog() {
 }
 function renderCatalog() { filterCatalog(); }
 
-const catIcons = {'Bebidas':'🥤','Alimentos':'🍞','Botanas':'🍿','Higiene':'🧴','Limpieza':'🧹','Ropa':'👕','Electrónica':'💻','General':'📦'};
+const catIcons = {'Bebidas':'ðŸ¥¤','Alimentos':'ðŸž','Botanas':'ðŸ¿','Higiene':'ðŸ§´','Limpieza':'ðŸ§¹','Ropa':'ðŸ‘•','ElectrÃ³nica':'ðŸ’»','General':'ðŸ“¦'};
 
 function renderCatalogRows(prods) {
   const el = document.getElementById('catalog-body');
   if (!prods.length) {
-    el.innerHTML = `<div class="cat-empty"><div class="cat-empty-icon">📦</div><h3>Sin productos</h3><p>Agrega tu primer producto o importa desde un archivo CSV</p></div>`;
+    el.innerHTML = `<div class="cat-empty"><div class="cat-empty-icon">ðŸ“¦</div><h3>Sin productos</h3><p>Agrega tu primer producto o importa desde un archivo CSV</p></div>`;
     return;
   }
   el.innerHTML = prods.map(p=>`
     <div class="cat-prod-row">
-      <div class="pr-icon">${catIcons[p.category]||'📦'}</div>
+      <div class="pr-icon">${catIcons[p.category]||'ðŸ“¦'}</div>
       <div class="pr-info">
         <div class="pr-name">${p.name}</div>
         <div class="pr-sku">${p.sku||''}</div>
@@ -2324,8 +2325,8 @@ function renderCatalogRows(prods) {
       <div class="pr-unit">${p.unit||'pza'}</div>
       <div class="pr-cat"><span>${p.category||'General'}</span></div>
       <div class="row-acts">
-        <button class="r-btn edit" title="Editar" onclick="openProductModal('${p.id}')">✏️</button>
-        <button class="r-btn del" title="Eliminar" onclick="openDeleteModal('${p.id}','${p.name.replace(/'/g,"\\'")}')">🗑️</button>
+        <button class="r-btn edit" title="Editar" onclick="openProductModal('${p.id}')">âœï¸</button>
+        <button class="r-btn del" title="Eliminar" onclick="openDeleteModal('${p.id}','${p.name.replace(/'/g,"\\'")}')">ðŸ—‘ï¸</button>
       </div>
     </div>`).join('');
 }
@@ -2379,7 +2380,7 @@ async function saveProduct() {
 
 function openDeleteModal(id,name) {
   document.getElementById('delete-product-id').value=id;
-  document.getElementById('delete-modal-name').textContent = '┐Eliminar "'+name+'"?';
+  document.getElementById('delete-modal-name').textContent = 'â”Eliminar "'+name+'"?';
   document.getElementById('delete-modal').classList.add('open');
 }
 async function confirmDelete() {
@@ -2398,7 +2399,7 @@ async function loadProductsFromDB() {
     const res = await apiFetch(API+'/products'); if(!res.ok) return;
     const db = await res.json();
     if (db&&db.length>0) {
-      products = db.map(p=>({id:p.id,name:p.name,price:p.price,icon:catIcons[p.category]||'📦',cat:p.category||'General',sku:p.sku||''}));
+      products = db.map(p=>({id:p.id,name:p.name,price:p.price,icon:catIcons[p.category]||'ðŸ“¦',cat:p.category||'General',sku:p.sku||''}));
       renderProducts(); renderCategories();
     }
   } catch(e){}
@@ -2411,7 +2412,7 @@ function onDrop(e){e.preventDefault();document.getElementById('drop-zone').class
 function handleFileSelect(e){const f=e.target.files[0];if(f)processFile(f);}
 async function processFile(file) {
   if (!file.name.match(/\.(csv|txt)$/i)){toast('Solo .csv o .txt','error');return;}
-  pendingFile=file; toast('📊 Analizando '+file.name+'...','info');
+  pendingFile=file; toast('ðŸ“Š Analizando '+file.name+'...','info');
   const fd=new FormData(); fd.append('file',file); fd.append('tipo','generic');
   try {
     const res = await apiFetch(API+'/migrate/preview',{method:'POST',body:fd});
@@ -2420,7 +2421,7 @@ async function processFile(file) {
   } catch(e) { toast('? '+e.message,'error'); showDemoPreview(); }
 }
 function showDemoPreview() {
-  pendingPreview={products:[{sku:'P01',name:'Producto demo 1',price:'18.00'},{sku:'P02',name:'Producto demo 2',price:'25.00'}],total_products:2,total_customers:0,format:'CSV Genérico'};
+  pendingPreview={products:[{sku:'P01',name:'Producto demo 1',price:'18.00'},{sku:'P02',name:'Producto demo 2',price:'25.00'}],total_products:2,total_customers:0,format:'CSV GenÃ©rico'};
   showPreview(pendingPreview);
 }
 function showPreview(d) {
@@ -2452,7 +2453,7 @@ async function doImport() {
     document.getElementById('migrate-step-2').style.display='none';
     document.getElementById('migrate-step-3').style.display='block';
     await loadProductsFromDB();
-    toast('? Importación completada','success');
+    toast('? ImportaciÃ³n completada','success');
   } catch(e){toast('? '+e.message,'error');}
   finally{btn.disabled=false;btn.innerHTML='? Importar todo';}
 }
@@ -2473,7 +2474,7 @@ function setStep(n) {
 // --- Loyalty -------------------------------------------------
 async function searchLoyalty() {
   const phone=document.getElementById('loyalty-search').value.replace(/\D/g,'');
-  if(phone.length<10){toast('Ingresa 10 dígitos','error');return;}
+  if(phone.length<10){toast('Ingresa 10 dÃ­gitos','error');return;}
   try {
     const res=await apiFetch(`${API}/loyalty?phone=${phone}`);
     if(!res.ok){toast('Cliente no encontrado','error');return;}
@@ -2500,7 +2501,7 @@ async function searchLoyalty() {
       :'<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">Sin historial</div>';
     document.getElementById('loyalty-result').classList.add('show');
     document.getElementById('loyalty-empty').style.display='none';
-  } catch(e){toast('Error de conexión','error');}
+  } catch(e){toast('Error de conexiÃ³n','error');}
 }
 
 // --- Toast ---------------------------------------------------
@@ -2525,7 +2526,7 @@ let repPeriodo = 'semana';
 function setRepPeriodo(p) {
   repPeriodo = p;
   document.querySelectorAll('.rep-btn').forEach(b=>b.classList.remove('active'));
-  const m={semana:'rep-semana',mes:'rep-mes','año':'rep-año'};
+  const m={semana:'rep-semana',mes:'rep-mes','aÃ±o':'rep-aÃ±o'};
   if(m[p]) document.getElementById(m[p])?.classList.add('active');
   loadReportes();
 }
@@ -2544,7 +2545,7 @@ async function loadReportes() {
   document.getElementById('rep-kpi-tx').textContent=tx;
   document.getElementById('rep-kpi-ticket').textContent=tx>0?'$'+(total/tx).toLocaleString('es-MX',{minimumFractionDigits:2}):'$0';
   document.getElementById('rep-kpi-cfdi').textContent=porDia.reduce((s,d)=>s+(d.timbradas||0),0);
-  // Barras por día
+  // Barras por dÃ­a
   const chart=document.getElementById('rep-chart'); chart.innerHTML='';
   if(!porDia.length){chart.innerHTML='<div style="color:var(--muted);font-size:13px;margin:auto">Sin datos</div>';}
   else {
@@ -2553,23 +2554,23 @@ async function loadReportes() {
       const pct=Math.max((d.total/maxV)*120,4);
       const col=document.createElement('div');
       col.style.cssText='display:flex;flex-direction:column;align-items:center;flex:1;min-width:28px;gap:4px;cursor:default';
-      col.title=d.dia+': $'+Number(d.total).toLocaleString('es-MX',{minimumFractionDigits:2})+' · '+d.transacciones+' ventas';
+      col.title=d.dia+': $'+Number(d.total).toLocaleString('es-MX',{minimumFractionDigits:2})+' Â· '+d.transacciones+' ventas';
       col.innerHTML='<div style="font-size:9px;color:var(--muted)">'+(d.total>0?'$'+Math.round(d.total):'')+'</div>'+
         '<div style="width:100%;background:var(--amber);border-radius:4px 4px 0 0;height:'+pct+'px;opacity:'+(d.total>0?'1':'.3')+'"></div>'+
         '<div style="font-size:9px;color:var(--muted);white-space:nowrap">'+(d.dia?d.dia.toString().slice(5,10).replace('T00:00:00Z',''):'')+'</div>';
       chart.appendChild(col);
     });
   }
-  // Métodos
+  // MÃ©todos
   const metEl=document.getElementById('rep-metodos');
-  const lbl={cash:'💵 Efectivo',card:'💳 Tarjeta',transfer:'🏦 Transferencia'};
+  const lbl={cash:'ðŸ’µ Efectivo',card:'ðŸ’³ Tarjeta',transfer:'ðŸ¦ Transferencia'};
   metEl.innerHTML=!metodos.length?'<div style="color:var(--muted);font-size:13px;padding:20px 0">Sin datos</div>':
     metodos.map(m=>{
       const pct=total>0?((m.total/total)*100).toFixed(1):0;
       return '<div style="margin-bottom:12px">'+
         '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:13px">'+(lbl[m.metodo]||m.metodo)+'</span><span style="font-size:13px;font-weight:700">$'+Number(m.total).toLocaleString('es-MX',{minimumFractionDigits:2})+'</span></div>'+
         '<div style="background:var(--surface3);border-radius:4px;height:6px"><div style="background:var(--amber);height:6px;border-radius:4px;width:'+pct+'%"></div></div>'+
-        '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+pct+'% · '+m.transacciones+' ventas</div></div>';
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+pct+'% Â· '+m.transacciones+' ventas</div></div>';
     }).join('');
   // Top prods
   const prodsEl=document.getElementById('rep-prods');
@@ -2602,15 +2603,15 @@ async function loadCFDIReporte() {
     cfdiData = data.cfdis || [];
     document.getElementById('rep-cfdi-count').textContent = cfdiData.length + ' factura' + (cfdiData.length!==1?'s':'');
     document.getElementById('rep-cfdi-total').textContent = '$'+(data.total_timbrado||0).toLocaleString('es-MX',{minimumFractionDigits:2});
-    const metLbl = {cash:'💵 Efectivo', card:'💳 Tarjeta', transfer:'🏦 Transferencia'};
+    const metLbl = {cash:'ðŸ’µ Efectivo', card:'ðŸ’³ Tarjeta', transfer:'ðŸ¦ Transferencia'};
     const body = document.getElementById('rep-cfdi-body');
     if (!cfdiData.length) {
-      body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px;font-size:13px">Sin facturas en el período</td></tr>';
+      body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px;font-size:13px">Sin facturas en el perÃ­odo</td></tr>';
       return;
     }
     body.innerHTML = cfdiData.map(c => {
       const fecha = c.fecha_hora ? c.fecha_hora.replace('T',' ').slice(0,16) : c.fecha;
-      const uuid_short = c.uuid ? c.uuid.slice(0,8)+'...' : '—';
+      const uuid_short = c.uuid ? c.uuid.slice(0,8)+'...' : 'â€”';
       const statusColor = c.status==='completed' ? 'var(--green)' : c.status==='cancelled' ? 'var(--red)' : 'var(--amber)';
       const statusLabel = c.status==='completed' ? '? Timbrado' : c.status==='cancelled' ? '? Cancelado' : '? Pendiente';
       return `<tr style="border-bottom:1px solid var(--border)">
@@ -2619,7 +2620,7 @@ async function loadCFDIReporte() {
           <span style="cursor:pointer;color:var(--amber)" onclick="navigator.clipboard.writeText('${c.uuid}');toast('UUID copiado','success')">${uuid_short}</span>
         </td>
         <td style="padding:10px;font-family:var(--mono);font-size:11px;color:var(--text)">${c.rfc_receptor||'XAXX010101000'}</td>
-        <td style="padding:10px;font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.nombre_receptor||'Público general'}</td>
+        <td style="padding:10px;font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.nombre_receptor||'PÃºblico general'}</td>
         <td style="padding:10px;font-size:12px">${metLbl[c.metodo]||c.metodo}</td>
         <td style="padding:10px;text-align:right;font-weight:700;color:var(--amber);font-family:var(--mono)">$${Number(c.total).toLocaleString('es-MX',{minimumFractionDigits:2})}</td>
         <td style="padding:10px;text-align:center"><span style="color:${statusColor};font-size:11px;font-weight:700">${statusLabel}</span></td>
@@ -2630,7 +2631,7 @@ async function loadCFDIReporte() {
 
 function exportCFDIcsv() {
   if (!cfdiData.length) { toast('Sin datos para exportar','error'); return; }
-  const headers = ['Fecha','UUID','RFC Receptor','Receptor','Método','Total','Estado'];
+  const headers = ['Fecha','UUID','RFC Receptor','Receptor','MÃ©todo','Total','Estado'];
   const rows = cfdiData.map(c => [
     c.fecha_hora||c.fecha, c.uuid, c.rfc_receptor, c.nombre_receptor,
     c.metodo, c.total, c.status
@@ -2654,9 +2655,9 @@ function showTicket(data) {
   let items = (data.items||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span style="color:var(--text2)">${i.name} x${i.qty}</span><span>$${Number(i.subtotal).toLocaleString('es-MX',{minimumFractionDigits:2})}</span></div>`).join('');
   let cfdiSection = '';
   if (esFactura && data.cfdi_uuid) {
-    cfdiSection = `<div style="margin-top:16px;padding:16px;background:var(--surface2);border-radius:8px;text-align:center"><div style="font-size:11px;color:var(--text2);margin-bottom:8px">CFDI 4.0 · Folio Fiscal</div><div style="font-size:11px;font-weight:700;word-break:break-all;color:var(--blue)">${data.cfdi_uuid}</div><div id="qr-container" style="margin-top:12px;display:flex;justify-content:center"></div><div style="font-size:10px;color:var(--text2);margin-top:8px">Verifica en sat.gob.mx</div></div>`;
+    cfdiSection = `<div style="margin-top:16px;padding:16px;background:var(--surface2);border-radius:8px;text-align:center"><div style="font-size:11px;color:var(--text2);margin-bottom:8px">CFDI 4.0 Â· Folio Fiscal</div><div style="font-size:11px;font-weight:700;word-break:break-all;color:var(--blue)">${data.cfdi_uuid}</div><div id="qr-container" style="margin-top:12px;display:flex;justify-content:center"></div><div style="font-size:10px;color:var(--text2);margin-top:8px">Verifica en sat.gob.mx</div></div>`;
   }
-  c.innerHTML = `<div style="text-align:center;margin-bottom:20px"><div style="font-size:22px;font-weight:800">TurboPOS</div><div style="font-size:12px;color:var(--text2)">${fecha}</div>${esFactura?'<div style="margin-top:6px;padding:4px 10px;background:#1a3a1a;color:#4caf50;border-radius:20px;font-size:11px;font-weight:700;display:inline-block">🔹 FACTURA ELECTRÓNICA</div>':''}</div><div style="border-top:1px dashed var(--border);padding-top:16px;margin-bottom:16px">${items}</div><div style="display:flex;justify-content:space-between;font-weight:700;font-size:16px;padding-top:12px;border-top:1px solid var(--border)"><span>Total</span><span>$${Number(data.total).toLocaleString('es-MX',{minimumFractionDigits:2})}</span></div><div style="font-size:12px;color:var(--text2);margin-top:6px">Pago: ${data.payment_method||'Efectivo'}</div>${cfdiSection}`;
+  c.innerHTML = `<div style="text-align:center;margin-bottom:20px"><div style="font-size:22px;font-weight:800">TurboPOS</div><div style="font-size:12px;color:var(--text2)">${fecha}</div>${esFactura?'<div style="margin-top:6px;padding:4px 10px;background:#1a3a1a;color:#4caf50;border-radius:20px;font-size:11px;font-weight:700;display:inline-block">ðŸ”¹ FACTURA ELECTRÃ“NICA</div>':''}</div><div style="border-top:1px dashed var(--border);padding-top:16px;margin-bottom:16px">${items}</div><div style="display:flex;justify-content:space-between;font-weight:700;font-size:16px;padding-top:12px;border-top:1px solid var(--border)"><span>Total</span><span>$${Number(data.total).toLocaleString('es-MX',{minimumFractionDigits:2})}</span></div><div style="font-size:12px;color:var(--text2);margin-top:6px">Pago: ${data.payment_method||'Efectivo'}</div>${cfdiSection}`;
   document.getElementById('ticket-modal').style.display = 'flex';
   if (esFactura && data.cfdi_uuid) {
     setTimeout(()=>{
@@ -2675,7 +2676,7 @@ function printTicket() {
   (d.items||[]).forEach(i=>{ txt+=i.name+' x'+i.qty+'\n  $'+Number(i.subtotal).toFixed(2)+'\n'; });
   txt+='--------------------------------\nTOTAL: $'+Number(d.total).toFixed(2)+'\nPago: '+(d.payment_method||'Efectivo');
   if (d.cfdi_uuid) txt+='\n--------------------------------\nFACTURA ELECTRONICA CFDI 4.0\nUUID:\n'+d.cfdi_uuid+'\nVerificar: sat.gob.mx/verificacfdi\n--------------------------------';
-  txt+='\n\n  íGracias por su compra!\n\n';
+  txt+='\n\n  Ã­Gracias por su compra!\n\n';
   const pa=document.getElementById('print-area');
   pa.style.display='block';
   pa.innerHTML='<pre style="font-family:Courier New,monospace;font-size:11px;white-space:pre">'+txt+'</pre>';
@@ -2903,15 +2904,15 @@ async function loadCSDStatus() {
     const r = await apiFetch(API + '/csd/info', {signal: controller.signal});
     if (!r.ok) { el.textContent = 'Sin certificado cargado'; return; }
     const d = await r.json();
-    el.textContent = 'Activo · ' + (d.rfc||'');
+    el.textContent = 'Activo Â· ' + (d.rfc||'');
     document.getElementById('csd-info-panel').style.display = 'block';
-    document.getElementById('csd-rfc').textContent = d.rfc||'—';
-    document.getElementById('csd-hasta').textContent = (d.valid_to||'—').slice(0,10);
+    document.getElementById('csd-rfc').textContent = d.rfc||'â€”';
+    document.getElementById('csd-hasta').textContent = (d.valid_to||'â€”').slice(0,10);
     if (d.valid_to) {
       const dias = Math.ceil((new Date(d.valid_to)-new Date())/86400000);
       document.getElementById('csd-vencimiento').innerHTML = dias < 30
-        ? '<span style="color:var(--red)">⚠️ Vence en '+dias+' días</span>'
-        : '<span style="color:var(--green)">🔹 Vigente '+dias+' días</span>';
+        ? '<span style="color:var(--red)">âš ï¸ Vence en '+dias+' dÃ­as</span>'
+        : '<span style="color:var(--green)">ðŸ”¹ Vigente '+dias+' dÃ­as</span>';
     }
   } catch(e) {}
 }
@@ -2923,7 +2924,7 @@ async function uploadCSD() {
   const cer = document.getElementById('csd-cer').files[0];
   const key = document.getElementById('csd-key').files[0];
   const pass = document.getElementById('csd-pass').value;
-  if (!cer||!key||!pass) { toast('Selecciona .cer, .key y contraseña','error'); return; }
+  if (!cer||!key||!pass) { toast('Selecciona .cer, .key y contraseÃ±a','error'); return; }
   const fd = new FormData();
   fd.append('cer',cer); fd.append('key',key); fd.append('password',pass);
   try {
@@ -2931,7 +2932,7 @@ async function uploadCSD() {
     const d = await r.json();
     r.ok ? toast('Certificado cargado','success') : toast(d.error||'Error','error');
     if (r.ok) loadCSDStatus();
-  } catch(e) { toast('Error de conexión','error'); }
+  } catch(e) { toast('Error de conexiÃ³n','error'); }
 }
 async function saveCfgNegocio() { toast('Guardando...','info'); setTimeout(()=>toast('Cambios guardados','success'),800); }
 function selectPlan(p) { document.querySelectorAll('.subs-plan').forEach(el=>el.classList.remove('active')); event.currentTarget.classList.add('active'); toast('Para cambiar plan contacta soporte','info'); }
@@ -2955,11 +2956,11 @@ async function cliLoad() {
 function renderClientes(lista) {
   const body = document.getElementById('cli-body');
   if (!body) return;
-  if (!lista.length) { body.innerHTML='<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">Sin clientes aún</td></tr>'; return; }
+  if (!lista.length) { body.innerHTML='<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">Sin clientes aÃºn</td></tr>'; return; }
   body.innerHTML = lista.map(c=>`<tr>
-    <td><div style="font-weight:600">${c.customer_name||c.nombre||'—'}</div><div style="font-size:11px;color:var(--muted)">${c.email||''}</div></td>
-    <td style="font-family:monospace;font-size:12px">${c.phone||c.tel||'—'}</td>
-    <td style="font-family:monospace;font-size:11px">${c.rfc||'—'}</td>
+    <td><div style="font-weight:600">${c.customer_name||c.nombre||'â€”'}</div><div style="font-size:11px;color:var(--muted)">${c.email||''}</div></td>
+    <td style="font-family:monospace;font-size:12px">${c.phone||c.tel||'â€”'}</td>
+    <td style="font-family:monospace;font-size:11px">${c.rfc||'â€”'}</td>
     <td style="color:var(--amber);font-weight:600">${(c.points||0).toLocaleString('es-MX')}</td>
     <td>${(c.total_spent||0).toLocaleString('es-MX')}</td>
     <td><button onclick='openCliDetail(${JSON.stringify(JSON.stringify(c))})' style="padding:5px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:11px;cursor:pointer">Ver</button></td>
@@ -2971,7 +2972,7 @@ function filterClientes() {
 }
 function openCliDetail(jsonStr) {
   const c = JSON.parse(jsonStr);
-  toast((c.name||c.customer_name||c.nombre||'Cliente') + ' — ' + (c.points||0) + ' puntos', 'info');
+  toast((c.name||c.customer_name||c.nombre||'Cliente') + ' â€” ' + (c.points||0) + ' puntos', 'info');
 }
 
 
@@ -2993,7 +2994,7 @@ function initMobileUI() {
   const fab = document.getElementById('fab-ticket');
   if (!fab) return;
   const check = () => {
-    if (window.innerWidth < 768) fab.classList.add('visible');
+    if (window.innerWidth < 768 && currentView === 'pos') fab.classList.add('visible');
     else {
       fab.classList.remove('visible');
       document.querySelector('.ticket-panel').classList.remove('open');
@@ -3010,12 +3011,12 @@ function initMobileUI() {
 <div id="ticket-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center">
   <div style="background:var(--surface);border-radius:16px;width:380px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.5)">
     <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-      <span style="font-weight:700;font-size:16px">🧾 Comprobante</span>
+      <span style="font-weight:700;font-size:16px">ðŸ§¾ Comprobante</span>
       <button onclick="closeTicket()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer">?</button>
     </div>
     <div id="ticket-content" style="padding:24px"></div>
     <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px">
-      <button onclick="printTicket()" class="btn-primary" style="flex:1">🖨️ Imprimir</button>
+      <button onclick="printTicket()" class="btn-primary" style="flex:1">ðŸ–¨ï¸ Imprimir</button>
       <button onclick="closeTicket()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);cursor:pointer;font-weight:600">Cerrar</button>
     </div>
   </div>
