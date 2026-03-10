@@ -2356,6 +2356,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
               <span class="s-icon">🔍</span>
 
               <input type="text" id="product-search" placeholder="Buscar producto, SKU o código...  [ / ]" oninput="filterProducts()">
+              <button id="scan-btn" onclick="toggleScanner()" title="Escanear código de barras" style="background:none;border:none;cursor:pointer;padding:4px 8px;color:var(--muted);font-size:18px;transition:color .15s" onmouseenter="this.style.color='var(--amber)'" onmouseleave="this.style.color='var(--muted)'">📷</button>
 
             </div>
 
@@ -3970,6 +3971,122 @@ function renderCategories() {
 
 function setCategory(c) { activeCategory=c; renderCategories(); filterProducts(); }
 
+// ── BARCODE SCANNER ─────────────────────────────────────────────────────────
+let scannerActive = false;
+let scannerStream  = null;
+let barcodeReader  = null;
+
+async function toggleScanner() {
+  if (scannerActive) { closeScanner(); return; }
+  // Crear modal scanner
+  let modal = document.getElementById('scanner-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'scanner-modal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(8,12,20,.92);z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px';
+    modal.innerHTML = `
+      <div style="color:var(--text);font-size:15px;font-weight:700">Apunta al código de barras</div>
+      <div style="position:relative;width:300px;height:220px;border-radius:12px;overflow:hidden;border:2px solid var(--amber)">
+        <video id="scanner-video" autoplay playsinline style="width:100%;height:100%;object-fit:cover"></video>
+        <div style="position:absolute;inset:0;border:2px solid var(--amber);border-radius:10px;pointer-events:none">
+          <div style="position:absolute;top:50%;left:10%;right:10%;height:2px;background:rgba(255,181,71,.6);transform:translateY(-50%);animation:scan-line 1.5s ease-in-out infinite"></div>
+        </div>
+      </div>
+      <div id="scan-result" style="font-size:13px;color:var(--muted);font-family:var(--mono)">Buscando...</div>
+      <div style="display:flex;gap:12px">
+        <button onclick="closeScanner()" style="padding:10px 24px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);cursor:pointer;font-weight:600">Cancelar</button>
+        <button onclick="scanManual()" style="padding:10px 24px;border-radius:8px;background:var(--amber);border:none;color:#000;cursor:pointer;font-weight:700">Ingresar manual</button>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+  modal.style.display = 'flex';
+  scannerActive = true;
+  document.getElementById('scan-btn').style.color = 'var(--amber)';
+  // Agregar CSS animacion si no existe
+  if (!document.getElementById('scan-style')) {
+    const s = document.createElement('style');
+    s.id = 'scan-style';
+    s.textContent = '@keyframes scan-line{0%,100%{opacity:.3;top:30%}50%{opacity:1;top:65%}}';
+    document.head.appendChild(s);
+  }
+  try {
+    scannerStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: {ideal:1280}, height: {ideal:720} }
+    });
+    const video = document.getElementById('scanner-video');
+    video.srcObject = scannerStream;
+    await video.play();
+    startBarcodeDetection(video);
+  } catch(e) {
+    document.getElementById('scan-result').textContent = 'Sin acceso a camara — usa ingreso manual';
+    console.warn('Scanner error:', e);
+  }
+}
+
+function startBarcodeDetection(video) {
+  // Usar BarcodeDetector API si esta disponible
+  if ('BarcodeDetector' in window) {
+    barcodeReader = new BarcodeDetector({formats: [
+      'ean_13','ean_8','code_128','code_39','qr_code','upc_a','upc_e','itf','codabar'
+    ]});
+    const detect = async () => {
+      if (!scannerActive) return;
+      try {
+        const codes = await barcodeReader.detect(video);
+        if (codes.length > 0) {
+          const code = codes[0].rawValue;
+          document.getElementById('scan-result').textContent = 'Detectado: ' + code;
+          handleScannedCode(code);
+          return;
+        }
+      } catch(e) {}
+      if (scannerActive) requestAnimationFrame(detect);
+    };
+    requestAnimationFrame(detect);
+  } else {
+    // Fallback — busqueda manual
+    document.getElementById('scan-result').textContent = 'Camara activa — ingresa el codigo manualmente';
+  }
+}
+
+function handleScannedCode(code) {
+  // Buscar producto por barcode o SKU
+  const prod = products.find(p =>
+    (p.barcode && p.barcode === code) ||
+    (p.sku && p.sku.toLowerCase() === code.toLowerCase()) ||
+    p.id === code
+  );
+  if (prod) {
+    closeScanner();
+    addToCart(prod.id);
+    toast('Agregado: ' + prod.name, 'success');
+    document.getElementById('scan-btn').style.color = 'var(--muted)';
+  } else {
+    // Poner en buscador y filtrar
+    closeScanner();
+    const s = document.getElementById('product-search');
+    if (s) { s.value = code; filterProducts(); s.focus(); }
+    toast('Codigo: ' + code + ' — verifica el producto', 'info');
+  }
+}
+
+function closeScanner() {
+  scannerActive = false;
+  if (scannerStream) {
+    scannerStream.getTracks().forEach(t => t.stop());
+    scannerStream = null;
+  }
+  const modal = document.getElementById('scanner-modal');
+  if (modal) modal.style.display = 'none';
+  document.getElementById('scan-btn').style.color = 'var(--muted)';
+}
+
+function scanManual() {
+  closeScanner();
+  const code = prompt('Ingresa el código de barras:');
+  if (code && code.trim()) handleScannedCode(code.trim());
+}
+
 // Shortcut: / enfoca busqueda, Escape limpia
 document.addEventListener('keydown', e => {
   if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
@@ -3978,6 +4095,7 @@ document.addEventListener('keydown', e => {
     if (s) { s.focus(); s.select(); }
   }
   if (e.key === 'Escape') {
+    if (scannerActive) { closeScanner(); return; }
     const s = document.getElementById('product-search');
     if (s && document.activeElement === s) {
       s.value = ''; s.blur(); filterProducts();
