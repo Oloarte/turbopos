@@ -5,6 +5,7 @@
 <head><link rel="icon" href="/favicon.svg" type="image/svg+xml">
 
 <meta charset="UTF-8">
+  <link rel="manifest" href="/manifest.json">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -4832,6 +4833,7 @@ function exportCortePDF() {
   }
 
   const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <link rel="manifest" href="/manifest.json">
   <title>Corte Z — ${fecha}</title>
   <style>
     @page { size: A4; margin: 20mm 15mm; }
@@ -5745,6 +5747,7 @@ function exportReportePDF() {
   });
 
   const htm=`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <link rel="manifest" href="/manifest.json">
   <title>Reporte — ${negocio}</title>
   <style>
     @page{size:A4;margin:18mm 14mm}
