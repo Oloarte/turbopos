@@ -2901,7 +2901,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
       <div class="view reportes-view" id="view-reportes">
 
-        <div style="padding:24px;max-width:1100px;margin:0 auto">
+        <div style="padding:24px;max-width:1100px;margin:0 auto;overflow-y:auto;height:calc(100vh - 58px)">
 
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
 
@@ -2926,6 +2926,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
               <input type="date" id="rep-hasta" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12px">
 
               <button class="rep-btn" onclick="setRepPeriodo('custom')">Aplicar</button>
+              <button class="rep-btn" onclick="exportReportePDF()" style="background:var(--amber);color:#000;font-weight:700">PDF</button>
 
             </div>
 
@@ -5310,48 +5311,48 @@ async function loadReportes() {
   const d=await res.json();
 
   const porDia=d.por_dia||[], topProds=d.top_prods||[], metodos=d.metodos||[];
-
   const total=d.total||0, tx=d.transacciones||0;
+  window._repData = d;
 
-  document.getElementById('rep-kpi-total').textContent='$'+total.toLocaleString('es-MX',{minimumFractionDigits:2});
-
+  document.getElementById('rep-kpi-total').textContent='$'+Number(total).toLocaleString('es-MX',{minimumFractionDigits:2});
   document.getElementById('rep-kpi-tx').textContent=tx;
+  document.getElementById('rep-kpi-ticket').textContent=tx>0?'$'+Number(total/tx).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}):'$0';
+  document.getElementById('rep-kpi-cfdi').textContent=porDia.reduce((s,x)=>s+(x.timbradas||0),0);
 
-  document.getElementById('rep-kpi-ticket').textContent=tx>0?'$'+(total/tx).toLocaleString('es-MX',{minimumFractionDigits:2}):'$0';
-
-  document.getElementById('rep-kpi-cfdi').textContent=porDia.reduce((s,d)=>s+(d.timbradas||0),0);
-
-  // Barras por día
-
+  // Grafica elite por dia
   const chart=document.getElementById('rep-chart'); chart.innerHTML='';
-
-  if(!porDia.length){chart.innerHTML='<div style="color:var(--muted);font-size:13px;margin:auto">Sin datos</div>';}
-
-  else {
-
-    const maxV=Math.max(...porDia.map(d=>d.total),1);
-
-    porDia.forEach(d=>{
-
-      const pct=Math.max((d.total/maxV)*120,4);
-
+  if(!porDia.length){
+    chart.innerHTML='<div style="color:var(--muted);font-size:13px;margin:auto;text-align:center">Sin datos para este periodo</div>';
+  } else {
+    const maxV=Math.max(...porDia.map(x=>x.total),1);
+    const avgV=porDia.reduce((s,x)=>s+x.total,0)/porDia.length;
+    chart.style.cssText='display:flex;align-items:flex-end;gap:3px;height:140px;padding-bottom:20px;position:relative;overflow:visible';
+    const avgPct=Math.max((avgV/maxV)*120,4);
+    const avgLine=document.createElement('div');
+    avgLine.style.cssText='position:absolute;left:0;right:0;bottom:'+(avgPct+20)+'px;border-top:1px dashed rgba(255,181,71,.4);pointer-events:none;z-index:1';
+    avgLine.title='Promedio: $'+avgV.toFixed(2);
+    chart.appendChild(avgLine);
+    porDia.forEach(x=>{
+      const pct=Math.max((x.total/maxV)*120,4);
+      const isMax=x.total===maxV;
+      const label=x.dia?x.dia.toString().slice(5,10).replace('-','/'):'';
       const col=document.createElement('div');
-
-      col.style.cssText='display:flex;flex-direction:column;align-items:center;flex:1;min-width:28px;gap:4px;cursor:default';
-
-      col.title=d.dia+': $'+Number(d.total).toLocaleString('es-MX',{minimumFractionDigits:2})+' · '+d.transacciones+' ventas';
-
-      col.innerHTML='<div style="font-size:9px;color:var(--muted)">'+(d.total>0?'$'+Math.round(d.total):'')+'</div>'+
-
-        '<div style="width:100%;background:var(--amber);border-radius:4px 4px 0 0;height:'+pct+'px;opacity:'+(d.total>0?'1':'.3')+'"></div>'+
-
-        '<div style="font-size:9px;color:var(--muted);white-space:nowrap">'+(d.dia?d.dia.toString().slice(5,10).replace('T00:00:00Z',''):'')+'</div>';
-
+      col.style.cssText='display:flex;flex-direction:column;align-items:center;flex:1;min-width:24px;gap:2px;cursor:default;position:relative;z-index:2';
+      col.title=label+': $'+Number(x.total).toLocaleString('es-MX',{minimumFractionDigits:2})+' · '+(x.transacciones||0)+' ventas';
+      col.innerHTML=
+        '<div style="font-size:8px;color:'+(isMax?'var(--amber)':'var(--muted)')+';font-weight:'+(isMax?'700':'400')+';white-space:nowrap">'+(x.total>0?'$'+Math.round(x.total):'')+'</div>'+
+        '<div style="width:100%;border-radius:4px 4px 0 0;height:'+pct+'px;transition:filter .15s;'+
+          (isMax
+            ? 'background:linear-gradient(180deg,#FFD580,#FFB547);box-shadow:0 0 8px rgba(255,181,71,.5)'
+            : 'background:rgba(255,181,71,'+(0.3+0.7*(x.total/maxV)).toFixed(2)+')')+
+        '"></div>'+
+        '<div style="font-size:8px;color:var(--muted);white-space:nowrap">'+label+'</div>';
+      col.onmouseenter=function(){this.querySelectorAll('div')[1].style.filter='brightness(1.3)';};
+      col.onmouseleave=function(){this.querySelectorAll('div')[1].style.filter='';};
       chart.appendChild(col);
-
     });
-
   }
+
 
   // Métodos
 
@@ -5393,7 +5394,7 @@ async function loadReportes() {
 
         '<div style="background:var(--surface3);border-radius:3px;height:4px;margin-top:4px;width:80%"><div style="background:var(--amber);height:4px;border-radius:3px;width:'+pct+'%"></div></div></div>'+
 
-        '<div style="text-align:right;font-size:13px;color:var(--muted)">'+p.unidades+'</div>'+
+        '<div style="text-align:right;font-size:13px;color:var(--muted)">'+(p.uds||p.unidades||0)+'</div>'+
 
         '<div style="text-align:right;font-size:13px;font-weight:700;color:var(--green)">$'+Number(p.total).toLocaleString('es-MX',{minimumFractionDigits:2})+'</div></div>';
 
@@ -5406,6 +5407,100 @@ async function loadReportes() {
 }
 
 
+
+function exportReportePDF() {
+  const d = window._repData;
+  if (!d) { toast('Carga el reporte primero','error'); return; }
+  const negocio   = localStorage.getItem('tp_negocio')   || 'TurboPOS';
+  const direccion = localStorage.getItem('tp_direccion') || '';
+  const total=d.total||0, tx=d.transacciones||0;
+  const ticket=tx>0?(total/tx):0;
+  const porDia=d.por_dia||[], topProds=d.top_prods||[], metodos=d.metodos||[];
+  const cfdi=porDia.reduce((s,x)=>s+(x.timbradas||0),0);
+  const periodo={semana:'Últimos 7 días',mes:'Últimos 30 días',año:'Último año',custom:'Período personalizado'}[repPeriodo]||repPeriodo;
+  const now=new Date();
+  const fecha=now.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
+
+  // Filas por día
+  let diasRows='';
+  porDia.forEach(x=>{
+    const label=x.dia?x.dia.toString().slice(0,10):'';
+    diasRows+=`<tr>
+      <td>${label}</td>
+      <td style="text-align:right">${x.transacciones||0}</td>
+      <td style="text-align:right;font-weight:700">$${Number(x.total||0).toLocaleString('es-MX',{minimumFractionDigits:2})}</td>
+      <td style="text-align:right;color:#1565c0">${x.timbradas||0}</td>
+    </tr>`;
+  });
+
+  // Métodos
+  let metRows='';
+  metodos.forEach(m=>{
+    const pct=total>0?((m.total/total)*100).toFixed(1):0;
+    const lbl={cash:'Efectivo',card:'Tarjeta',transfer:'Transferencia'}[m.metodo]||m.metodo;
+    metRows+=`<tr><td>${lbl}</td><td style="text-align:right">${m.transacciones||0}</td><td style="text-align:right;font-weight:700">$${Number(m.total||0).toLocaleString('es-MX',{minimumFractionDigits:2})}</td><td style="text-align:right;color:#888">${pct}%</td></tr>`;
+  });
+
+  // Top productos
+  let prodRows='';
+  topProds.forEach((p,i)=>{
+    prodRows+=`<tr>
+      <td style="color:#888">${i+1}</td>
+      <td>${p.nombre||p.name||'-'}</td>
+      <td style="text-align:right">${p.uds||p.unidades||0}</td>
+      <td style="text-align:right;font-weight:700">$${Number(p.total||0).toLocaleString('es-MX',{minimumFractionDigits:2})}</td>
+    </tr>`;
+  });
+
+  const htm=`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>Reporte — ${negocio}</title>
+  <style>
+    @page{size:A4;margin:18mm 14mm}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;font-size:10.5pt;color:#111}
+    .header{text-align:center;border-bottom:3px solid #FFB547;padding-bottom:12px;margin-bottom:18px}
+    .header h1{font-size:20pt;font-weight:900}
+    .header .sub{font-size:9.5pt;color:#555;margin-top:2px}
+    .badge{display:inline-block;background:#FFB547;color:#000;font-weight:700;font-size:9pt;padding:3px 14px;border-radius:20px;margin-top:5px}
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+    .kpi{border:1px solid #eee;border-radius:8px;padding:10px 12px}
+    .kpi .lbl{font-size:8pt;color:#888;text-transform:uppercase;letter-spacing:.5px}
+    .kpi .val{font-size:15pt;font-weight:900;margin-top:2px}
+    .kpi .val.amber{color:#e6a000}.kpi .val.green{color:#2e7d32}.kpi .val.blue{color:#1565c0}
+    h2{font-size:9.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#777;border-bottom:1px solid #eee;padding-bottom:4px;margin:16px 0 8px}
+    table{width:100%;border-collapse:collapse}
+    td{padding:6px 8px;font-size:10pt;border-bottom:1px solid #f0f0f0}
+    tr.hdr td{font-size:8.5pt;font-weight:700;text-transform:uppercase;color:#888;background:#fafafa;border-bottom:1px solid #ddd}
+    .footer{text-align:center;font-size:8pt;color:#aaa;border-top:1px solid #eee;padding-top:10px;margin-top:20px}
+  </style></head><body>
+  <div class="header">
+    <h1>${negocio}</h1>
+    ${direccion?`<div class="sub">${direccion}</div>`:''}
+    <div class="badge">REPORTE DE VENTAS</div>
+    <div class="sub" style="margin-top:5px">${periodo} &nbsp;·&nbsp; Generado: ${fecha}</div>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="lbl">Ventas netas</div><div class="val amber">$${Number(total).toLocaleString('es-MX',{minimumFractionDigits:2})}</div></div>
+    <div class="kpi"><div class="lbl">Transacciones</div><div class="val">${tx}</div></div>
+    <div class="kpi"><div class="lbl">Ticket promedio</div><div class="val green">$${Number(ticket).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+    <div class="kpi"><div class="lbl">CFDIs timbrados</div><div class="val blue">${cfdi}</div></div>
+  </div>
+  ${diasRows?`<h2>Ventas por día</h2>
+  <table><tr class="hdr"><td>Fecha</td><td style="text-align:right">Ventas</td><td style="text-align:right">Total</td><td style="text-align:right">CFDIs</td></tr>${diasRows}</table>`:''}
+  ${metRows?`<h2>Métodos de pago</h2>
+  <table><tr class="hdr"><td>Método</td><td style="text-align:right">Ventas</td><td style="text-align:right">Total</td><td style="text-align:right">%</td></tr>${metRows}</table>`:''}
+  ${prodRows?`<h2>Top productos</h2>
+  <table><tr class="hdr"><td>#</td><td>Producto</td><td style="text-align:right">Uds.</td><td style="text-align:right">Total</td></tr>${prodRows}</table>`:''}
+  <div class="footer">TurboPOS v10 &nbsp;·&nbsp; Documento generado automáticamente &nbsp;·&nbsp; Este reporte no es un comprobante fiscal</div>
+  </body></html>`;
+
+  const win=window.open('','_blank','width=820,height:920');
+  if(!win){toast('Permite ventanas emergentes para exportar PDF','error');return;}
+  win.document.write(htm);
+  win.document.close();
+  win.focus();
+  setTimeout(()=>{win.print();},600);
+}
 
 let cfdiData = [];
 
