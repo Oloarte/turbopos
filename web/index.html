@@ -457,6 +457,34 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 
 .p-card {
+  transition: border-color .15s, transform .12s, box-shadow .15s;
+  position: relative;
+  overflow: hidden;
+}
+.p-card .p-price {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--amber);
+  font-family: var(--mono);
+  margin-top: 3px;
+}
+.p-card .p-name {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.p-card .p-icon {
+  font-size: 22px;
+  margin-bottom: 4px;
+  display: block;
+}
+/* sobreescribir el original */
+.__p-card-orig {
 
   background: var(--surface2); border: 1px solid var(--border);
 
@@ -2326,7 +2354,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
               <span class="s-icon">🔍</span>
 
-              <input type="text" id="product-search" placeholder="Buscar producto, SKU o código..." oninput="filterProducts()">
+              <input type="text" id="product-search" placeholder="Buscar producto, SKU o código...  [ / ]" oninput="filterProducts()">
 
             </div>
 
@@ -3839,6 +3867,21 @@ function renderCategories() {
 
 function setCategory(c) { activeCategory=c; renderCategories(); filterProducts(); }
 
+// Shortcut: / enfoca busqueda, Escape limpia
+document.addEventListener('keydown', e => {
+  if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+    e.preventDefault();
+    const s = document.getElementById('product-search');
+    if (s) { s.focus(); s.select(); }
+  }
+  if (e.key === 'Escape') {
+    const s = document.getElementById('product-search');
+    if (s && document.activeElement === s) {
+      s.value = ''; s.blur(); filterProducts();
+    }
+  }
+});
+
 function filterProducts() {
 
   const q = document.getElementById('product-search').value.toLowerCase();
@@ -3861,33 +3904,52 @@ function filterProducts() {
 
   }
 
-  grid.innerHTML = filtered.map(p=>`
-
-    <div class="p-card" onclick="addToCart('${p.id}')">
-
-      <div class="p-icon">${getCatIcon(p.category)}</div>
-
+  grid.innerHTML = filtered.map(p=>{
+    const q2 = document.getElementById('product-search').value.toLowerCase();
+    const icon = getCatIcon(p.category);
+    const nameHL = q2 && p.name.toLowerCase().includes(q2)
+      ? p.name.replace(new RegExp('('+q2.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<mark style="background:rgba(255,181,71,.35);color:var(--amber);border-radius:2px;padding:0 1px">$1</mark>')
+      : p.name;
+    const skuBadge = p.sku ? `<div style="font-size:9px;color:var(--muted);font-family:var(--mono);margin-top:1px">${p.sku}</div>` : '';
+    return `<div class="p-card" onclick="addToCart('${p.id}')" title="${p.name}">
+      <div class="p-icon">${icon}</div>
       <div class="p-body">
-
-        <div class="p-name">${p.name}</div>
-
-        <div class="p-price">$${Number(p.price||0).toFixed(2)}</div>
-
+        <div class="p-name">${nameHL}</div>
+        ${skuBadge}
+        <div class="p-price">$${Number(p.price||0).toLocaleString('es-MX',{minimumFractionDigits:2})}</div>
       </div>
-
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
 }
 
 function getCatIcon(cat) {
   if (!cat) return '📦';
   const c = cat.toLowerCase();
+  // Copias e impresion
   if (c.includes('copia')) return '📄';
-  if (c.includes('impresion') || c.includes('impresión')) return '🖨️';
-  if (c.includes('engargolado')) return '📎';
-  if (c.includes('plastificado')) return '✨';
-  if (c.includes('servicio')) return '🔧';
-  if (c.includes('general')) return '🛍️';
+  if (c.includes('impresion') || c.includes('impresión') || c.includes('print')) return '🖨️';
+  if (c.includes('engargolado') || c.includes('espiral')) return '📒';
+  if (c.includes('plastificado') || c.includes('laminado')) return '🪪';
+  // Comida y bebida
+  if (c.includes('bebida') || c.includes('refresco') || c.includes('agua') || c.includes('cafe') || c.includes('café')) return '🥤';
+  if (c.includes('comida') || c.includes('snack') || c.includes('papas') || c.includes('dulce')) return '🍿';
+  if (c.includes('alimento')) return '🥗';
+  // Tecnologia
+  if (c.includes('tecno') || c.includes('electro') || c.includes('computo') || c.includes('cómputo')) return '💻';
+  if (c.includes('accesorio')) return '🔌';
+  if (c.includes('celular') || c.includes('movil') || c.includes('móvil')) return '📱';
+  // Papeleria
+  if (c.includes('papeleria') || c.includes('papelería') || c.includes('papel')) return '✏️';
+  if (c.includes('cartucho') || c.includes('tinta') || c.includes('toner') || c.includes('tóner')) return '🖋️';
+  // Servicios
+  if (c.includes('servicio')) return '⚙️';
+  if (c.includes('envio') || c.includes('envío') || c.includes('paquete')) return '📦';
+  if (c.includes('renta') || c.includes('alquiler')) return '🔑';
+  // General
+  if (c.includes('general') || c.includes('varios')) return '🛍️';
+  if (c.includes('limpieza')) return '🧹';
+  if (c.includes('oficina')) return '🗂️';
   return '📦';
 }
 function renderProducts() { filterProducts(); }
