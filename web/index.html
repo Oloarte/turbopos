@@ -402,11 +402,11 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 .prod-header { padding: 16px 20px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 
-.prod-search { position: relative; margin-bottom: 12px; }
+.prod-search { position: relative; margin-bottom: 12px; display:flex; align-items:center; gap:4px; }
 
 .prod-search input {
 
-  width: 100%; background: var(--surface2);
+  flex:1; width: 100%; background: var(--surface2);
 
   border: 1px solid var(--border2); border-radius: 10px;
 
@@ -4024,9 +4024,9 @@ async function toggleScanner() {
 }
 
 function startBarcodeDetection(video) {
-  // Usar BarcodeDetector API si esta disponible
   if ('BarcodeDetector' in window) {
-    barcodeReader = new BarcodeDetector({formats: [
+    // Chrome/Edge con BarcodeDetector nativo
+    barcodeReader = new BarcodeDetector({formats:[
       'ean_13','ean_8','code_128','code_39','qr_code','upc_a','upc_e','itf','codabar'
     ]});
     const detect = async () => {
@@ -4034,9 +4034,7 @@ function startBarcodeDetection(video) {
       try {
         const codes = await barcodeReader.detect(video);
         if (codes.length > 0) {
-          const code = codes[0].rawValue;
-          document.getElementById('scan-result').textContent = 'Detectado: ' + code;
-          handleScannedCode(code);
+          handleScannedCode(codes[0].rawValue);
           return;
         }
       } catch(e) {}
@@ -4044,8 +4042,50 @@ function startBarcodeDetection(video) {
     };
     requestAnimationFrame(detect);
   } else {
-    // Fallback — busqueda manual
-    document.getElementById('scan-result').textContent = 'Camara activa — ingresa el codigo manualmente';
+    // Fallback: QuaggaJS
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js';
+    script.onload = () => {
+      const container = document.getElementById('scanner-video').parentElement;
+      // Quagga necesita un div, no el video directamente
+      const qDiv = document.createElement('div');
+      qDiv.id = 'quagga-container';
+      qDiv.style.cssText = 'position:absolute;inset:0';
+      container.appendChild(qDiv);
+      Quagga.init({
+        inputStream: {
+          type: 'LiveStream',
+          target: qDiv,
+          constraints: { facingMode: 'environment', width: 640, height: 480 }
+        },
+        decoder: {
+          readers: ['ean_reader','ean_8_reader','code_128_reader','code_39_reader','upc_reader']
+        },
+        locate: true
+      }, err => {
+        if (err) {
+          document.getElementById('scan-result').textContent = 'Error camara: ' + err.message;
+          return;
+        }
+        document.getElementById('scan-result').textContent = 'Escaneando...';
+        Quagga.start();
+        const hits = {};
+        Quagga.onDetected(result => {
+          const code = result.codeResult.code;
+          if (!code || code.length < 6) return;
+          hits[code] = (hits[code] || 0) + 1;
+          document.getElementById('scan-result').textContent = 'Leyendo: ' + code + ' (' + hits[code] + '/2)';
+          if (hits[code] >= 2) {
+            Quagga.stop();
+            handleScannedCode(code);
+          }
+        });
+      });
+    };
+    script.onerror = () => {
+      document.getElementById('scan-result').textContent = 'Sin deteccion automatica — usa Ingresar manual';
+    };
+    document.head.appendChild(script);
   }
 }
 
@@ -4072,13 +4112,15 @@ function handleScannedCode(code) {
 
 function closeScanner() {
   scannerActive = false;
+  try { if (window.Quagga) Quagga.stop(); } catch(e) {}
   if (scannerStream) {
     scannerStream.getTracks().forEach(t => t.stop());
     scannerStream = null;
   }
   const modal = document.getElementById('scanner-modal');
   if (modal) modal.style.display = 'none';
-  document.getElementById('scan-btn').style.color = 'var(--muted)';
+  const btn = document.getElementById('scan-btn');
+  if (btn) btn.style.color = 'var(--muted)';
 }
 
 function scanManual() {
@@ -4149,7 +4191,7 @@ function getCatIcon(cat) {
   const c = cat.toLowerCase();
   // Copias e impresion
   if (c.includes('copia')) return '📄';
-  if (c.includes('impresion') || c.includes('impresión') || c.includes('print')) return '🖨️';
+  if (c.includes('impresion') || c.includes('impresión') || c.includes('print')) return '&#x1F5A8;';
   if (c.includes('engargolado') || c.includes('espiral')) return '📒';
   if (c.includes('plastificado') || c.includes('laminado')) return '🪪';
   // Comida y bebida
