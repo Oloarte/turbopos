@@ -154,7 +154,12 @@ func main() {
 	mux.HandleFunc("/api/v1/admin/tenants/", gw.handleAdminTenantByID)
     mux.HandleFunc("/api/v1/csd",        gw.handleCSDUpload)
     mux.HandleFunc("/api/v1/csd/info",   gw.handleCSDInfo)
-	mux.Handle("/", http.FileServer(http.Dir("web")))
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        data, err := os.ReadFile("web/index.html")
+        if err != nil { http.Error(w, "not found", 404); return }
+        w.Header().Set("Content-Type", "text/html; charset=utf-8")
+        w.Write(data)
+    })
 	log.Println("[BFF] Escuchando en :8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
@@ -2142,6 +2147,8 @@ func (gw *Gateway) loadTenantCSD(tenantID string) (certB64 string, keyBytes []by
         Scan(&rfc, &certB64, &keyBytes, &keyPass)
     return certB64, keyBytes, keyPass, rfc, err == nil
 }
+
+
 
 
 
