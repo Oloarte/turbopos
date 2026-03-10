@@ -3049,6 +3049,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
                 <div class="cfg-field"><label>RFC</label><input id="cfg-rfc" class="cfg-input" placeholder="XAXX010101000"></div>
 
                 <div class="cfg-field"><label>Razón Social</label><input id="cfg-razon" class="cfg-input" placeholder="MI TIENDA SA DE CV"></div>
+                <div class="cfg-field"><label>Dirección</label><input id="cfg-dir" class="cfg-input" placeholder="Calle, Colonia, Ciudad"></div>
 
                 <div class="cfg-field"><label>Código Postal</label><input id="cfg-cp" class="cfg-input" placeholder="64000"></div>
 
@@ -3778,7 +3779,7 @@ function showView(v) {
 
   const btn = document.getElementById('nav-'+v); if(btn) btn.classList.add('active');
 
-  if(v==='config') setTimeout(loadCSDStatus, 100);
+  if(v==='config') { setTimeout(loadCSDStatus, 100); setTimeout(loadCfgNegocio, 120); }
 
   // Mobile: FAB y ticket solo en vista POS
 
@@ -5986,7 +5987,47 @@ async function uploadCSD() {
 
 }
 
-async function saveCfgNegocio() { toast('Guardando...','info'); setTimeout(()=>toast('Cambios guardados','success'),800); }
+function loadCfgNegocio() {
+  const campos = {
+    'cfg-nombre': 'tp_negocio',
+    'cfg-rfc':    'tp_rfc',
+    'cfg-razon':  'tp_direccion',
+    'cfg-cp':     'tp_cp',
+    'cfg-email':  'tp_email',
+    'cfg-tel':    'tp_telefono'
+  };
+  Object.entries(campos).forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    const val = localStorage.getItem(key);
+    if (el && val) el.value = val;
+  });
+}
+
+async function saveCfgNegocio() {
+  const nombre  = document.getElementById('cfg-nombre')?.value.trim() || '';
+  const rfc     = document.getElementById('cfg-rfc')?.value.trim().toUpperCase() || '';
+  const razon   = document.getElementById('cfg-razon')?.value.trim() || '';
+  const cp      = document.getElementById('cfg-cp')?.value.trim() || '';
+  const email   = document.getElementById('cfg-email')?.value.trim() || '';
+  const tel     = document.getElementById('cfg-tel')?.value.trim() || '';
+  if (!nombre) { toast('El nombre del negocio es requerido','error'); return; }
+  // Guardar en localStorage para ticket
+  localStorage.setItem('tp_negocio',   nombre);
+  localStorage.setItem('tp_direccion', razon);
+  localStorage.setItem('tp_telefono',  tel);
+  localStorage.setItem('tp_rfc',       rfc);
+  localStorage.setItem('tp_cp',        cp);
+  localStorage.setItem('tp_email',     email);
+  // Intentar guardar en API (opcional, no bloquea)
+  try {
+    await apiFetch(API+'/config/negocio', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({nombre, rfc, razon_social:razon, cp, email, telefono:tel})
+    });
+  } catch(e) {}
+  toast('Negocio guardado correctamente','success');
+}
 
 function selectPlan(p) { document.querySelectorAll('.subs-plan').forEach(el=>el.classList.remove('active')); event.currentTarget.classList.add('active'); toast('Para cambiar plan contacta soporte','info'); }
 
