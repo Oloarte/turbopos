@@ -3450,45 +3450,28 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
           <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Regimen Fiscal</label>
 
-          <select id="sale-regimen" style="width:100%;margin-top:6px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:var(--font);box-sizing:border-box;outline:none">
-
-            <option value="601">601 - General de Ley Personas Morales</option>
-
-            <option value="603">603 - Sin fines de lucro</option>
-
-            <option value="605">605 - Sueldos y Salarios</option>
-
-            <option value="606">606 - Arrendamiento</option>
-
-            <option value="607">607 - Enajenacion de bienes</option>
-
-            <option value="608">608 - Demas ingresos</option>
-
-            <option value="610">610 - Residentes en el extranjero</option>
-
-            <option value="611">611 - Ingresos por dividendos</option>
-
-            <option value="612" selected>612 - Personas Fisicas con Act. Empresariales</option>
-
-            <option value="614">614 - Ingresos por intereses</option>
-
-            <option value="616">616 - Sin obligaciones fiscales</option>
-
-            <option value="620">620 - Sociedades Cooperativas de Produccion</option>
-
-            <option value="621">621 - Incorporacion Fiscal</option>
-
-            <option value="622">622 - Agricola, Ganadera, Silvicola y Pesquera</option>
-
-            <option value="623">623 - Opcional para Grupos de Sociedades</option>
-
-            <option value="624">624 - Coordinados</option>
-
-            <option value="625">625 - Plataformas Tecnologicas</option>
-
-            <option value="626">626 - Simplificado de Confianza</option>
-
-          </select>
+          <select id="sale-regimen" style="width:100%;margin-top:6px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text1);font-size:13px">
+<option value="">-- Régimen Fiscal --</option>
+<option value="601">601 - General de Ley Personas Morales</option>
+<option value="603">603 - Personas Morales sin fines de lucro</option>
+<option value="605">605 - Sueldos y Salarios e Ingresos Asimilados</option>
+<option value="606">606 - Arrendamiento</option>
+<option value="607">607 - Enajenación o Adquisición de Bienes</option>
+<option value="608">608 - Demás ingresos</option>
+<option value="610">610 - Residentes en el Extranjero sin EP</option>
+<option value="611">611 - Ingresos por Dividendos</option>
+<option value="612">612 - Personas Físicas con Actividades Empresariales</option>
+<option value="614">614 - Ingresos por intereses</option>
+<option value="615">615 - Ingresos por obtención de premios</option>
+<option value="616">616 - Sin obligaciones fiscales</option>
+<option value="620">620 - Sociedades Cooperativas de Producción</option>
+<option value="621">621 - Incorporación Fiscal</option>
+<option value="622">622 - Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras</option>
+<option value="623">623 - Opcional para Grupos de Sociedades</option>
+<option value="624">624 - Coordinados</option>
+<option value="625">625 - Plataformas Tecnológicas</option>
+<option value="626">626 - Régimen Simplificado de Confianza</option>
+</select>
 
         </div>
 
@@ -3496,57 +3479,41 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
           <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Uso CFDI</label>
 
-          <select id="sale-uso" style="width:100%;margin-top:6px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:var(--font);box-sizing:border-box;outline:none">
-
-            <option value="G01">G01 - Adquisicion de mercancias</option>
-
-            <option value="G02">G02 - Devoluciones y descuentos</option>
-
-            <option value="G03" selected>G03 - Gastos en general</option>
-
-            <option value="I01">I01 - Construcciones</option>
-
-            <option value="I02">I02 - Mobilario y equipo de oficina</option>
-
-            <option value="I03">I03 - Equipo de transporte</option>
-
-            <option value="I04">I04 - Equipo de computo y accesorios</option>
-
-            <option value="I05">I05 - Dados, troqueles y herramental</option>
-
-            <option value="I06">I06 - Comunicaciones telefonicas</option>
-
-            <option value="I07">I07 - Comunicaciones satelitales</option>
-
-            <option value="I08">I08 - Otra maquinaria y equipo</option>
-
-            <option value="D01">D01 - Honorarios medicos y dentales</option>
-
-            <option value="D02">D02 - Gastos medicos por incapacidad</option>
-
-            <option value="D03">D03 - Gastos funerales</option>
-
-            <option value="D04">D04 - Donativos</option>
-
-            <option value="D05">D05 - Intereses reales creditos hipotecarios</option>
-
-            <option value="D06">D06 - Aportaciones voluntarias al SAR</option>
-
-            <option value="D07">D07 - Primas por seguros de gastos medicos</option>
-
-            <option value="D08">D08 - Gastos de transportacion escolar</option>
-
-            <option value="D09">D09 - Depositos en cuentas de ahorro</option>
-
-            <option value="D10">D10 - Pagos por servicios educativos</option>
-
-            <option value="S01">S01 - Sin efectos fiscales</option>
-
-            <option value="CP01">CP01 - Pagos</option>
-
-            <option value="CN01">CN01 - Nomina</option>
-
-          </select>
+          <select id="sale-uso" style="width:100%;margin-top:6px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text1);font-size:13px">
+<option value="">-- Uso CFDI --</option>
+<optgroup label="Adquisiciones">
+<option value="G01">G01 - Adquisición de mercancias</option>
+<option value="G02">G02 - Devoluciones, descuentos o bonificaciones</option>
+<option value="G03">G03 - Gastos en general</option>
+</optgroup>
+<optgroup label="Inversiones">
+<option value="I01">I01 - Construcciones</option>
+<option value="I02">I02 - Mobiliario y equipo de oficina</option>
+<option value="I03">I03 - Equipo de transporte</option>
+<option value="I04">I04 - Equipo de cómputo y accesorios</option>
+<option value="I05">I05 - Dados, troqueles, moldes y herramental</option>
+<option value="I06">I06 - Comunicaciones telefónicas</option>
+<option value="I07">I07 - Comunicaciones satelitales</option>
+<option value="I08">I08 - Otra maquinaria y equipo</option>
+</optgroup>
+<optgroup label="Deducciones personales">
+<option value="D01">D01 - Honorarios médicos y dentales</option>
+<option value="D02">D02 - Gastos médicos por incapacidad</option>
+<option value="D03">D03 - Gastos funerales</option>
+<option value="D04">D04 - Donativos</option>
+<option value="D05">D05 - Intereses reales créditos hipotecarios</option>
+<option value="D06">D06 - Aportaciones voluntarias al SAR</option>
+<option value="D07">D07 - Primas por seguros de gastos médicos</option>
+<option value="D08">D08 - Gastos de transportación escolar</option>
+<option value="D09">D09 - Depósitos para el ahorro / pensiones</option>
+<option value="D10">D10 - Pagos por servicios educativos</option>
+</optgroup>
+<optgroup label="Otros">
+<option value="S01">S01 - Sin efectos fiscales</option>
+<option value="CP01">CP01 - Pagos</option>
+<option value="CN01">CN01 - Nómina</option>
+</optgroup>
+</select>
 
         </div>
 
