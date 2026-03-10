@@ -9,7 +9,12 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/csv"
-	"encoding/json"
+	"bytes"
+    "context"
+    "encoding/json"
+    firebase "firebase.google.com/go/v4"
+    "firebase.google.com/go/v4/messaging"
+    "google.golang.org/api/option"
 	"fmt"
 	"io"
 	"log"
@@ -154,6 +159,26 @@ func main() {
 	mux.HandleFunc("/api/v1/admin/tenants/", gw.handleAdminTenantByID)
     mux.HandleFunc("/api/v1/csd",        gw.handleCSDUpload)
     mux.HandleFunc("/api/v1/csd/info",   gw.handleCSDInfo)
+    mux.HandleFunc("/api/v1/push/register", gw.handlePushRegister)
+    mux.HandleFunc("/api/v1/config/negocio", gw.handleConfigNegocio)
+	// Archivos estaticos PWA
+	mux.HandleFunc("/manifest.json", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/manifest+json")
+		http.ServeFile(w, r, "web/manifest.json")
+	})
+	mux.HandleFunc("/firebase-messaging-sw.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/javascript")
+		w.Header().Set("Service-Worker-Allowed", "/")
+		http.ServeFile(w, r, "web/firebase-messaging-sw.js")
+	})
+	mux.HandleFunc("/icon-192.png", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/png")
+		http.ServeFile(w, r, "web/icon-192.png")
+	})
+	mux.HandleFunc("/icon-512.png", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/png")
+		http.ServeFile(w, r, "web/icon-512.png")
+	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
         data, err := os.ReadFile("web/index.html")
         if err != nil { http.Error(w, "not found", 404); return }
@@ -741,6 +766,7 @@ func (gw *Gateway) handleCobrar(w http.ResponseWriter, r *http.Request) {
                 log.Printf("[BFF] Auto-timbrado OK sale=%s uuid=%s", saleID, tRes.GetUuid())
         }(res.GetSaleId(), req.Total, rfcTimbrar, r.URL.Query().Get("cp"), nombreTimbrar, regimenTimbrar, tid)
 	}
+	go gw.sendPushNotification(tid, "Nueva venta $"+fmt.Sprintf("%.2f", req.Total), fmt.Sprintf("%d producto(s) · %s", len(req.Items), req.PaymentMethod))
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"sale_id": res.GetSaleId(), "status": res.GetStatus(),
@@ -1784,10 +1810,82 @@ func validateJWT(token string) (*jwtClaims, error) {
 }
 
 // jwtMiddleware valida el token en todas las rutas excepto /api/v1/login y /
+func (gw *Gateway) handlePushRegister(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method == http.MethodOptions { w.WriteHeader(http.StatusOK); return }
+	if r.Method != http.MethodPost { w.WriteHeader(http.StatusMethodNotAllowed); return }
+	var body struct {
+		Token    string `json:"token"`
+		TenantID string `json:"tenant_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.Token == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "token requerido"})
+		return
+	}
+	// Guardar token en DB
+	_, err := gw.db.Exec(`INSERT INTO push_tokens (tenant_id, token, created_at)
+		VALUES ($1, $2, NOW())
+		ON CONFLICT (token) DO UPDATE SET updated_at = NOW()`,
+		body.TenantID, body.Token)
+	if err != nil {
+		log.Printf("[Push] Error guardando token: %v", err)
+	}
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
+func (gw *Gateway) handleConfigNegocio(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method == http.MethodOptions { w.WriteHeader(http.StatusOK); return }
+	// Solo acepta POST, guarda en memoria por ahora
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
+func (gw *Gateway) sendPushNotification(tenantID, title, body string) {
+	rows, err := gw.db.Query(`SELECT token FROM push_tokens WHERE tenant_id=$1`, tenantID)
+	if err != nil { log.Printf("[Push] DB error: %v", err); return }
+	defer rows.Close()
+	var tokens []string
+	for rows.Next() {
+		var token string
+		if err := rows.Scan(&token); err == nil { tokens = append(tokens, token) }
+	}
+	if len(tokens) == 0 { return }
+	go func() {
+		ctx := context.Background()
+		app, err := firebase.NewApp(ctx, nil, option.WithCredentialsFile("secrets/firebase-sa.json"))
+		if err != nil { log.Printf("[Push] Firebase init error: %v", err); return }
+		client, err := app.Messaging(ctx)
+		if err != nil { log.Printf("[Push] Messaging error: %v", err); return }
+		for _, token := range tokens {
+			msg := &messaging.Message{
+				Token: token,
+				Notification: &messaging.Notification{Title: title, Body: body},
+				Android: &messaging.AndroidConfig{Priority: "high"},
+				APNS: &messaging.APNSConfig{
+					Payload: &messaging.APNSPayload{
+						Aps: &messaging.Aps{Sound: "default"},
+					},
+				},
+			}
+			_, err := client.Send(ctx, msg)
+			if err != nil {
+				log.Printf("[Push] Send error token=%s... %v", token[:15], err)
+			} else {
+				log.Printf("[Push] OK enviado a %s... titulo: %s", token[:15], title)
+			}
+		}
+	}()
+}
+
 func jwtMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Rutas públicas
 		if r.URL.Path == "/" || r.URL.Path == "/index.html" ||
+			r.URL.Path == "/manifest.json" || r.URL.Path == "/firebase-messaging-sw.js" ||
+			r.URL.Path == "/icon-192.png" || r.URL.Path == "/icon-512.png" ||
+			r.URL.Path == "/api/v1/push/register" ||
 			r.URL.Path == "/api/v1/login" || r.URL.Path == "/api/v1/status" {
 			next.ServeHTTP(w, r)
 			return

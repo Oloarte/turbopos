@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 
 <html lang="es">
 
@@ -6806,4 +6806,78 @@ function initMobileUI() {
 
     .cli-ml{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
 
-    .cli-mi{background:var(--surface2,#131926);border:1px solid var(--border);border-radius:7px;padding:8px 11px;font-family:var(--font);font-size:12px;color:var(--text);outline:none;transition:border-col
+or:var(--border);box-shadow:none;width:100%}
+    .cli-mi:focus{border-color:var(--amber);outline:none}
+    .cli-ms{background:var(--surface2,#131926);border:1px solid var(--border);border-radius:7px;padding:8px 11px;font-family:var(--font);font-size:12px;color:var(--text);outline:none;cursor:pointer;width:100%}
+    .cli-mbtn{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none}
+    .cli-mbtn-p{background:var(--amber);color:#000}
+    .cli-mbtn-s{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+</style>
+
+<div id="cli-modal" class="cli-modal-ov" style="display:none" onclick="if(event.target===this)cliCloseModal()">
+  <div class="cli-modal">
+    <div class="cli-mh">
+      <span class="cli-mh-t">Nuevo cliente</span>
+      <button class="cli-mc" onclick="cliCloseModal()">&#x2715;</button>
+    </div>
+    <div class="cli-mb">
+      <div class="cli-mf">
+        <div class="cli-mfg"><label class="cli-ml">Nombre</label><input id="cm-nombre" class="cli-mi" placeholder="Nombre completo"></div>
+        <div class="cli-mfg"><label class="cli-ml">Telefono</label><input id="cm-phone" class="cli-mi" placeholder="10 digitos" maxlength="10"></div>
+      </div>
+      <div class="cli-mf">
+        <div class="cli-mfg"><label class="cli-ml">RFC</label><input id="cm-rfc" class="cli-mi" placeholder="RFC (opcional)"></div>
+        <div class="cli-mfg"><label class="cli-ml">Email</label><input id="cm-email" class="cli-mi" placeholder="correo@ejemplo.com"></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button class="cli-mbtn cli-mbtn-s" onclick="cliCloseModal()" style="flex:1">Cancelar</button>
+        <button class="cli-mbtn cli-mbtn-p" onclick="cliSave()" style="flex:1">Guardar cliente</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+  import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
+  const firebaseApp = initializeApp({
+    apiKey: "AIzaSyD7oTezdatdlev7z--b66UIh48HZWC_5ko",
+    authDomain: "turbopos-7f9a2.firebaseapp.com",
+    projectId: "turbopos-7f9a2",
+    storageBucket: "turbopos-7f9a2.firebasestorage.app",
+    messagingSenderId: "778124637274",
+    appId: "1:778124637274:web:09ff9eb5ab87ca44e21463"
+  });
+  const messaging = getMessaging(firebaseApp);
+  window._fcmMessaging = messaging;
+  async function initPushNotifications() {
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+    try {
+      const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') return;
+      const token = await getToken(messaging, {
+        vapidKey: 'BPdle36BFOQZPLgtIn8Ok6YOo_u3MAo2oQt_A7edQhiZTvNO09sC21dpB7Xgc91_KsmiMltnZgks8FspIg2JKZM',
+        serviceWorkerRegistration: reg
+      });
+      if (token) {
+        localStorage.setItem('fcm_token', token);
+        try {
+          await apiFetch(window.API + '/push/register', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({token, tenant_id: localStorage.getItem('tenant_id')})
+          });
+        } catch(e) {}
+        if (window.toast) toast('Notificaciones activadas', 'success');
+      }
+      onMessage(messaging, payload => {
+        const {title, body} = payload.notification || {};
+        if (title && window.toast) toast(title + (body ? ' - ' + body : ''), 'success');
+      });
+    } catch(e) { console.warn('Push init error:', e); }
+  }
+  window._initPush = initPushNotifications;
+</script>
+
+</body>
+</html>
