@@ -3362,7 +3362,27 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
     <div class="sale-breakdown" id="sale-breakdown"></div>
 
-    <div id="rfc-row" style="display:none;margin-top:14px;">
+    <!-- CAMBIO EFECTIVO -->
+<div id="efectivo-row" style="display:none;margin-top:14px;">
+  <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Efectivo recibido</label>
+  <input id="sale-recibido" type="number" min="0" step="0.50" placeholder="$0.00" autocomplete="off"
+    oninput="calcCambio()"
+    style="width:100%;margin-top:6px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border2);
+    border-radius:8px;color:var(--text);font-size:20px;font-family:var(--mono);font-weight:700;
+    letter-spacing:.04em;box-sizing:border-box;outline:none;text-align:right"/>
+  <div id="cambio-row" style="display:none;margin-top:10px;padding:12px 16px;border-radius:10px;
+    background:var(--surface2);border:1px solid var(--green);display:flex;justify-content:space-between;align-items:center">
+    <span style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Cambio</span>
+    <span id="cambio-val" style="font-size:24px;font-weight:800;color:var(--green);font-family:var(--mono)">$0.00</span>
+  </div>
+  <div id="falta-row" style="display:none;margin-top:10px;padding:12px 16px;border-radius:10px;
+    background:var(--surface2);border:1px solid var(--red);display:flex;justify-content:space-between;align-items:center">
+    <span style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Falta</span>
+    <span id="falta-val" style="font-size:24px;font-weight:800;color:var(--red);font-family:var(--mono)">$0.00</span>
+  </div>
+</div>
+
+<div id="rfc-row" style="display:none;margin-top:14px;">
 
       <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">RFC receptor</label>
 
@@ -3985,6 +4005,26 @@ function setPayment(m) {
 
 }
 
+function calcCambio() {
+  const total = cart.reduce((s,i)=>s+i.subtotal, 0);
+  const recibido = parseFloat(document.getElementById('sale-recibido').value) || 0;
+  const diff = recibido - total;
+  const cambioRow = document.getElementById('cambio-row');
+  const faltaRow  = document.getElementById('falta-row');
+  if (recibido === 0) {
+    cambioRow.style.display = 'none';
+    faltaRow.style.display  = 'none';
+  } else if (diff >= 0) {
+    cambioRow.style.display = 'flex';
+    faltaRow.style.display  = 'none';
+    document.getElementById('cambio-val').textContent = '$'+diff.toLocaleString('es-MX',{minimumFractionDigits:2});
+  } else {
+    cambioRow.style.display = 'none';
+    faltaRow.style.display  = 'flex';
+    document.getElementById('falta-val').textContent = '$'+Math.abs(diff).toLocaleString('es-MX',{minimumFractionDigits:2});
+  }
+}
+
 
 
 async function checkLoyalty(phone) {
@@ -4094,6 +4134,14 @@ function cobrar() {
   }
 
   const payLabels = {cash:'Efectivo',card:'Tarjeta',transfer:'Transferencia'};
+  // Mostrar campo efectivo solo si metodo es cash
+  const efRow = document.getElementById('efectivo-row');
+  if (efRow) {
+    efRow.style.display = payment === 'cash' ? 'block' : 'none';
+    document.getElementById('sale-recibido').value = '';
+    document.getElementById('cambio-row').style.display = 'none';
+    document.getElementById('falta-row').style.display  = 'none';
+  }
 
   document.getElementById('sale-modal-sub').textContent = payLabels[payment]||payment;
 
@@ -4125,6 +4173,15 @@ async function confirmSale() {
 
   const factura = document.getElementById('factura-check').checked;
 
+  // Validar efectivo suficiente
+  if (payment === 'cash') {
+    const totalV = cart.reduce((s,i)=>s+i.subtotal,0);
+    const recibido = parseFloat(document.getElementById('sale-recibido').value)||0;
+    if (recibido > 0 && recibido < totalV) {
+      toast('Efectivo insuficiente — faltan $'+(totalV-recibido).toFixed(2),'error');
+      return;
+    }
+  }
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Procesando...';
 
   const body = { total, payment_method:payment, items:cart.map(i=>({product_id:i.id,name:i.name,quantity:i.qty,unit_price:i.price,subtotal:i.subtotal})) };
@@ -4138,6 +4195,8 @@ async function confirmSale() {
       const regimen = document.getElementById('sale-regimen').value||'612';
 
       const uso     = document.getElementById('sale-uso').value||'G03';
+
+      const cp      = (document.getElementById('sale-cp').value||'').trim();
 
       if (factura) url+='?factura=1&rfc='+encodeURIComponent(rfc)+'&cp='+encodeURIComponent(cp)+'&nombre='+encodeURIComponent(nombre)+'&regimen='+encodeURIComponent(regimen)+'&uso='+encodeURIComponent(uso);
 
@@ -5268,78 +5327,164 @@ function exportCFDIcsv() {
 let currentTicket = null;
 
 function showTicket(data) {
-
   currentTicket = data;
-
   const c = document.getElementById('ticket-content');
-
-  const fecha = new Date().toLocaleString('es-MX');
-
+  const now = new Date();
+  const fecha = now.toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const hora  = now.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   const esFactura = !!data.cfdi_uuid;
-
-  let items = (data.items||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span style="color:var(--text2)">${i.name} x${i.qty}</span><span>$${Number(i.subtotal).toLocaleString('es-MX',{minimumFractionDigits:2})}</span></div>`).join('');
-
-  let cfdiSection = '';
-
-  if (esFactura && data.cfdi_uuid) {
-
-    cfdiSection = `<div style="margin-top:16px;padding:16px;background:var(--surface2);border-radius:8px;text-align:center"><div style="font-size:11px;color:var(--text2);margin-bottom:8px">CFDI 4.0 · Folio Fiscal</div><div style="font-size:11px;font-weight:700;word-break:break-all;color:var(--blue)">${data.cfdi_uuid}</div><div id="qr-container" style="margin-top:12px;display:flex;justify-content:center"></div><div style="font-size:10px;color:var(--text2);margin-top:8px">Verifica en sat.gob.mx</div></div>`;
-
-  }
-
-  c.innerHTML = `<div style="text-align:center;margin-bottom:20px"><div style="font-size:22px;font-weight:800">TurboPOS</div><div style="font-size:12px;color:var(--text2)">${fecha}</div>${esFactura?'<div style="margin-top:6px;padding:4px 10px;background:#1a3a1a;color:#4caf50;border-radius:20px;font-size:11px;font-weight:700;display:inline-block">🔹 FACTURA ELECTRÓNICA</div>':''}</div><div style="border-top:1px dashed var(--border);padding-top:16px;margin-bottom:16px">${items}</div><div style="display:flex;justify-content:space-between;font-weight:700;font-size:16px;padding-top:12px;border-top:1px solid var(--border)"><span>Total</span><span>$${Number(data.total).toLocaleString('es-MX',{minimumFractionDigits:2})}</span></div><div style="font-size:12px;color:var(--text2);margin-top:6px">Pago: ${data.payment_method||'Efectivo'}</div>${cfdiSection}`;
-
+  const folio = (data.sale_id||data.id||'').slice(0,8).toUpperCase() || Math.random().toString(36).slice(2,10).toUpperCase();
+  const negocio   = localStorage.getItem('tp_negocio')   || 'Vecino Copy Center';
+  const direccion = localStorage.getItem('tp_direccion') || '';
+  const telefono  = localStorage.getItem('tp_telefono')  || '';
+  const total   = Number(data.total||0);
+  const base    = total / 1.16;
+  const iva     = total - base;
+  const recibido = parseFloat(document.getElementById('sale-recibido')?.value)||0;
+  const cambio   = recibido > 0 ? Math.max(recibido - total, 0) : 0;
+  const payLabel = {cash:'Efectivo',card:'Tarjeta bancaria',transfer:'Transferencia'}[data.payment_method]||data.payment_method||'Efectivo';
+  const sep = `<div style="border-top:1px dashed var(--border2);margin:10px 0"></div>`;
+  const items = (data.items||[]).map(i=>`
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;gap:8px">
+      <span style="color:var(--text);font-size:13px;flex:1">${i.name}</span>
+      <span style="color:var(--muted);font-size:12px;white-space:nowrap">${i.qty} x $${Number(i.subtotal/i.qty).toFixed(2)}</span>
+      <span style="font-size:13px;font-weight:600;white-space:nowrap">$${Number(i.subtotal).toLocaleString('es-MX',{minimumFractionDigits:2})}</span>
+    </div>`).join('');
+  const cfdiSection = esFactura ? `
+    <div style="margin-top:14px;padding:14px;background:rgba(26,90,26,.18);border:1px solid #2e7d32;border-radius:10px">
+      <div style="font-size:12px;color:#4caf50;font-weight:700;margin-bottom:8px">CFDI 4.0 — Factura Electronica</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em">Folio Fiscal (UUID)</div>
+      <div style="font-size:11px;font-weight:700;word-break:break-all;color:#64b5f6;font-family:var(--mono);line-height:1.6">${data.cfdi_uuid}</div>
+      <div id="qr-container" style="margin-top:12px;display:flex;justify-content:center"></div>
+      <div style="font-size:10px;color:var(--muted);margin-top:8px;text-align:center">Verifica en sat.gob.mx</div>
+    </div>` : '';
+  const cambioRow = (data.payment_method==='cash' && recibido > 0) ? `
+    <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px">
+      <span style="color:var(--muted)">Recibido</span>
+      <span>$${recibido.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px;font-weight:700">
+      <span style="color:var(--green)">Cambio</span>
+      <span style="color:var(--green)">$${cambio.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>
+    </div>` : '';
+  c.innerHTML = `
+    <div style="font-family:var(--mono);max-width:320px;margin:0 auto">
+      <div style="text-align:center;margin-bottom:8px">
+        <div style="font-size:18px;font-weight:800;letter-spacing:.5px">${negocio}</div>
+        ${direccion?`<div style="font-size:11px;color:var(--muted);margin-top:2px">${direccion}</div>`:''}
+        ${telefono?`<div style="font-size:11px;color:var(--muted)">Tel: ${telefono}</div>`:''}
+      </div>
+      ${sep}
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)">
+        <span>${fecha} ${hora}</span>
+        <span>Folio: <b style="color:var(--text)">${folio}</b></span>
+      </div>
+      ${sep}
+      <div>${items}</div>
+      ${sep}
+      <div style="font-size:12px;color:var(--muted)">
+        <div style="display:flex;justify-content:space-between;padding:2px 0">
+          <span>Subtotal (sin IVA)</span><span>$${base.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0">
+          <span>IVA 16%</span><span>$${iva.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-weight:800;font-size:18px;padding:10px 0 4px">
+        <span>TOTAL</span>
+        <span style="color:var(--amber)">$${total.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted)">
+        <div style="display:flex;justify-content:space-between;padding:2px 0">
+          <span>Forma de pago</span>
+          <span style="color:var(--text);font-weight:600">${payLabel}</span>
+        </div>
+        ${cambioRow}
+      </div>
+      ${cfdiSection}
+      ${sep}
+      <div style="text-align:center;font-size:11px;color:var(--muted);line-height:1.8">
+        <div>Gracias por su preferencia</div>
+        ${esFactura?'':'<div style="font-size:10px;margin-top:2px">Este ticket no es un comprobante fiscal</div>'}
+        <div style="font-size:10px;color:var(--border2);margin-top:2px">TurboPOS v10</div>
+      </div>
+    </div>`;
   document.getElementById('ticket-modal').style.display = 'flex';
-
   if (esFactura && data.cfdi_uuid) {
-
     setTimeout(()=>{
-
-      const qr = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent('https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?id='+data.cfdi_uuid)}`;
-
+      const qr = `https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent('https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?id='+data.cfdi_uuid)}`;
       const qrEl = document.getElementById('qr-container');
-
-      if(qrEl) qrEl.innerHTML = `<img src="${qr}" style="border-radius:8px">`;
-
+      if (qrEl) qrEl.innerHTML = `<img src="${qr}" style="border-radius:8px;border:2px solid var(--border)">`;
     }, 200);
-
   }
-
 }
+
 
 function closeTicket() { document.getElementById('ticket-modal').style.display='none'; }
 
 function printTicket() {
-
   if (!currentTicket) return;
-
   const d = currentTicket;
-
-  const fecha = new Date().toLocaleString('es-MX');
-
-  let txt = '================================\n         TURBOPOS\n================================\n'+fecha+'\n--------------------------------\n';
-
-  (d.items||[]).forEach(i=>{ txt+=i.name+' x'+i.qty+'\n  $'+Number(i.subtotal).toFixed(2)+'\n'; });
-
-  txt+='--------------------------------\nTOTAL: $'+Number(d.total).toFixed(2)+'\nPago: '+(d.payment_method||'Efectivo');
-
-  if (d.cfdi_uuid) txt+='\n--------------------------------\nFACTURA ELECTRONICA CFDI 4.0\nUUID:\n'+d.cfdi_uuid+'\nVerificar: sat.gob.mx/verificacfdi\n--------------------------------';
-
-  txt+='\n\n  íGracias por su compra!\n\n';
-
-  const pa=document.getElementById('print-area');
-
-  pa.style.display='block';
-
-  pa.innerHTML='<pre style="font-family:Courier New,monospace;font-size:11px;white-space:pre">'+txt+'</pre>';
-
+  const now = new Date();
+  const fecha = now.toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const hora  = now.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const negocio   = localStorage.getItem('tp_negocio')   || 'Vecino Copy Center';
+  const direccion = localStorage.getItem('tp_direccion') || '';
+  const telefono  = localStorage.getItem('tp_telefono')  || '';
+  const total   = Number(d.total||0);
+  const base    = total / 1.16;
+  const iva     = total - base;
+  const recibido = parseFloat(document.getElementById('sale-recibido')?.value)||0;
+  const cambio   = recibido > 0 ? Math.max(recibido - total, 0) : 0;
+  const folio    = (d.sale_id||d.id||'').slice(0,8).toUpperCase();
+  const payLabel = {cash:'Efectivo',card:'Tarjeta',transfer:'Transferencia'}[d.payment_method]||d.payment_method||'Efectivo';
+  const W = 32;
+  const Cn = s=>{ s=String(s); const p=Math.max(0,Math.floor((W-s.length)/2)); return ' '.repeat(p)+s; };
+  const Rn = (l,r)=>{ const g=W-String(l).length-String(r).length; return String(l)+' '.repeat(Math.max(1,g))+String(r); };
+  const LL = '--------------------------------';
+  let rows = [];
+  rows.push('================================');
+  rows.push(Cn(negocio));
+  if (direccion) rows.push(Cn(direccion));
+  if (telefono)  rows.push(Cn('Tel: '+telefono));
+  rows.push('================================');
+  rows.push(fecha+' '+hora);
+  if (folio) rows.push('Folio: '+folio);
+  rows.push(LL);
+  (d.items||[]).forEach(i=>{
+    rows.push(i.name);
+    rows.push(Rn('  '+i.qty+' x $'+(i.subtotal/i.qty).toFixed(2),'$'+Number(i.subtotal).toFixed(2)));
+  });
+  rows.push(LL);
+  rows.push(Rn('Subtotal (sin IVA)','$'+base.toFixed(2)));
+  rows.push(Rn('IVA 16%','$'+iva.toFixed(2)));
+  rows.push('================================');
+  rows.push(Rn('TOTAL','$'+total.toFixed(2)));
+  rows.push('================================');
+  rows.push(Rn('Forma de pago',payLabel));
+  if (d.payment_method==='cash' && recibido > 0) {
+    rows.push(Rn('Recibido','$'+recibido.toFixed(2)));
+    rows.push(Rn('CAMBIO','$'+cambio.toFixed(2)));
+  }
+  if (d.cfdi_uuid) {
+    rows.push(LL);
+    rows.push(Cn('FACTURA ELECTRONICA CFDI 4.0'));
+    rows.push(Cn('UUID:'));
+    rows.push(d.cfdi_uuid);
+    rows.push(Cn('sat.gob.mx/verificacfdi'));
+  }
+  rows.push(LL);
+  rows.push(Cn('Gracias por su preferencia'));
+  if (!d.cfdi_uuid) rows.push(Cn('No es comprobante fiscal'));
+  rows.push(Cn('TurboPOS v10'));
+  rows.push(''); rows.push('');
+  const txt = rows.join('\n');
+  const pa = document.getElementById('print-area');
+  pa.style.display = 'block';
+  pa.innerHTML = '<pre style="font-family:Courier New,monospace;font-size:11px;white-space:pre;line-height:1.4">'+txt+'</pre>';
   window.print();
-
-  setTimeout(()=>{pa.style.display='none';},1000);
-
+  setTimeout(()=>{ pa.style.display='none'; }, 1500);
 }
-
-
 
   // -- CLIENTES --------------------------------------------------
 
