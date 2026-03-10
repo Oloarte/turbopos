@@ -2591,6 +2591,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
               <input type="date" id="corte-fecha-sel" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12px" onchange="loadCorte()">
 
               <button class="btn btn-primary" onclick="loadCorte()" style="font-size:12px">🔄 Actualizar</button>
+              <button class="btn btn-ghost" onclick="exportCortePDF()" style="font-size:12px;border:1px solid var(--border)">📄 Exportar PDF</button>
 
             </div>
 
@@ -4479,6 +4480,139 @@ async function loadTransactions() {
 
 // --- Corte Z -------------------------------------------------
 
+function exportCortePDF() {
+  const negocio   = localStorage.getItem('tp_negocio')   || 'TurboPOS';
+  const direccion = localStorage.getItem('tp_direccion') || '';
+  const telefono  = localStorage.getItem('tp_telefono')  || '';
+  const fecha  = document.getElementById('corte-fecha').textContent || '';
+  const hora   = new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+
+  // Extraer KPIs del DOM
+  const cards = document.getElementById('corte-cards');
+  const kpis  = cards ? cards.querySelectorAll('.corte-card') : [];
+  let kpiRows = '';
+  kpis.forEach(k => {
+    const title = k.querySelector('h3')?.textContent || '';
+    const val   = k.querySelector('.big')?.textContent || '';
+    kpiRows += `<tr><td>${title}</td><td style="text-align:right;font-weight:700">${val}</td></tr>`;
+  });
+
+  // Extraer metodos de pago
+  const methEl = document.getElementById('corte-methods');
+  let methRows = '';
+  if (methEl) {
+    methEl.querySelectorAll('div[style*="margin-bottom:12px"]').forEach(m => {
+      const spans = m.querySelectorAll('span');
+      if (spans.length >= 2) {
+        methRows += `<tr><td>${spans[0].textContent}</td><td style="text-align:right;font-weight:700">${spans[1].textContent}</td></tr>`;
+      }
+    });
+  }
+
+  // Extraer top productos desde corteData global
+  let prodRows = '';
+  if (window._corteData && window._corteData.top_prods) {
+    window._corteData.top_prods.forEach((p, idx) => {
+      prodRows += `<tr>
+        <td style="color:#888">${idx+1}</td>
+        <td>${p.nombre||p.name||'-'}</td>
+        <td style="text-align:right">${p.uds||p.qty||0}</td>
+        <td style="text-align:right;font-weight:700">$${Number(p.total||0).toLocaleString('es-MX',{minimumFractionDigits:2})}</td>
+      </tr>`;
+    });
+  } else {
+    // Fallback DOM — leer spans directos
+    const prodsEl = document.getElementById('corte-top-prods');
+    if (prodsEl) {
+      const rows = prodsEl.querySelectorAll('.corte-prod-row');
+      rows.forEach(row => {
+        const cells = row.querySelectorAll('span,div');
+        if (cells.length >= 4) {
+          prodRows += `<tr>
+            <td style="color:#888">${cells[0].textContent}</td>
+            <td>${cells[1].textContent}</td>
+            <td style="text-align:right">${cells[2].textContent}</td>
+            <td style="text-align:right;font-weight:700">${cells[3].textContent}</td>
+          </tr>`;
+        }
+      });
+    }
+  }
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>Corte Z — ${fecha}</title>
+  <style>
+    @page { size: A4; margin: 20mm 15mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; font-size: 11pt; color: #111; background: #fff; }
+    .header { text-align: center; border-bottom: 3px solid #FFB547; padding-bottom: 14px; margin-bottom: 20px; }
+    .header h1 { font-size: 22pt; font-weight: 900; color: #111; letter-spacing: 1px; }
+    .header .sub { font-size: 10pt; color: #555; margin-top: 3px; }
+    .header .badge { display: inline-block; background: #FFB547; color: #000; font-weight: 700; font-size: 9pt; padding: 3px 12px; border-radius: 20px; margin-top: 6px; }
+    .section { margin-bottom: 20px; }
+    .section h2 { font-size: 10pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #777; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px; }
+    table { width: 100%; border-collapse: collapse; }
+    table td { padding: 7px 8px; font-size: 10.5pt; border-bottom: 1px solid #f0f0f0; }
+    table tr:last-child td { border-bottom: none; }
+    table tr.total td { font-size: 13pt; font-weight: 900; background: #fff9ee; border-top: 2px solid #FFB547; }
+    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .kpi-box { border: 1px solid #eee; border-radius: 8px; padding: 12px 14px; }
+    .kpi-box .label { font-size: 8.5pt; color: #888; text-transform: uppercase; letter-spacing: .5px; }
+    .kpi-box .val { font-size: 16pt; font-weight: 900; color: #111; margin-top: 3px; }
+    .kpi-box .val.amber { color: #e6a000; }
+    .kpi-box .val.green { color: #2e7d32; }
+    .kpi-box .val.blue  { color: #1565c0; }
+    .footer { text-align: center; font-size: 8.5pt; color: #aaa; border-top: 1px solid #eee; padding-top: 12px; margin-top: 24px; }
+    .logo { font-size: 9pt; font-weight: 700; color: #FFB547; letter-spacing: 1px; }
+  </style></head><body>
+
+  <div class="header">
+    <h1>${negocio}</h1>
+    ${direccion ? `<div class="sub">${direccion}</div>` : ''}
+    ${telefono  ? `<div class="sub">Tel: ${telefono}</div>` : ''}
+    <div class="badge">CORTE Z</div>
+    <div class="sub" style="margin-top:6px">${fecha} &nbsp;·&nbsp; Generado: ${hora}</div>
+  </div>
+
+  <div class="section">
+    <h2>Resumen del día</h2>
+    <table>
+      ${kpiRows}
+    </table>
+  </div>
+
+  ${methRows ? `<div class="section">
+    <h2>Métodos de pago</h2>
+    <table>${methRows}</table>
+  </div>` : ''}
+
+  ${prodRows ? `<div class="section">
+    <h2>Top productos del día</h2>
+    <table>
+      <tr style="background:#f9f9f9">
+        <td style="font-weight:700;font-size:9pt;color:#777;text-transform:uppercase">#</td>
+        <td style="font-weight:700;font-size:9pt;color:#777;text-transform:uppercase">Producto</td>
+        <td style="font-weight:700;font-size:9pt;color:#777;text-transform:uppercase;text-align:right">Uds.</td>
+        <td style="font-weight:700;font-size:9pt;color:#777;text-transform:uppercase;text-align:right">Total</td>
+      </tr>
+      ${prodRows}
+    </table>
+  </div>` : ''}
+
+  <div class="footer">
+    <span class="logo">TurboPOS v10</span> &nbsp;·&nbsp; Documento generado automáticamente &nbsp;·&nbsp; Este documento no es un comprobante fiscal
+  </div>
+
+  </body></html>`;
+
+  const win = window.open('','_blank','width=800,height=900');
+  if (!win) { toast('Permite ventanas emergentes para exportar PDF','error'); return; }
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(()=>{ win.print(); }, 600);
+}
+
 async function loadCorte() {
 
   try {
@@ -4492,6 +4626,8 @@ async function loadCorte() {
     const res = await apiFetch(url); if(!res.ok) return;
 
     const d = await res.json();
+
+    window._corteData = d; // cache para exportPDF
 
     document.getElementById('corte-fecha').textContent = 'Corte del '+(d.fecha||'');
 
@@ -4507,7 +4643,7 @@ async function loadCorte() {
 
       `<div class="corte-card"><h3>Transacciones</h3><div class="big">${d.total_transacciones||0}</div></div>` +
 
-      `<div class="corte-card"><h3>Ticket promedio</h3><div class="big" style="color:var(--green)">$${ticket.toLocaleString('es-MX',{minimumFractionDigits:2})}</div></div>` +
+      `<div class="corte-card"><h3>Ticket promedio</h3><div class="big" style="color:var(--green)">$${Number(ticket).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>` +
 
       `<div class="corte-card"><h3>CFDIs timbrados</h3><div class="big" style="color:var(--blue)">${d.total_timbradas||0}</div></div>` +
 
