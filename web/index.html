@@ -2595,6 +2595,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
               <button class="btn btn-primary" onclick="loadCorte()" style="font-size:12px">🔄 Actualizar</button>
               <button class="btn btn-ghost" onclick="exportCortePDF()" style="font-size:12px;border:1px solid var(--border)">📄 Exportar PDF</button>
+<button class="btn" onclick="abrirCierreTurno()" style="font-size:12px;background:var(--amber);color:#000;border:none;padding:7px 14px;border-radius:8px;font-weight:700;cursor:pointer">&#x1F512; Cerrar Turno</button>
 
             </div>
 
@@ -4897,7 +4898,58 @@ function exportCortePDF() {
     <span class="logo">TurboPOS v10</span> &nbsp;·&nbsp; Documento generado automáticamente &nbsp;·&nbsp; Este documento no es un comprobante fiscal
   </div>
 
-  </body></html>`;
+  
+<!-- Modal Cierre de Turno -->
+<div id="turno-modal" style="display:none;position:fixed;inset:0;background:rgba(8,12,20,.88);backdrop-filter:blur(4px);z-index:3000;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.6)">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:16px;font-weight:800">&#x1F512; Cierre de Turno</div>
+        <div style="font-size:11px;color:var(--muted)" id="turno-fecha-lbl"></div>
+      </div>
+      <button onclick="cerrarTurnoModal()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer">&#x2715;</button>
+    </div>
+    <div style="padding:24px;display:flex;flex-direction:column;gap:16px">
+
+      <!-- Resumen del dia -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="turno-kpis"></div>
+
+      <!-- Cajero -->
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Cajero responsable</label>
+        <input id="turno-cajero" class="cfg-input" placeholder="Nombre del cajero" style="width:100%">
+      </div>
+
+      <!-- Observaciones -->
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Observaciones</label>
+        <textarea id="turno-obs" class="cfg-input" rows="2" placeholder="Notas del turno..." style="width:100%;resize:none;font-family:var(--font)"></textarea>
+      </div>
+
+      <!-- Firma digital -->
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Firma del responsable</label>
+          <button onclick="limpiarFirma()" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:underline">Limpiar</button>
+        </div>
+        <canvas id="firma-canvas" width="468" height="140"
+          style="background:#0d1117;border:1px solid var(--border);border-radius:8px;cursor:crosshair;touch-action:none;width:100%"
+          onmousedown="firmaStart(event)" onmousemove="firmaMove(event)" onmouseup="firmaEnd()"
+          onmouseleave="firmaEnd()" ontouchstart="firmaTouch(event)" ontouchmove="firmaTouch(event)"
+          ontouchend="firmaEnd()"></canvas>
+        <div style="font-size:10px;color:var(--muted);text-align:center">Firma con mouse o touch</div>
+      </div>
+
+      <!-- Botones -->
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button onclick="cerrarTurnoModal()" style="flex:1;padding:11px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);cursor:pointer;font-weight:600">Cancelar</button>
+        <button onclick="guardarCierreTurno()" style="flex:2;padding:11px;border-radius:8px;background:var(--amber);border:none;color:#000;cursor:pointer;font-weight:800;font-size:14px">&#x1F4BE; Guardar y cerrar turno</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body></html>`;
 
   const win = window.open('','_blank','width=800,height=900');
   if (!win) { toast('Permite ventanas emergentes para exportar PDF','error'); return; }
@@ -5787,7 +5839,58 @@ function exportReportePDF() {
   ${prodRows?`<h2>Top productos</h2>
   <table><tr class="hdr"><td>#</td><td>Producto</td><td style="text-align:right">Uds.</td><td style="text-align:right">Total</td></tr>${prodRows}</table>`:''}
   <div class="footer">TurboPOS v10 &nbsp;·&nbsp; Documento generado automáticamente &nbsp;·&nbsp; Este reporte no es un comprobante fiscal</div>
-  </body></html>`;
+  
+<!-- Modal Cierre de Turno -->
+<div id="turno-modal" style="display:none;position:fixed;inset:0;background:rgba(8,12,20,.88);backdrop-filter:blur(4px);z-index:3000;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.6)">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:16px;font-weight:800">&#x1F512; Cierre de Turno</div>
+        <div style="font-size:11px;color:var(--muted)" id="turno-fecha-lbl"></div>
+      </div>
+      <button onclick="cerrarTurnoModal()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer">&#x2715;</button>
+    </div>
+    <div style="padding:24px;display:flex;flex-direction:column;gap:16px">
+
+      <!-- Resumen del dia -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="turno-kpis"></div>
+
+      <!-- Cajero -->
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Cajero responsable</label>
+        <input id="turno-cajero" class="cfg-input" placeholder="Nombre del cajero" style="width:100%">
+      </div>
+
+      <!-- Observaciones -->
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Observaciones</label>
+        <textarea id="turno-obs" class="cfg-input" rows="2" placeholder="Notas del turno..." style="width:100%;resize:none;font-family:var(--font)"></textarea>
+      </div>
+
+      <!-- Firma digital -->
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Firma del responsable</label>
+          <button onclick="limpiarFirma()" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:underline">Limpiar</button>
+        </div>
+        <canvas id="firma-canvas" width="468" height="140"
+          style="background:#0d1117;border:1px solid var(--border);border-radius:8px;cursor:crosshair;touch-action:none;width:100%"
+          onmousedown="firmaStart(event)" onmousemove="firmaMove(event)" onmouseup="firmaEnd()"
+          onmouseleave="firmaEnd()" ontouchstart="firmaTouch(event)" ontouchmove="firmaTouch(event)"
+          ontouchend="firmaEnd()"></canvas>
+        <div style="font-size:10px;color:var(--muted);text-align:center">Firma con mouse o touch</div>
+      </div>
+
+      <!-- Botones -->
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button onclick="cerrarTurnoModal()" style="flex:1;padding:11px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);cursor:pointer;font-weight:600">Cancelar</button>
+        <button onclick="guardarCierreTurno()" style="flex:2;padding:11px;border-radius:8px;background:var(--amber);border:none;color:#000;cursor:pointer;font-weight:800;font-size:14px">&#x1F4BE; Guardar y cerrar turno</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body></html>`;
 
   const win=window.open('','_blank','width=820,height:920');
   if(!win){toast('Permite ventanas emergentes para exportar PDF','error');return;}
@@ -6759,6 +6862,141 @@ function initMobileUI() {
 
 
 
+
+// ── CIERRE DE TURNO ──────────────────────────────────────────────────────────
+let firmaDrawing = false;
+let firmaLastX = 0, firmaLastY = 0;
+
+function abrirCierreTurno() {
+  // Asegurar que _corteData este disponible
+  if (!window._corteData) {
+    loadCorte().then(() => _abrirCierreTurnoModal());
+  } else {
+    _abrirCierreTurnoModal();
+  }
+}
+
+function _abrirCierreTurnoModal() {
+  const modal = document.getElementById('turno-modal');
+  modal.style.display = 'flex';
+  document.getElementById('turno-fecha-lbl').textContent =
+    new Date().toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const kpis = document.getElementById('turno-kpis');
+  if (window._corteData) {
+    const d = window._corteData;
+    kpis.innerHTML = [
+      ['Ventas del dia', '$'+(d.total||0).toLocaleString('es-MX',{minimumFractionDigits:2})],
+      ['Transacciones', d.count||0],
+      ['Ticket promedio', '$'+((d.total||0)/(d.count||1)).toLocaleString('es-MX',{minimumFractionDigits:2})],
+      ['Productos vendidos', d.items||0]
+    ].map(([l,v])=>`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px"><div style="font-size:18px;font-weight:800;color:var(--amber)">${v}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">${l}</div></div>`).join('');
+  }
+  setTimeout(() => {
+    const canvas = document.getElementById('firma-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.strokeStyle = '#FFB547';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+  }, 100);
+}
+
+function cerrarTurnoModal() {
+  document.getElementById('turno-modal').style.display = 'none';
+}
+
+function limpiarFirma() {
+  const canvas = document.getElementById('firma-canvas');
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function firmaCoords(e, canvas) {
+  const r = canvas.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * (canvas.width/r.width), y: (e.clientY - r.top) * (canvas.height/r.height) };
+}
+
+function firmaStart(e) {
+  firmaDrawing = true;
+  const canvas = document.getElementById('firma-canvas');
+  const {x,y} = firmaCoords(e, canvas);
+  firmaLastX = x; firmaLastY = y;
+  const ctx = canvas.getContext('2d');
+  ctx.beginPath(); ctx.arc(x,y,1.2,0,Math.PI*2);
+  ctx.fillStyle='#FFB547'; ctx.fill();
+}
+
+function firmaMove(e) {
+  if (!firmaDrawing) return;
+  e.preventDefault();
+  const canvas = document.getElementById('firma-canvas');
+  const ctx = canvas.getContext('2d');
+  const {x,y} = firmaCoords(e, canvas);
+  ctx.beginPath(); ctx.moveTo(firmaLastX,firmaLastY); ctx.lineTo(x,y); ctx.stroke();
+  firmaLastX=x; firmaLastY=y;
+}
+
+function firmaEnd() { firmaDrawing = false; }
+
+function firmaTouch(e) {
+  e.preventDefault();
+  const t = e.touches[0]; if (!t) return;
+  const canvas = document.getElementById('firma-canvas');
+  const r = canvas.getBoundingClientRect();
+  const x = (t.clientX-r.left)*(canvas.width/r.width);
+  const y = (t.clientY-r.top)*(canvas.height/r.height);
+  if (e.type==='touchstart') { firmaDrawing=true; firmaLastX=x; firmaLastY=y; }
+  else if (e.type==='touchmove' && firmaDrawing) {
+    const ctx = canvas.getContext('2d');
+    ctx.beginPath(); ctx.moveTo(firmaLastX,firmaLastY); ctx.lineTo(x,y); ctx.stroke();
+    firmaLastX=x; firmaLastY=y;
+  }
+}
+
+async function guardarCierreTurno() {
+  const cajero = document.getElementById('turno-cajero').value.trim();
+  const obs = document.getElementById('turno-obs').value.trim();
+  const canvas = document.getElementById('firma-canvas');
+  if (!cajero) { toast('Ingresa el nombre del cajero','error'); return; }
+  const data = canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
+  if (!data.some(v=>v!==0)) { toast('Se requiere firma del responsable','error'); return; }
+  const firmaImg = canvas.toDataURL('image/png');
+  const fecha = new Date().toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const hora = new Date().toLocaleTimeString('es-MX');
+  const d = window._corteData || {};
+  const negocio = localStorage.getItem('tp_negocio') || 'TurboPOS';
+  const printWin = window.open('','_blank','width=700,height=900');
+  printWin.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Cierre de Turno</title>
+  <style>body{font-family:Arial,sans-serif;padding:40px;color:#111;max-width:600px;margin:0 auto}
+  h1{font-size:22px;margin-bottom:4px}.sub{color:#666;font-size:13px;margin-bottom:24px}
+  .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+  .kpi{background:#f5f5f5;border-radius:8px;padding:12px 16px}
+  .kpi-val{font-size:22px;font-weight:800;color:#d97706}.kpi-lbl{font-size:11px;color:#666;margin-top:2px}
+  .st{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#999;margin-bottom:6px}
+  .firma-box{border:1px solid #ddd;border-radius:8px;padding:4px;margin-top:6px}
+  .firma-box img{width:100%}.footer{margin-top:32px;padding-top:16px;border-top:1px solid #eee;font-size:11px;color:#999;text-align:center}
+  </style></head><body>
+  <h1>&#x1F512; Cierre de Turno</h1>
+  <div class="sub">${negocio} &mdash; ${fecha} &mdash; ${hora}</div>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-val">$${(d.total||0).toLocaleString('es-MX',{minimumFractionDigits:2})}</div><div class="kpi-lbl">Ventas del dia</div></div>
+    <div class="kpi"><div class="kpi-val">${d.count||0}</div><div class="kpi-lbl">Transacciones</div></div>
+    <div class="kpi"><div class="kpi-val">$${((d.total||0)/(d.count||1)).toLocaleString('es-MX',{minimumFractionDigits:2})}</div><div class="kpi-lbl">Ticket promedio</div></div>
+    <div class="kpi"><div class="kpi-val">${d.items||0}</div><div class="kpi-lbl">Productos vendidos</div></div>
+  </div>
+  <div style="margin-bottom:16px"><div class="st">Cajero responsable</div><strong>${cajero}</strong></div>
+  ${obs?'<div style="margin-bottom:16px"><div class="st">Observaciones</div>'+obs+'</div>':''}
+  <div><div class="st">Firma digital</div><div class="firma-box"><img src="${firmaImg}"></div></div>
+  <div class="footer">Generado por TurboPOS &mdash; ${new Date().toISOString()}</div>
+  </body></html>`);
+  printWin.document.close();
+  setTimeout(()=>{ printWin.print(); }, 600);
+  cerrarTurnoModal();
+  toast('Turno cerrado — PDF generado','success');
+  const cierres = JSON.parse(localStorage.getItem('tp_cierres')||'[]');
+  cierres.push({fecha,hora,cajero,obs,total:d.total||0,count:d.count||0});
+  localStorage.setItem('tp_cierres', JSON.stringify(cierres.slice(-30)));
+}
 </script>
 
 <!-- -- Modal Ticket ------------------------------------------------ -->
@@ -7041,6 +7279,57 @@ or:var(--border);box-shadow:none;width:100%}
   }
   window._initPush = initPushNotifications;
 </script>
+
+
+<!-- Modal Cierre de Turno -->
+<div id="turno-modal" style="display:none;position:fixed;inset:0;background:rgba(8,12,20,.88);backdrop-filter:blur(4px);z-index:3000;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.6)">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:16px;font-weight:800">&#x1F512; Cierre de Turno</div>
+        <div style="font-size:11px;color:var(--muted)" id="turno-fecha-lbl"></div>
+      </div>
+      <button onclick="cerrarTurnoModal()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer">&#x2715;</button>
+    </div>
+    <div style="padding:24px;display:flex;flex-direction:column;gap:16px">
+
+      <!-- Resumen del dia -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="turno-kpis"></div>
+
+      <!-- Cajero -->
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Cajero responsable</label>
+        <input id="turno-cajero" class="cfg-input" placeholder="Nombre del cajero" style="width:100%">
+      </div>
+
+      <!-- Observaciones -->
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Observaciones</label>
+        <textarea id="turno-obs" class="cfg-input" rows="2" placeholder="Notas del turno..." style="width:100%;resize:none;font-family:var(--font)"></textarea>
+      </div>
+
+      <!-- Firma digital -->
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Firma del responsable</label>
+          <button onclick="limpiarFirma()" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:underline">Limpiar</button>
+        </div>
+        <canvas id="firma-canvas" width="468" height="140"
+          style="background:#0d1117;border:1px solid var(--border);border-radius:8px;cursor:crosshair;touch-action:none;width:100%"
+          onmousedown="firmaStart(event)" onmousemove="firmaMove(event)" onmouseup="firmaEnd()"
+          onmouseleave="firmaEnd()" ontouchstart="firmaTouch(event)" ontouchmove="firmaTouch(event)"
+          ontouchend="firmaEnd()"></canvas>
+        <div style="font-size:10px;color:var(--muted);text-align:center">Firma con mouse o touch</div>
+      </div>
+
+      <!-- Botones -->
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button onclick="cerrarTurnoModal()" style="flex:1;padding:11px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);cursor:pointer;font-weight:600">Cancelar</button>
+        <button onclick="guardarCierreTurno()" style="flex:2;padding:11px;border-radius:8px;background:var(--amber);border:none;color:#000;cursor:pointer;font-weight:800;font-size:14px">&#x1F4BE; Guardar y cerrar turno</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
