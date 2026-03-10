@@ -2328,6 +2328,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
       <div class="clock-display" id="clock">--:--</div>
 
+      <div id="offline-badge" style="display:none;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;color:#fff;cursor:pointer;margin-right:6px" onclick="syncOfflineQueue()" title="Click para sincronizar"></div>
       <button class="logout-btn" onclick="logout()">Salir</button>
 
     </header>
@@ -3682,18 +3683,118 @@ function logout() {
 
 
 
+// OFFLINE ENGINE
+const DB_NAME = 'turbopos_offline';
+const DB_VER  = 1;
+let offlineDB  = null;
+let isSyncing  = false;
+
+function initOfflineDB() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open(DB_NAME, DB_VER);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('sales_queue')) {
+        const store = db.createObjectStore('sales_queue', {keyPath:'local_id', autoIncrement:true});
+        store.createIndex('status', 'status', {unique:false});
+      }
+    };
+    req.onsuccess = e => { offlineDB = e.target.result; res(offlineDB); };
+    req.onerror   = e => { console.warn('IndexedDB error', e); res(null); };
+  });
+}
+
+function queueSaleOffline(payload) {
+  return new Promise((res, rej) => {
+    if (!offlineDB) { rej('No DB'); return; }
+    const tx    = offlineDB.transaction('sales_queue','readwrite');
+    const store = tx.objectStore('sales_queue');
+    const req   = store.add({...payload, status:'pending', queued_at: new Date().toISOString()});
+    req.onsuccess = () => res(req.result);
+    req.onerror   = () => rej(req.error);
+  });
+}
+
+function getPendingSales() {
+  return new Promise((res) => {
+    if (!offlineDB) { res([]); return; }
+    const tx    = offlineDB.transaction('sales_queue','readonly');
+    const store = tx.objectStore('sales_queue');
+    const idx   = store.index('status');
+    const req   = idx.getAll('pending');
+    req.onsuccess = () => res(req.result || []);
+    req.onerror   = () => res([]);
+  });
+}
+
+function markSaleSynced(local_id) {
+  return new Promise((res) => {
+    if (!offlineDB) { res(); return; }
+    const tx    = offlineDB.transaction('sales_queue','readwrite');
+    const store = tx.objectStore('sales_queue');
+    const getReq = store.get(local_id);
+    getReq.onsuccess = () => {
+      const rec = getReq.result;
+      if (rec) { rec.status = 'synced'; store.put(rec); }
+      res();
+    };
+    getReq.onerror = () => res();
+  });
+}
+
+async function syncOfflineQueue() {
+  if (isSyncing || !navigator.onLine) return;
+  const pending = await getPendingSales();
+  if (!pending.length) return;
+  isSyncing = true;
+  updateOfflineBadge();
+  let synced = 0;
+  for (const sale of pending) {
+    try {
+      const {local_id, status, queued_at, url, body} = sale;
+      const res = await apiFetch(url, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(body)
+      });
+      if (res.ok) { await markSaleSynced(local_id); synced++; }
+    } catch(e) { break; }
+  }
+  isSyncing = false;
+  if (synced > 0) { toast('Sincronizadas '+synced+' venta(s) offline','success'); loadDashboard(); }
+  updateOfflineBadge();
+}
+
+async function updateOfflineBadge() {
+  const badge = document.getElementById('offline-badge');
+  if (!badge) return;
+  const pending = await getPendingSales();
+  const online  = navigator.onLine;
+  if (!online) {
+    badge.style.display = 'flex';
+    badge.style.background = '#c62828';
+    badge.textContent = 'Sin conexion';
+  } else if (pending.length > 0) {
+    badge.style.display = 'flex';
+    badge.style.background = '#e65100';
+    badge.textContent = pending.length+' pendiente'+(pending.length>1?'s':'');
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+window.addEventListener('online',  () => { updateOfflineBadge(); setTimeout(syncOfflineQueue, 1000); });
+window.addEventListener('offline', () => { updateOfflineBadge(); });
+
+initOfflineDB().then(() => { updateOfflineBadge(); setTimeout(syncOfflineQueue, 3000); });
+
+// apiFetch
 async function apiFetch(url, opts={}) {
-
   opts.headers = opts.headers || {};
-
   if (authToken) opts.headers['Authorization'] = 'Bearer ' + authToken;
-
   const res = await fetch(url, opts);
-
-  if (res.status === 401) { logout(); throw new Error('Sesión expirada'); }
-
+  if (res.status === 401) { logout(); throw new Error('Sesion expirada'); }
   return res;
-
 }
 
 
@@ -4247,6 +4348,36 @@ async function confirmSale() {
       return;
     }
   }
+  // Modo offline
+  if (!navigator.onLine) {
+    const payload = {
+      url: API+'/cobrar',
+      body: {
+        total: cart.reduce((s,i)=>s+i.subtotal,0),
+        payment_method: payment,
+        items: cart.map(i=>({product_id:i.id,name:i.name,quantity:i.qty,unit_price:i.price,subtotal:i.subtotal}))
+      }
+    };
+    try {
+      const local_id = await queueSaleOffline(payload);
+      const offlineTicket = {
+        sale_id: 'OFF-'+String(local_id).padStart(4,'0'),
+        total: payload.body.total,
+        items: cart.map(i=>({name:i.name,qty:i.qty,subtotal:i.subtotal})),
+        payment_method: payment,
+        offline: true
+      };
+      closeSaleModal();
+      toast('Venta guardada offline — se sincronizara al reconectar','info');
+      showTicket(offlineTicket);
+      cart=[]; renderCart();
+      updateOfflineBadge();
+    } catch(e) {
+      toast('Error al guardar offline','error');
+    }
+    return;
+  }
+
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Procesando...';
 
   const body = { total, payment_method:payment, items:cart.map(i=>({product_id:i.id,name:i.name,quantity:i.qty,unit_price:i.price,subtotal:i.subtotal})) };
@@ -5021,24 +5152,25 @@ async function confirmDelete() {
 
 
 async function loadProductsFromDB() {
-
   try {
-
-    const res = await apiFetch(API+'/products'); if(!res.ok) return;
-
-    const db = await res.json();
-
-    if (db&&db.length>0) {
-
-      products = db.map(p=>({id:p.id,name:p.name,price:p.price,icon:catIcons[p.category]||'📦',cat:p.category||'General',sku:p.sku||''}));
-
-      renderProducts(); renderCategories();
-
+    if (!navigator.onLine) {
+      const cached = localStorage.getItem('tp_products_cache');
+      if (cached) { products = JSON.parse(cached); renderProducts(); renderCategories(); toast('Modo offline — catalogo desde cache','info'); }
+      return;
     }
-
-  } catch(e){}
-
+    const res = await apiFetch(API+'/products'); if(!res.ok) return;
+    const db = await res.json();
+    if (db&&db.length>0) {
+      products = db.map(p=>({id:p.id,name:p.name,price:p.price,icon:catIcons[p.category]||'📦',cat:p.category||'General',sku:p.sku||'',category:p.category||'General'}));
+      try { localStorage.setItem('tp_products_cache', JSON.stringify(products)); } catch(e){}
+      renderProducts(); renderCategories();
+    }
+  } catch(e){
+    const cached = localStorage.getItem('tp_products_cache');
+    if (cached) { products = JSON.parse(cached); renderProducts(); renderCategories(); toast('Sin conexion — usando catalogo guardado','info'); }
+  }
 }
+
 
 
 
