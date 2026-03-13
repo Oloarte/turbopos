@@ -3104,7 +3104,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
               <div class="cfg-card-info"><div class="cfg-card-title">Negocio</div><div class="cfg-card-sub">Nombre, RFC, dirección fiscal</div></div>
 
-              <div class="cfg-chevron" id="chv-negocio">?</div>
+              <div class="cfg-chevron" id="chv-negocio">&#9654;</div>
 
             </div>
 
@@ -3141,7 +3141,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
               <div class="cfg-card-info"><div class="cfg-card-title">Certificado SAT (CSD)</div><div class="cfg-card-sub" id="csd-status-sub">Verifica tu certificado para timbrar</div></div>
 
-              <div class="cfg-chevron" id="chv-csd">?</div>
+              <div class="cfg-chevron" id="chv-csd">&#9654;</div>
 
             </div>
 
@@ -3193,7 +3193,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
               <div class="cfg-card-info"><div class="cfg-card-title">Suscripción</div><div class="cfg-card-sub" id="subs-sub">Plan activo</div></div>
 
-              <div class="cfg-chevron" id="chv-subs">?</div>
+              <div class="cfg-chevron" id="chv-subs">&#9654;</div>
 
             </div>
 
@@ -3223,7 +3223,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
               <div class="cfg-card-info"><div class="cfg-card-title">Acerca de TurboPOS</div><div class="cfg-card-sub">Versión 1.0.0 · Soporte</div></div>
 
-              <div class="cfg-chevron" id="chv-about">?</div>
+              <div class="cfg-chevron" id="chv-about">&#9654;</div>
 
             </div>
 
@@ -3359,7 +3359,14 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
         <input type="file" id="prod-foto-input" accept="image/*" style="display:none">
       </div>
 
-      <div class="fg"><label>Código de barras</label><input type="text" id="prod-barcode" placeholder="7501234567890"></div>
+      <div class="fg">
+        <label>&#128379; C&#243;digo de barras</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="prod-barcode" placeholder="7501234567890" style="flex:1">
+          <button type="button" onclick="toggleScannerCatalog()" title="Escanear"
+            style="padding:8px 12px;border-radius:8px;background:var(--amber);border:none;color:#000;font-size:16px;cursor:pointer">&#x1F4F7;</button>
+        </div>
+      </div>
 
     </div>
 
@@ -4134,6 +4141,16 @@ function startBarcodeDetection(video) {
 }
 
 function handleScannedCode(code) {
+  // Modo catalogo ? llenar campo barcode
+  if (window._scannerMode === 'catalog') {
+    closeScanner();
+    window._scannerMode = null;
+    const field = document.getElementById('prod-barcode');
+    if (field) { field.value = code; toast('&#x2713; Codigo escaneado: '+code,'success'); }
+    return;
+  }
+  // Modo POS ? buscar y agregar al carrito
+
   // Buscar producto por barcode o SKU
   const prod = products.find(p =>
     (p.barcode && p.barcode === code) ||
@@ -4531,6 +4548,55 @@ function resetFotoUpload() {
   const input = document.getElementById('prod-foto-input');
   if (preview) { preview.src=''; preview.style.display='none'; }
   if (input) input.value='';
+}
+
+
+// ?? SCANNER CATALOGO ?????????????????????????????????????????????????????????
+async function toggleScannerCatalog() {
+  if (scannerActive) { closeScanner(); return; }
+  let modal = document.getElementById('scanner-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'scanner-modal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(8,12,20,.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px';
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `
+    <div style="color:var(--text);font-size:15px;font-weight:700">Escanea el producto</div>
+    <div style="position:relative;width:300px;height:220px;border-radius:12px;overflow:hidden;border:2px solid var(--amber)">
+      <video id="scanner-video" autoplay playsinline style="width:100%;height:100%;object-fit:cover"></video>
+      <div style="position:absolute;inset:0;border:2px solid var(--amber);border-radius:10px;pointer-events:none">
+        <div style="position:absolute;top:50%;left:10%;right:10%;height:2px;background:rgba(255,181,71,.6);transform:translateY(-50%)"></div>
+      </div>
+    </div>
+    <div id="scan-result" style="font-size:13px;color:var(--muted);font-family:var(--mono)">Buscando...</div>
+    <div style="display:flex;gap:12px">
+      <button onclick="closeScanner()" style="padding:10px 24px;border-radius:8px;background:var(--surface2);border:1px solid rgba(255,255,255,.15);color:var(--text);cursor:pointer">Cancelar</button>
+      <button onclick="scanManualCatalog()" style="padding:10px 24px;border-radius:8px;background:var(--amber);border:none;color:#000;font-weight:700;cursor:pointer">Ingresar manual</button>
+    </div>`;
+  modal.style.display = 'flex';
+  scannerActive = true;
+  window._scannerMode = 'catalog';
+  try {
+    scannerStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: {ideal:1280}, height: {ideal:720} }
+    });
+    const video = document.getElementById('scanner-video');
+    video.srcObject = scannerStream;
+    await video.play();
+    startBarcodeDetection(video);
+  } catch(e) {
+    document.getElementById('scan-result').textContent = 'Sin acceso a camara ? usa ingreso manual';
+  }
+}
+
+function scanManualCatalog() {
+  const code = prompt('Ingresa el c?digo de barras:');
+  if (code) {
+    closeScanner();
+    const field = document.getElementById('prod-barcode');
+    if (field) field.value = code.trim();
+  }
 }
 
 function cobrar() {
@@ -7037,29 +7103,32 @@ let firmaDrawing = false;
 let firmaLastX = 0, firmaLastY = 0;
 
 function abrirCierreTurno() {
-  // Asegurar que _corteData este disponible
-  if (!window._corteData) {
-    loadCorte().then(() => _abrirCierreTurnoModal());
-  } else {
-    _abrirCierreTurnoModal();
-  }
+  // Cargar datos del dia de hoy siempre frescos
+  const hoy = new Date().toISOString().slice(0,10);
+  const sel = document.getElementById('corte-fecha-sel');
+  if (sel) sel.value = hoy;
+  loadCorte().then(() => _abrirCierreTurnoModal()).catch(() => _abrirCierreTurnoModal());
 }
 
+
 function _abrirCierreTurnoModal() {
+  if (!window._corteData) { loadCorte().then(_abrirCierreTurnoModal); return; }
   const modal = document.getElementById('turno-modal');
   modal.style.display = 'flex';
   document.getElementById('turno-fecha-lbl').textContent =
     new Date().toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   const kpis = document.getElementById('turno-kpis');
-  if (window._corteData) {
-    const d = window._corteData;
-    kpis.innerHTML = [
-      ['Ventas del dia', '$'+(d.total||0).toLocaleString('es-MX',{minimumFractionDigits:2})],
-      ['Transacciones', d.count||0],
-      ['Ticket promedio', '$'+((d.total||0)/(d.count||1)).toLocaleString('es-MX',{minimumFractionDigits:2})],
-      ['Productos vendidos', d.items||0]
-    ].map(([l,v])=>`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px"><div style="font-size:18px;font-weight:800;color:var(--amber)">${v}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">${l}</div></div>`).join('');
-  }
+  const d = window._corteData || {};
+  const total = d.total_neto || d.total || 0;
+  const txs   = d.total_transacciones || d.count || 0;
+  const items = d.total_items || d.items || 0;
+  const ticket = txs > 0 ? total / txs : 0;
+  kpis.innerHTML = [
+    ['Ventas del dia', '$'+total.toLocaleString('es-MX',{minimumFractionDigits:2})],
+    ['Transacciones', txs],
+    ['Ticket promedio', '$'+ticket.toLocaleString('es-MX',{minimumFractionDigits:2})],
+    ['Productos vendidos', items]
+  ].map(([l,v])=>`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px"><div style="font-size:18px;font-weight:800;color:var(--amber)">${v}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">${l}</div></div>`).join('');
   setTimeout(() => {
     const canvas = document.getElementById('firma-canvas');
     if (!canvas) return;
@@ -7186,7 +7255,7 @@ async function guardarCierreTurno() {
 
     <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px">
 
-      <button onclick="printTicket()" class="btn-primary" style="flex:1">🖨ï¸ Imprimir</button>
+<button onclick="printTicket()" class="btn-primary" style="flex:1">&#x1F5A8; Imprimir</button>
 
       <button onclick="closeTicket()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);cursor:pointer;font-weight:600">Cerrar</button>
 
