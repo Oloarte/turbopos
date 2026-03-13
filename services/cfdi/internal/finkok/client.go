@@ -19,23 +19,39 @@ import (
 )
 
 const (
-	StampEndpoint  = "https://demo-facturacion.finkok.com/servicios/soap/stamp.wsdl"
-	CancelEndpoint = "https://demo-facturacion.finkok.com/servicios/soap/cancel"
+	StampEndpointSandbox = "https://demo-facturacion.finkok.com/servicios/soap/stamp.wsdl"
+	StampEndpointProd    = "https://facturacion.finkok.com/servicios/soap/stamp.wsdl"
+	CancelEndpointSandbox = "https://demo-facturacion.finkok.com/servicios/soap/cancel"
+	CancelEndpointProd    = "https://facturacion.finkok.com/servicios/soap/cancel"
 )
 
 type Client struct {
 	Username   string
 	Password   string
 	Endpoint   string
-	HTTPClient *http.Client
+	CancelEndpoint string
+	HTTPClient     *http.Client
 }
 
-func NewDemoClient(user, pass string) *Client {
+// NewClient crea cliente para produccion Finkok
+func NewClient(username, password string) *Client {
 	return &Client{
-		Username:   user,
-		Password:   pass,
-		Endpoint:   StampEndpoint,
-		HTTPClient: &http.Client{Timeout: 30 * time.Second},
+		Username:       username,
+		Password:       password,
+		Endpoint:       StampEndpointProd,
+		CancelEndpoint: CancelEndpointProd,
+		HTTPClient:     &http.Client{Timeout: 30 * time.Second},
+	}
+}
+
+// NewDemoClient crea cliente para sandbox Finkok
+func NewDemoClient(username, password string) *Client {
+	return &Client{
+		Username:       username,
+		Password:       password,
+		Endpoint:       StampEndpointSandbox,
+		CancelEndpoint: CancelEndpointSandbox,
+		HTTPClient:     &http.Client{Timeout: 30 * time.Second},
 	}
 }
 
@@ -129,7 +145,7 @@ func (c *Client) Cancelar(uuid, rfc, motivo, uuidReemplazo, certB64 string, keyB
    </soapenv:Body>
 </soapenv:Envelope>`, uuidNode, c.Username, c.Password, rfc, certPEMB64, keyPEMB64)
 
-	req, err := http.NewRequest("POST", CancelEndpoint, bytes.NewBufferString(soapBody))
+	req, err := http.NewRequest("POST", c.CancelEndpoint, bytes.NewBufferString(soapBody))
 	if err != nil { return nil, fmt.Errorf("crear request cancelar: %w", err) }
 	req.Header.Set("Content-Type", "text/xml; charset=utf-8")
 	req.Header.Set("SOAPAction", "cancel")

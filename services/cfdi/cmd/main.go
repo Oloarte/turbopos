@@ -62,8 +62,16 @@ func NewCFDIServer() *CFDIServer {
 	if err != nil { log.Fatalf("[CFDI] Error llave: %v", err) }
 
 	s := &CFDIServer{certBase64: cert, certDER: certDER, keyBytes: key}
-	s.pacs[0] = finkok.NewDemoClient(user, pass)
-	s.pacs[1] = finkok.NewDemoClient(user, pass)
+	finkokEnv := getenv("FINKOK_ENV", "sandbox")
+	if finkokEnv == "produccion" {
+		log.Println("[CFDI] Modo PRODUCCION ? Finkok real")
+		s.pacs[0] = finkok.NewClient(user, pass)
+		s.pacs[1] = finkok.NewClient(user, pass)
+	} else {
+		log.Println("[CFDI] Modo SANDBOX ? Finkok demo")
+		s.pacs[0] = finkok.NewDemoClient(user, pass)
+		s.pacs[1] = finkok.NewDemoClient(user, pass)
+	}
 
 	go s.auditLoop()
 	go s.healthCheckLoop()
@@ -234,3 +242,9 @@ func main() {
 	if err := grpcSrv.Serve(lis); err != nil { log.Fatalf("serve: %v", err) }
 }
 
+func getenv(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
