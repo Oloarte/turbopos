@@ -2182,6 +2182,23 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .foto-preview{width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px;display:none;}
 .foto-upload-lbl{font-size:12px;color:rgba(255,255,255,.5);}
 
+
+  .giro-btn {
+    padding: 12px 8px;
+    border-radius: 10px;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    color: var(--text);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    text-align: center;
+    line-height: 1.6;
+  }
+  .giro-btn:hover { border-color: var(--amber); color: var(--amber); }
+  .giro-btn.active { border-color: var(--amber); background: rgba(255,181,71,.12); color: var(--amber); }
+
 </style>
 
 </head>
@@ -2701,7 +2718,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
             <div class="cat-spacer"></div>
 
-            <button class="btn-new" onclick="openProductModal()">+ Nuevo producto</button>
+            <button class="btn-cat-mgr" onclick="openCatModal()" title="Gestionar categorias" style="padding:8px 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);cursor:pointer;font-size:12px;margin-right:8px">&#x1F3F7; Categor&#237;as</button><button class="btn-new" onclick="openProductModal()">+ Nuevo producto</button>
 
           </div>
 
@@ -3214,6 +3231,25 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
             </div>
 
           </div>
+
+<div class="cfg-card" id="cfg-giro">
+<div class="cfg-card-hdr" onclick="toggleCfg('giro')">
+<div class="cfg-card-icon">&#x1F3EA;</div>
+<div class="cfg-card-info"><div class="cfg-card-title">Giro del negocio</div><div class="cfg-card-sub" id="giro-sub">Adapta la interfaz a tu tipo de negocio</div></div>
+<div class="cfg-chevron" id="chv-giro">&#9654;</div>
+</div>
+<div class="cfg-card-body" id="body-giro" style="display:none">
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:4px 0 12px">
+<button onclick="setGiro('copy')"       class="giro-btn" data-giro="copy">&#x1F5A8; Copy Center</button>
+<button onclick="setGiro('restaurant')" class="giro-btn" data-giro="restaurant">&#x1F354; Restaurante</button>
+<button onclick="setGiro('tienda')"     class="giro-btn" data-giro="tienda">&#x1F6D2; Tienda</button>
+<button onclick="setGiro('papeleria')"  class="giro-btn" data-giro="papeleria">&#x270F; Papelar&#237;a</button>
+<button onclick="setGiro('salon')"      class="giro-btn" data-giro="salon">&#x2702; Sal&#243;n</button>
+<button onclick="setGiro('custom')"     class="giro-btn" data-giro="custom">&#x2699; Personalizado</button>
+</div>
+<div style="font-size:11px;color:var(--muted);padding-top:4px">Cambia color, iconos y categor&#237;as sugeridas autom&#225;ticamente.</div>
+</div>
+</div>
 
           <div class="cfg-card">
 
@@ -4251,6 +4287,7 @@ function filterProducts() {
 }
 
 function getCatIcon(cat) {
+  if (window._giroIcons && window._giroIcons[cat]) return window._giroIcons[cat];
   if (!cat) return '📦';
   const c = cat.toLowerCase();
   // Copias e impresion
@@ -4597,6 +4634,183 @@ function scanManualCatalog() {
     const field = document.getElementById('prod-barcode');
     if (field) field.value = code.trim();
   }
+}
+
+
+// ?? GESTIONAR CATEGORIAS ?????????????????????????????????????????????????????
+function openCatModal() {
+  renderCatMgrList();
+  document.getElementById('cat-mgr-modal').style.display = 'flex';
+}
+
+function closeCatModal() {
+  document.getElementById('cat-mgr-modal').style.display = 'none';
+}
+
+function renderCatMgrList() {
+  const cats = [...new Set(allProducts.map(p=>p.category||'General'))].sort();
+  const el = document.getElementById('cat-mgr-list');
+  if (!cats.length) { el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px">Sin categor&#237;as</div>'; return; }
+  el.innerHTML = cats.map(cat => {
+    const count = allProducts.filter(p=>(p.category||'General')===cat).length;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px">
+      <div style="flex:1">
+        <input class="cat-edit-input" data-cat="${cat}" value="${cat}"
+          style="background:transparent;border:none;border-bottom:1px solid transparent;color:var(--text);font-size:13px;font-weight:600;width:100%;outline:none"
+          onfocus="this.style.borderBottomColor='var(--amber)'"
+          onblur="this.style.borderBottomColor='transparent'">
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${count} producto${count!==1?'s':''}</div>
+      </div>
+      <button onclick="renameCat('${cat}')" title="Guardar nombre"
+        style="padding:6px 10px;border-radius:6px;background:var(--surface3);border:1px solid var(--border);color:var(--amber);cursor:pointer;font-size:11px">&#x1F4BE;</button>
+      <button onclick="deleteCat('${cat}')" title="Eliminar"
+        style="padding:6px 10px;border-radius:6px;background:var(--surface3);border:1px solid var(--border);color:var(--red);cursor:pointer;font-size:13px">&#x1F5D1;</button>
+    </div>`;
+  }).join('');
+}
+
+async function addCategory() {
+  const inp = document.getElementById('cat-new-input');
+  const name = inp.value.trim();
+  if (!name) return;
+  // Verificar que no exista
+  const existing = [...new Set(allProducts.map(p=>p.category||'General'))];
+  if (existing.map(c=>c.toLowerCase()).includes(name.toLowerCase())) {
+    toast('Esa categor\u00eda ya existe','error'); return;
+  }
+  // Crear producto temporal invisible para registrar la categoria
+  // En realidad solo la guardamos en localStorage para que aparezca en el filtro
+  let customCats = JSON.parse(localStorage.getItem('turbopos_cats')||'[]');
+  if (!customCats.includes(name)) customCats.push(name);
+  localStorage.setItem('turbopos_cats', JSON.stringify(customCats));
+  inp.value = '';
+  toast('Categor\u00eda "'+name+'" creada','success');
+  renderCatMgrList();
+  updateCategoryFilter();
+}
+
+async function renameCat(oldName) {
+  const inp = document.querySelector(`.cat-edit-input[data-cat="${oldName}"]`);
+  const newName = inp?.value?.trim();
+  if (!newName || newName === oldName) return;
+  // Actualizar todos los productos con esta categoria
+  const prods = allProducts.filter(p=>(p.category||'General')===oldName);
+  let ok = 0;
+  for (const p of prods) {
+    try {
+      const res = await apiFetch(API+'/products/'+p.id, {
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({...p, category: newName})
+      });
+      if (res.ok) ok++;
+    } catch(e) {}
+  }
+  toast(`Renombrado "${oldName}" \u2192 "${newName}" (${ok} productos)`,'success');
+  await loadCatalog();
+  renderCatMgrList();
+}
+
+async function deleteCat(catName) {
+  const prods = allProducts.filter(p=>(p.category||'General')===catName);
+  if (!confirm(`\u00bfMover ${prods.length} producto(s) de "${catName}" a General y eliminar la categor\u00eda?`)) return;
+  for (const p of prods) {
+    try {
+      await apiFetch(API+'/products/'+p.id, {
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({...p, category:'General'})
+      });
+    } catch(e) {}
+  }
+  // Limpiar de localStorage tambien
+  let customCats = JSON.parse(localStorage.getItem('turbopos_cats')||'[]');
+  customCats = customCats.filter(c=>c!==catName);
+  localStorage.setItem('turbopos_cats', JSON.stringify(customCats));
+  toast(`Categor\u00eda "${catName}" eliminada`,'success');
+  await loadCatalog();
+  renderCatMgrList();
+}
+
+
+// ?? GIRO DE NEGOCIO ??????????????????????????????????????????????????????????
+const GIROS = {
+  copy: {
+    label: 'Copy Center',
+    cats: ['Copias','Impresion','Engargolado','Plastificado','Servicios','BEBIDAS','Papeleria'],
+    catIcons: {'Copias':'&#x1F4C4;','Impresion':'&#x1F5A8;','Engargolado':'&#x1F4D2;','Plastificado':'&#x1FAAA;','Servicios':'&#x2699;','BEBIDAS':'&#x1F964;','Papeleria':'&#x270F;'},
+    posLabel: 'Servicio / Producto',
+    accent: '#FFB547'
+  },
+  restaurant: {
+    label: 'Restaurante',
+    cats: ['Entradas','Platos fuertes','Postres','Bebidas','Combos','Para llevar'],
+    catIcons: {'Entradas':'&#x1F957;','Platos fuertes':'&#x1F372;','Postres':'&#x1F370;','Bebidas':'&#x1F964;','Combos':'&#x1F37D;','Para llevar':'&#x1F4E6;'},
+    posLabel: 'Platillo',
+    accent: '#FF6B35'
+  },
+  tienda: {
+    label: 'Tienda / Abarrotes',
+    cats: ['Bebidas','Alimentos','Botanas','Limpieza','Higiene','Varios'],
+    catIcons: {'Bebidas':'&#x1F964;','Alimentos':'&#x1F35E;','Botanas':'&#x1F37F;','Limpieza':'&#x1F9F9;','Higiene':'&#x1F9F4;','Varios':'&#x1F6CD;'},
+    posLabel: 'Producto',
+    accent: '#22c55e'
+  },
+  papeleria: {
+    label: 'Papelar\u00eda',
+    cats: ['Utiles','Impresion','Servicios','Tecnologia','Arte','Varios'],
+    catIcons: {'Utiles':'&#x270F;','Impresion':'&#x1F5A8;','Servicios':'&#x2699;','Tecnologia':'&#x1F4BB;','Arte':'&#x1F58C;','Varios':'&#x1F4E6;'},
+    posLabel: 'Art\u00edculo',
+    accent: '#3b82f6'
+  },
+  salon: {
+    label: 'Sal\u00f3n de Belleza',
+    cats: ['Cortes','Tintes','Tratamientos','U\u00f1as','Maquillaje','Productos'],
+    catIcons: {'Cortes':'&#x2702;','Tintes':'&#x1F3A8;','Tratamientos':'&#x1F9E4;','U\u00f1as':'&#x1F485;','Maquillaje':'&#x1F484;','Productos':'&#x1F9F4;'},
+    posLabel: 'Servicio',
+    accent: '#ec4899'
+  },
+  custom: {
+    label: 'Personalizado',
+    cats: [],
+    catIcons: {},
+    posLabel: 'Producto',
+    accent: '#FFB547'
+  }
+};
+
+function setGiro(key) {
+  localStorage.setItem('turbopos_giro', key);
+  applyGiro(key);
+  // Marcar boton activo
+  document.querySelectorAll('.giro-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.giro === key);
+  });
+  const g = GIROS[key];
+  document.getElementById('giro-sub').textContent = 'Giro: ' + g.label;
+  toast('Interfaz adaptada a ' + g.label, 'success');
+}
+
+function applyGiro(key) {
+  const g = GIROS[key] || GIROS.copy;
+  // Cambiar accent color
+  document.documentElement.style.setProperty('--amber', g.accent);
+  // Guardar catIcons para usar en getCatIcon
+  window._giroIcons = g.catIcons;
+}
+
+function loadGiro() {
+  const key = localStorage.getItem('turbopos_giro') || 'copy';
+  applyGiro(key);
+  // Marcar boton activo cuando se abra config
+  setTimeout(() => {
+    document.querySelectorAll('.giro-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.giro === key);
+    });
+    const g = GIROS[key];
+    const sub = document.getElementById('giro-sub');
+    if (sub) sub.textContent = 'Giro: ' + g.label;
+  }, 300);
 }
 
 function cobrar() {
@@ -5176,6 +5390,7 @@ function exportCortePDF() {
     </div>
   </div>
 </div>
+
 
 </body></html>`;
 
@@ -5825,7 +6040,7 @@ async function searchLoyalty() {
 
 function toast(msg,type='info') {
 
-  const icons={success:'?',error:'?',info:'i'};
+const icons={success:'&#x2713;',error:'&#x2717;',info:'&#x2139;',warning:'&#x26A0;'};
 
   const el=document.createElement('div');
 
@@ -5835,7 +6050,7 @@ function toast(msg,type='info') {
 
   icon.className='toast-icon';
 
-  icon.textContent=icons[type]||'i';
+icon.innerHTML=icons[type]||'&#x2139;';
 
   const txt=document.createElement('span');
 
@@ -7568,6 +7783,26 @@ or:var(--border);box-shadow:none;width:100%}
     </div>
   </div>
 </div>
+
+
+<!-- ?? MODAL GESTIONAR CATEGORIAS ??????????????????????????????????????? -->
+<div id="cat-mgr-modal" style="display:none;position:fixed;inset:0;background:rgba(8,12,20,.85);z-index:3000;align-items:center;justify-content:center">
+  <div style="background:var(--surface1);border:1px solid var(--border);border-radius:16px;padding:28px;width:420px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:16px;font-weight:800">&#x1F3F7; Gestionar Categor&#237;as</div>
+      <button onclick="closeCatModal()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer">&#x2715;</button>
+    </div>
+    <!-- Nueva categoria -->
+    <div style="display:flex;gap:8px">
+      <input id="cat-new-input" type="text" placeholder="Nueva categor&#237;a..." style="flex:1;padding:8px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:13px">
+      <button onclick="addCategory()" style="padding:8px 16px;border-radius:8px;background:var(--amber);border:none;color:#000;font-weight:700;cursor:pointer">+ Agregar</button>
+    </div>
+    <!-- Lista de categorias -->
+    <div id="cat-mgr-list" style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:6px"></div>
+    <div style="font-size:11px;color:var(--muted)">&#9888; Eliminar una categor&#237;a mover&#225; sus productos a "General"</div>
+  </div>
+</div>
+
 
 </body>
 </html>
