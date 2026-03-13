@@ -2159,6 +2159,21 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 
 
+
+.descuento-row{padding:6px 0 4px;border-bottom:1px solid rgba(255,181,71,.15);}
+.desc-controls{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.desc-tipo-btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:var(--text);border-radius:6px;padding:4px 9px;font-size:12px;cursor:pointer;transition:.2s;}
+.desc-tipo-btn.active{background:var(--amber);color:#000;border-color:var(--amber);}
+.desc-input{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:var(--text);border-radius:6px;padding:4px 8px;font-size:12px;width:68px;}
+.desc-cupon{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:var(--text);border-radius:6px;padding:4px 8px;font-size:12px;width:90px;}
+.desc-cupon.valid{border-color:var(--green);}
+.desc-clear-btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:var(--text);border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;}
+.desc-badge{font-size:11px;color:var(--amber);margin-top:3px;min-height:14px;}
+.totals-row-desc{display:flex;justify-content:space-between;align-items:center;padding:2px 0;}
+.totals-lbl-desc{font-size:12px;color:var(--amber);}
+.totals-val-desc{font-size:12px;color:var(--amber);}
+.price-original{text-decoration:line-through;color:rgba(255,255,255,.4);font-size:11px;margin-right:4px;}
+
 </style>
 
 </head>
@@ -2410,6 +2425,16 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
             </div>
 
             <div class="loyalty-badge" id="loyalty-display"></div>
+            <div class="descuento-row" id="descuento-row">
+              <div class="desc-controls">
+                <button class="desc-tipo-btn active" id="desc-pct-btn" onclick="setDescTipo('pct')">%</button>
+                <button class="desc-tipo-btn" id="desc-fix-btn" onclick="setDescTipo('fixed')">$</button>
+                <input type="number" class="desc-input" id="desc-valor" placeholder="0" min="0" max="100" step="0.5" oninput="applyDescuento()">
+                <input type="text" class="desc-cupon" id="desc-codigo" placeholder="Cup?n" oninput="validateCupon(this.value)">
+                <button class="desc-clear-btn" onclick="clearDescuento()">&#x2715;</button>
+              </div>
+              <div class="desc-badge" id="desc-badge"></div>
+            </div>
 
             <div class="pay-methods" id="pay-methods">
 
@@ -2443,6 +2468,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
             </label>
 
+            <div class="totals-row-desc" id="desc-total-row" style="display:none"><span class="totals-lbl-desc">Descuento</span><span class="totals-val-desc" id="desc-total-lbl">-$0.00</span></div>
             <div class="totals-row">
 
               <span class="totals-lbl">Total</span>
@@ -4273,7 +4299,15 @@ function renderCart() {
 
   const total = cart.reduce((s,i)=>s+i.subtotal,0);
 
-  document.getElementById('cart-total').textContent = '$'+total.toFixed(2);
+  const descMonto = calcDescuento(total);
+  const totalFinal = Math.max(0, total - descMonto);
+  document.getElementById('cart-total').textContent = '$'+totalFinal.toFixed(2);
+  const descRow = document.getElementById('desc-total-row');
+  const descLbl = document.getElementById('desc-total-lbl');
+  if (descMonto > 0 && descRow) {
+    descRow.style.display = 'flex';
+    descLbl.textContent = '-$'+descMonto.toFixed(2)+(descuento.tipo==='pct'?' ('+descuento.valor+'%)':'');
+  } else if (descRow) { descRow.style.display = 'none'; }
 
   const _qty=cart.reduce((s,i)=>s+i.qty,0);
 
@@ -4382,6 +4416,73 @@ async function checkLoyalty(phone) {
 }
 
 
+
+
+// ?? DESCUENTOS Y CUPONES ??????????????????????????????????????????????????
+let descuento = { tipo: 'pct', valor: 0, codigo: '' };
+
+const CUPONES = {
+  'VECINO10': { tipo: 'pct',   valor: 10, desc: '10% descuento piloto' },
+  'TURBO20':  { tipo: 'pct',   valor: 20, desc: '20% lanzamiento'      },
+  'PROMO50':  { tipo: 'fixed', valor: 50, desc: '$50 descuento fijo'   },
+};
+
+function setDescTipo(tipo) {
+  descuento.tipo = tipo;
+  document.getElementById('desc-pct-btn').classList.toggle('active', tipo === 'pct');
+  document.getElementById('desc-fix-btn').classList.toggle('active', tipo === 'fixed');
+  const inp = document.getElementById('desc-valor');
+  inp.max = tipo === 'pct' ? 100 : 999999;
+  applyDescuento();
+}
+
+function applyDescuento() {
+  const v = parseFloat(document.getElementById('desc-valor').value) || 0;
+  descuento.valor = v;
+  descuento.codigo = '';
+  document.getElementById('desc-codigo').value = '';
+  document.getElementById('desc-codigo').classList.remove('valid');
+  renderCart();
+}
+
+function validateCupon(code) {
+  const cup = CUPONES[code.toUpperCase()];
+  const inp = document.getElementById('desc-codigo');
+  if (cup) {
+    descuento = { tipo: cup.tipo, valor: cup.valor, codigo: code.toUpperCase() };
+    document.getElementById('desc-valor').value = cup.valor;
+    setDescTipo(cup.tipo);
+    inp.classList.add('valid');
+    document.getElementById('desc-badge').textContent = '&#x2713; ' + cup.desc;
+  } else {
+    descuento.codigo = '';
+    inp.classList.remove('valid');
+    document.getElementById('desc-badge').textContent = code.length >= 4 ? 'Cupon no valido' : '';
+    descuento.valor = parseFloat(document.getElementById('desc-valor').value) || 0;
+  }
+  renderCart();
+}
+
+function clearDescuento() {
+  descuento = { tipo: 'pct', valor: 0, codigo: '' };
+  document.getElementById('desc-valor').value = '';
+  document.getElementById('desc-codigo').value = '';
+  document.getElementById('desc-codigo').classList.remove('valid');
+  document.getElementById('desc-badge').textContent = '';
+  setDescTipo('pct');
+  renderCart();
+}
+
+function calcDescuento(subtotal) {
+  if (!descuento.valor) return 0;
+  if (descuento.tipo === 'pct') return Math.min(subtotal * descuento.valor / 100, subtotal);
+  return Math.min(descuento.valor, subtotal);
+}
+
+function getTotalConDescuento() {
+  const sub = cart.reduce((s,i)=>s+i.subtotal, 0);
+  return Math.max(0, sub - calcDescuento(sub));
+}
 
 function cobrar() {
 
@@ -4532,7 +4633,7 @@ async function confirmSale() {
       closeSaleModal();
       toast('Venta guardada offline — se sincronizara al reconectar','info');
       showTicket(offlineTicket);
-      cart=[]; renderCart();
+      cart=[]; clearDescuento(); renderCart();
       updateOfflineBadge();
     } catch(e) {
       toast('Error al guardar offline','error');
@@ -4542,7 +4643,19 @@ async function confirmSale() {
 
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Procesando...';
 
-  const body = { total, payment_method:payment, items:cart.map(i=>({product_id:i.id,name:i.name,quantity:i.qty,unit_price:i.price,subtotal:i.subtotal})) };
+  const totalSinDesc = total;
+  const descMonto2 = calcDescuento(totalSinDesc);
+  const totalPagar = getTotalConDescuento();
+  const body = {
+    total: totalPagar,
+    subtotal_original: totalSinDesc,
+    descuento_monto: descMonto2,
+    descuento_tipo: descuento.tipo,
+    descuento_valor: descuento.valor,
+    descuento_codigo: descuento.codigo,
+    payment_method: payment,
+    items: cart.map(i=>({product_id:i.id,name:i.name,quantity:i.qty,unit_price:i.price,subtotal:i.subtotal}))
+  };
 
   const rfc = (document.getElementById('sale-rfc').value||'').trim().toUpperCase()||'XAXX010101000';
 
