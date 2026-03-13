@@ -2438,7 +2438,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
                 <button class="desc-tipo-btn active" id="desc-pct-btn" onclick="setDescTipo('pct')">%</button>
                 <button class="desc-tipo-btn" id="desc-fix-btn" onclick="setDescTipo('fixed')">$</button>
                 <input type="number" class="desc-input" id="desc-valor" placeholder="0" min="0" max="100" step="0.5" oninput="applyDescuento()">
-                <input type="text" class="desc-cupon" id="desc-codigo" placeholder="Cup?n" oninput="validateCupon(this.value)">
+                <input type="text" class="desc-cupon" id="desc-codigo" placeholder="Cup&#243;n" oninput="validateCupon(this.value)">
                 <button class="desc-clear-btn" onclick="clearDescuento()">&#x2715;</button>
               </div>
               <div class="desc-badge" id="desc-badge"></div>
@@ -4219,7 +4219,10 @@ function filterProducts() {
       : p.name;
     const skuBadge = p.sku ? `<div style="font-size:9px;color:var(--muted);font-family:var(--mono);margin-top:1px">${p.sku}</div>` : '';
     return `<div class="p-card" onclick="addToCart('${p.id}')" title="${p.name}">
-      <div class="p-icon">${icon}</div>
+      ${p.image_url
+        ? `<img class="prod-card-img" src="${p.image_url}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`
+        : ''}
+      <div class="p-icon" style="${p.image_url?'display:none':''}"> ${icon}</div>
       <div class="p-body">
         <div class="p-name">${nameHL}</div>
         ${skuBadge}
@@ -5541,7 +5544,7 @@ async function loadProductsFromDB() {
     const res = await apiFetch(API+'/products'); if(!res.ok) return;
     const db = await res.json();
     if (db&&db.length>0) {
-      products = db.map(p=>({id:p.id,name:p.name,price:p.price,icon:catIcons[p.category]||'📦',cat:p.category||'General',sku:p.sku||'',category:p.category||'General'}));
+      products = db.map(p=>({id:p.id,name:p.name,price:p.price,icon:catIcons[p.category]||'&#x1F4E6;',cat:p.category||'General',sku:p.sku||'',category:p.category||'General',image_url:p.image_url||''}));
       try { localStorage.setItem('tp_products_cache', JSON.stringify(products)); } catch(e){}
       renderProducts(); renderCategories();
     }

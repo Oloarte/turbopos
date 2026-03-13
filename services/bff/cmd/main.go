@@ -1498,92 +1498,90 @@ func (gw *Gateway) handleCorte(w http.ResponseWriter, r *http.Request) {
 // DELETE /api/v1/products/{id}  — eliminar producto
 
 func (gw *Gateway) handleProducts(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	tid := tenantID(r)
+    w.Header().Set("Content-Type", "application/json")
+    tid := tenantID(r)
 
-	switch r.Method {
-	case http.MethodGet:
-		q := `SELECT id, COALESCE(name,''), COALESCE(price,0),
-		             COALESCE(sku,''), COALESCE(category,''), COALESCE(unit,'pza'),
-		             COALESCE(barcode,''), active
-		      FROM products
-		      WHERE (tenant_id = $1::uuid OR tenant_id IS NULL)
-		        AND COALESCE(active, true) = true
-		      ORDER BY name`
-		rows, err := gw.db.Query(q, tid)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
-			return
-		}
-		defer rows.Close()
-		var prods []map[string]interface{}
-		for rows.Next() {
-			var id, name, sku, category, unit, barcode string
-			var price float64
-			var active bool
-			rows.Scan(&id, &name, &price, &sku, &category, &unit, &barcode, &active)
-			prods = append(prods, map[string]interface{}{
-				"id": id, "name": name, "price": price,
-				"sku": sku, "category": category, "unit": unit,
-				"barcode": barcode, "active": active,
-			})
-		}
-		if prods == nil { prods = []map[string]interface{}{} }
-		json.NewEncoder(w).Encode(prods)
+    switch r.Method {
+    case http.MethodGet:
+        rows, err := gw.db.Query(`
+            SELECT id, COALESCE(name,''), COALESCE(price,0),
+                   COALESCE(sku,''), COALESCE(category,''), COALESCE(unit,'pza'),
+                   COALESCE(barcode,''), active, COALESCE(image_url,'')
+            FROM products
+            WHERE (tenant_id = $1::uuid OR tenant_id IS NULL)
+              AND COALESCE(active, true) = true
+            ORDER BY name`, tid)
+        if err != nil {
+            w.WriteHeader(http.StatusInternalServerError)
+            json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+            return
+        }
+        defer rows.Close()
+        var prods []map[string]interface{}
+        for rows.Next() {
+            var id, name, sku, category, unit, barcode, imageURL string
+            var price float64
+            var active bool
+            rows.Scan(&id, &name, &price, &sku, &category, &unit, &barcode, &active, &imageURL)
+            prods = append(prods, map[string]interface{}{
+                "id": id, "name": name, "price": price,
+                "sku": sku, "category": category, "unit": unit,
+                "barcode": barcode, "active": active, "image_url": imageURL,
+            })
+        }
+        if prods == nil { prods = []map[string]interface{}{} }
+        json.NewEncoder(w).Encode(prods)
 
-	case http.MethodPost:
-		var req struct {
-			Name     string  `json:"name"`
-			Price    float64 `json:"price"`
-			SKU      string  `json:"sku"`
-			Category string  `json:"category"`
-			Unit     string  `json:"unit"`
-			Barcode  string  `json:"barcode"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error": "JSON inválido"})
-			return
-		}
-		if req.Name == "" || req.Price <= 0 {
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error": "name y price requeridos"})
-			return
-		}
-		if req.Unit == "" { req.Unit = "pza" }
-		if req.Category == "" { req.Category = "General" }
-		// Autogenerar SKU si no viene
-		if req.SKU == "" { req.SKU = fmt.Sprintf("PROD-%d", time.Now().UnixMilli()) }
+    case http.MethodPost:
+        var req struct {
+            Name     string  `json:"name"`
+            Price    float64 `json:"price"`
+            SKU      string  `json:"sku"`
+            Category string  `json:"category"`
+            Unit     string  `json:"unit"`
+            Barcode  string  `json:"barcode"`
+            ImageURL string  `json:"image_url"`
+        }
+        if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+            w.WriteHeader(http.StatusBadRequest)
+            json.NewEncoder(w).Encode(map[string]string{"error": "JSON invalido"})
+            return
+        }
+        if req.Name == "" || req.Price <= 0 {
+            w.WriteHeader(http.StatusBadRequest)
+            json.NewEncoder(w).Encode(map[string]string{"error": "name y price requeridos"})
+            return
+        }
+        if req.Unit == "" { req.Unit = "pza" }
+        if req.Category == "" { req.Category = "General" }
+        if req.SKU == "" { req.SKU = fmt.Sprintf("PROD-%d", time.Now().UnixMilli()) }
 
-		var id string
-		err := gw.db.QueryRow(`
-			INSERT INTO products (id, name, price, sku, category, unit, barcode, tenant_id, active, created_at)
-			VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7::uuid, true, NOW())
-			ON CONFLICT (sku) WHERE sku IS NOT NULL
-			DO UPDATE SET name=EXCLUDED.name, price=EXCLUDED.price,
-			              category=EXCLUDED.category, unit=EXCLUDED.unit
-			RETURNING id`,
-			req.Name, req.Price, req.SKU, req.Category, req.Unit, req.Barcode, tid,
-		).Scan(&id)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
-			return
-		}
-		log.Printf("[BFF] Producto creado: %s — %s $%.2f", id, req.Name, req.Price)
-		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"id": id, "name": req.Name, "price": req.Price, "sku": req.SKU,
-		})
+        var id string
+        err := gw.db.QueryRow(`
+            INSERT INTO products (id, name, price, sku, category, unit, barcode, image_url, tenant_id, active, created_at)
+            VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8::uuid, true, NOW())
+            ON CONFLICT (sku) WHERE sku IS NOT NULL
+            DO UPDATE SET name=EXCLUDED.name, price=EXCLUDED.price,
+                          category=EXCLUDED.category, unit=EXCLUDED.unit, image_url=EXCLUDED.image_url
+            RETURNING id`,
+            req.Name, req.Price, req.SKU, req.Category, req.Unit, req.Barcode, req.ImageURL, tid,
+        ).Scan(&id)
+        if err != nil {
+            w.WriteHeader(http.StatusInternalServerError)
+            json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+            return
+        }
+        log.Printf("[BFF] Producto creado: %s ? %s $%.2f", id, req.Name, req.Price)
+        w.WriteHeader(http.StatusCreated)
+        json.NewEncoder(w).Encode(map[string]interface{}{
+            "id": id, "name": req.Name, "price": req.Price, "sku": req.SKU,
+        })
 
-	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
-	}
+    default:
+        w.WriteHeader(http.StatusMethodNotAllowed)
+    }
 }
-
 func (gw *Gateway) handleProductByID(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 	// Extraer ID del path: /api/v1/products/UUID
 	productID := strings.TrimPrefix(r.URL.Path, "/api/v1/products/")
 	if productID == "" {
@@ -1602,10 +1600,11 @@ func (gw *Gateway) handleProductByID(w http.ResponseWriter, r *http.Request) {
 			Unit     string  `json:"unit"`
 			Barcode  string  `json:"barcode"`
 			Active   *bool   `json:"active"`
+			ImageURL string  `json:"image_url"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error": "JSON inválido"})
+			json.NewEncoder(w).Encode(map[string]string{"error": "JSON invalido"})
 			return
 		}
 		active := true
@@ -1613,15 +1612,16 @@ func (gw *Gateway) handleProductByID(w http.ResponseWriter, r *http.Request) {
 
 		res, err := gw.db.Exec(`
 			UPDATE products SET
-				name     = COALESCE(NULLIF($1,''), name),
-				price    = CASE WHEN $2 > 0 THEN $2 ELSE price END,
-				sku      = COALESCE(NULLIF($3,''), sku),
-				category = COALESCE(NULLIF($4,''), category),
-				unit     = COALESCE(NULLIF($5,''), unit),
-				barcode  = COALESCE(NULLIF($6,''), barcode),
-				active   = $7
-			WHERE id = $8::uuid`,
-			req.Name, req.Price, req.SKU, req.Category, req.Unit, req.Barcode, active, productID)
+				name      = COALESCE(NULLIF($1,''), name),
+				price     = CASE WHEN $2 > 0 THEN $2 ELSE price END,
+				sku       = COALESCE(NULLIF($3,''), sku),
+				category  = COALESCE(NULLIF($4,''), category),
+				unit      = COALESCE(NULLIF($5,''), unit),
+				barcode   = COALESCE(NULLIF($6,''), barcode),
+				image_url = CASE WHEN $7 != '' THEN $7 ELSE image_url END,
+				active    = $8
+			WHERE id = $9::uuid`,
+			req.Name, req.Price, req.SKU, req.Category, req.Unit, req.Barcode, req.ImageURL, active, productID)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
@@ -2243,8 +2243,3 @@ func (gw *Gateway) loadTenantCSD(tenantID string) (certB64 string, keyBytes []by
         Scan(&rfc, &certB64, &keyBytes, &keyPass)
     return certB64, keyBytes, keyPass, rfc, err == nil
 }
-
-
-
-
-
