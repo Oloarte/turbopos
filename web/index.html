@@ -2174,6 +2174,14 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .totals-val-desc{font-size:12px;color:var(--amber);}
 .price-original{text-decoration:line-through;color:rgba(255,255,255,.4);font-size:11px;margin-right:4px;}
 
+
+.prod-card-img{width:100%;height:90px;object-fit:cover;border-radius:8px 8px 0 0;background:rgba(255,255,255,.05);}
+.prod-card-no-img{width:100%;height:90px;display:flex;align-items:center;justify-content:center;font-size:32px;background:rgba(255,255,255,.04);border-radius:8px 8px 0 0;}
+.foto-upload-area{border:2px dashed rgba(255,181,71,.4);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:10px;}
+.foto-upload-area:hover{border-color:var(--amber);background:rgba(255,181,71,.05);}
+.foto-preview{width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px;display:none;}
+.foto-upload-lbl{font-size:12px;color:rgba(255,255,255,.5);}
+
 </style>
 
 </head>
@@ -2915,7 +2923,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
           <div class="loy-empty" id="loyalty-empty">
 
-            <div class="loy-empty-icon">?</div>
+            <div class="loy-empty-icon">&#127873;</div>
 
             <div class="loy-empty-txt">Busca un cliente por teléfono</div>
 
@@ -3331,7 +3339,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
         <label>Precio de venta *</label>
 
-        <div class="price-wrap"><input type="number" id="prod-price" placeholder="0.00" min="0.01" step="0.01"></div>
+        <div class="price-wrap"><input type="number" id="prod-price" onchange="this.value=parseFloat(this.value||0).toFixed(2)" placeholder="0.00" min="0.01" step="0.01"></div>
 
       </div>
 
@@ -3342,6 +3350,14 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <div class="fg-row">
 
       <div class="fg"><label>SKU / Clave</label><input type="text" id="prod-sku" placeholder="PROD-001"></div>
+      <div class="fg">
+        <label>&#128247; Foto del producto</label>
+        <div class="foto-upload-area" id="prod-foto-area">
+          <img class="foto-preview" id="prod-foto-preview" src="" alt="preview">
+          <div class="foto-upload-lbl">Toca para subir imagen (max 500KB)</div>
+        </div>
+        <input type="file" id="prod-foto-input" accept="image/*" style="display:none">
+      </div>
 
       <div class="fg"><label>Código de barras</label><input type="text" id="prod-barcode" placeholder="7501234567890"></div>
 
@@ -3373,7 +3389,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
       <button class="btn-cancel" onclick="closeProductModal()">Cancelar</button>
 
-      <button class="btn-save" id="prod-save-btn" onclick="saveProduct()">Guardar producto</button>
+      <button class="btn-save" id="prod-save-btn" onclick="saveProduct()" >Guardar producto</button>
 
     </div>
 
@@ -4484,6 +4500,36 @@ function getTotalConDescuento() {
   return Math.max(0, sub - calcDescuento(sub));
 }
 
+
+// ?? FOTO DE PRODUCTO ????????????????????????????????????????????????????????
+function initFotoUpload() {
+  const input = document.getElementById('prod-foto-input');
+  const preview = document.getElementById('prod-foto-preview');
+  const area = document.getElementById('prod-foto-area');
+  if (!input) return;
+  area.onclick = () => input.click();
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 500000) { toast('Imagen max 500KB','error'); return; }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      preview.src = ev.target.result;
+      preview.style.display = 'block';
+      window._fotoBase64 = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+}
+
+function resetFotoUpload() {
+  window._fotoBase64 = null;
+  const preview = document.getElementById('prod-foto-preview');
+  const input = document.getElementById('prod-foto-input');
+  if (preview) { preview.src=''; preview.style.display='none'; }
+  if (input) input.value='';
+}
+
 function cobrar() {
 
   if (!cart.length) return;
@@ -4799,7 +4845,7 @@ async function confirmSale() {
 
     clearCart();
 
-  } catch(e) { toast('? '+e.message,'error'); }
+  } catch(e) { toast('&#9888; '+e.message,'error'); }
 
   finally { btn.disabled=false; btn.innerHTML='⚡ Confirmar y cobrar'; }
 
@@ -5365,6 +5411,9 @@ function openProductModal(productId) {
     const p = allProducts.find(x=>x.id===productId); if(!p) return;
 
     document.getElementById('prod-name').value = p.name||'';
+    window._fotoBase64 = p.image_url || null;
+    const prev = document.getElementById('prod-foto-preview');
+    if (prev) { if (p.image_url) { prev.src=p.image_url; prev.style.display='block'; } else { prev.src=''; prev.style.display='none'; } }
 
     document.getElementById('prod-price').value = p.price||'';
 
@@ -5379,6 +5428,7 @@ function openProductModal(productId) {
   } else {
 
     ['prod-name','prod-price','prod-category','prod-sku','prod-barcode'].forEach(id=>document.getElementById(id).value='');
+    resetFotoUpload();
 
     document.getElementById('prod-unit').value='pza';
 
@@ -5387,6 +5437,7 @@ function openProductModal(productId) {
   document.getElementById('product-modal').classList.add('open');
 
   setTimeout(()=>document.getElementById('prod-name').focus(),120);
+    initFotoUpload();
 
 }
 
@@ -5414,7 +5465,9 @@ async function saveProduct() {
 
     barcode: document.getElementById('prod-barcode').value.trim(),
 
-    unit: document.getElementById('prod-unit').value };
+    unit: document.getElementById('prod-unit').value,
+
+    image_url: window._fotoBase64 || '' };
 
   btn.disabled=true; btn.textContent='Guardando...';
 
@@ -5438,7 +5491,7 @@ async function saveProduct() {
 
     toast(editingProductId?'? Producto actualizado':'? Producto creado','success');
 
-  } catch(e) { toast('? '+e.message,'error'); }
+  } catch(e) { toast('&#9888; '+e.message,'error'); }
 
   finally { btn.disabled=false; btn.textContent='Guardar producto'; }
 
@@ -5472,7 +5525,7 @@ async function confirmDelete() {
 
     toast('Producto eliminado','info');
 
-  } catch(e) { toast('? '+e.message,'error'); }
+  } catch(e) { toast('&#9888; '+e.message,'error'); }
 
 }
 
