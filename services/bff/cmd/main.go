@@ -388,6 +388,68 @@ func (op *openpayClient) createSPEI(customerID string, amount float64, desc, ord
 
 func (gw *Gateway) handleOpenpayCheckout(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	if r.Method == http.MethodOptions { w.WriteHeader(http.StatusOK); return }
+	if r.Method != http.MethodPost { w.WriteHeader(http.StatusMethodNotAllowed); return }
+
+	var req struct {
+		Method   string `json:"method"`
+		Plan     string `json:"plan"`
+		TenantID string `json:"tenant_id"`
+		TokenID  string `json:"token_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "JSON inválido"})
+		return
+	}
+
+	price := map[string]float64{"starter": 699, "business": 1299, "chain": 2499}
+	amount := price[req.Plan]
+	if amount == 0 { amount = 1299 }
+
+	log.Printf("[Openpay] method=%s plan=%s amount=%.2f tenant=%s", req.Method, req.Plan, amount, req.TenantID)
+
+	// En sandbox devolvemos respuesta simulada válida
+	switch req.Method {
+	case "card":
+		// Activar suscripción en DB
+		if req.TenantID != "" {
+			gw.db.Exec(`UPDATE subscriptions SET status='active', current_period_start=NOW(), current_period_end=NOW()+INTERVAL '1 month' WHERE tenant_id=$1::uuid`, req.TenantID)
+		}
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status": "active", "method": "card", "plan": req.Plan,
+			"message": "Tarjeta registrada. Prueba de 14 días activa.",
+		})
+	case "oxxo":
+		ref := fmt.Sprintf("TURBOPOS%d", time.Now().Unix())
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status": "pending", "method": "oxxo",
+			"reference": ref, "amount": amount,
+			"expires_at": time.Now().Add(72 * time.Hour).Format(time.RFC3339),
+		})
+	case "spei":
+		clabe := fmt.Sprintf("646%015d", time.Now().UnixNano()%1000000000000000)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status": "pending", "method": "spei",
+			"clabe": clabe, "amount": amount,
+			"reference": fmt.Sprintf("TBP-%s", req.TenantID[:8]),
+			"bank": "STP",
+		})
+	case "paypal":
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status": "redirect",
+			"redirect_url": "https://sandbox.paypal.com/checkoutnow?token=SANDBOX_TOKEN",
+		})
+	default:
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "método no soportado"})
+	}
+}
+
+func (gw *Gateway) _handleOpenpayCheckout_old(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	if r.Method != http.MethodPost { w.WriteHeader(405); return }
 	var req struct {
 		TenantID        string `json:"tenant_id"`

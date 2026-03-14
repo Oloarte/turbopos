@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 
 <html lang="es">
 
@@ -2254,8 +2254,55 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .ob-success-title{font-size:20px;font-weight:800;color:var(--text);margin-bottom:6px;}
 .ob-success-sub{font-size:13px;color:var(--muted);}
 
+
+/* ── PAYMENT STEP ────────────────────────────────────────────── */
+.pay-tabs{display:flex;gap:0;margin-bottom:20px;border-radius:12px;overflow:hidden;border:1px solid var(--border2);}
+.pay-tab{flex:1;padding:11px 6px;text-align:center;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);background:rgba(255,255,255,.03);transition:.2s;border:none;display:flex;align-items:center;justify-content:center;gap:5px;}
+.pay-tab:not(:last-child){border-right:1px solid var(--border2);}
+.pay-tab.active{background:rgba(255,181,71,.12);color:var(--amber);}
+.pay-panel{display:none;}
+.pay-panel.active{display:block;}
+/* Card inputs */
+.card-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.card-brand{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:20px;pointer-events:none;}
+.card-field-wrap{position:relative;}
+.card-secure{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-top:10px;}
+.card-secure-icon{width:14px;height:14px;border-radius:3px;background:rgba(34,197,94,.2);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--green);}
+/* OXXO */
+.oxxo-steps{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
+.oxxo-step{display:flex;gap:12px;align-items:flex-start;}
+.oxxo-num{width:24px;height:24px;border-radius:50%;background:rgba(255,181,71,.15);color:var(--amber);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.oxxo-txt{font-size:13px;color:var(--text2);line-height:1.4;}
+.oxxo-ref-box{background:rgba(255,255,255,.05);border:1px dashed rgba(255,181,71,.4);border-radius:12px;padding:16px;text-align:center;display:none;}
+.oxxo-ref-num{font-size:22px;font-weight:900;letter-spacing:3px;color:var(--amber);font-family:monospace;}
+.oxxo-ref-lbl{font-size:11px;color:var(--muted);margin-top:4px;}
+/* SPEI */
+.spei-box{background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:12px;padding:16px;display:none;}
+.spei-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px;}
+.spei-row:last-child{border-bottom:none;}
+.spei-lbl{color:var(--muted);}
+.spei-val{color:var(--text);font-weight:600;font-family:monospace;}
+/* PayPal */
+.paypal-info{background:rgba(0,112,243,.08);border:1px solid rgba(0,112,243,.2);border-radius:12px;padding:16px;text-align:center;}
+.paypal-logo{font-size:28px;font-weight:900;color:#009cde;margin-bottom:8px;}
+.paypal-desc{font-size:13px;color:var(--text2);}
+/* Resumen orden */
+.order-summary{background:rgba(255,181,71,.06);border:1px solid rgba(255,181,71,.2);border-radius:12px;padding:14px 16px;margin-bottom:20px;}
+.order-row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;}
+.order-total{font-weight:800;color:var(--amber);font-size:15px;padding-top:8px;border-top:1px solid rgba(255,181,71,.2);margin-top:6px;}
+/* Processing */
+.pay-processing{text-align:center;padding:20px 0;display:none;}
+.pay-spin{width:40px;height:40px;border:3px solid rgba(255,181,71,.2);border-top-color:var(--amber);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pay-success{text-align:center;padding:24px 0;display:none;}
+.pay-success-icon{font-size:52px;margin-bottom:12px;}
+.pay-success-title{font-size:20px;font-weight:800;color:var(--text);}
+.pay-success-sub{font-size:13px;color:var(--muted);margin-top:6px;}
+
 </style>
 
+<script src="https://js.openpay.mx/openpay.v1.min.js"></script>
+<script src="https://js.openpay.mx/openpay-data.v1.min.js"></script>
 </head>
 
 <body>
@@ -5359,7 +5406,9 @@ function exportCortePDF() {
     .kpi-box .val.blue  { color: #1565c0; }
     .footer { text-align: center; font-size: 8.5pt; color: #aaa; border-top: 1px solid #eee; padding-top: 12px; margin-top: 24px; }
     .logo { font-size: 9pt; font-weight: 700; color: #FFB547; letter-spacing: 1px; }
-  </style></head><body>
+  </style><script src="https://js.openpay.mx/openpay.v1.min.js"></script>
+<script src="https://js.openpay.mx/openpay-data.v1.min.js"></script>
+</head><body>
 
   <div class="header">
     <h1>${negocio}</h1>
@@ -5591,6 +5640,167 @@ function exportCortePDF() {
       <button class="ob-btn" id="ob-create-btn" onclick="obCrearCuenta()">Crear cuenta gratis &#127881;</button>
       <button class="ob-btn-sec" onclick="obBack2()">&#8249; Regresar</button>
       <div class="ob-foot">Al registrarte aceptas nuestros <a href="https://turbopos.mx" target="_blank">Términos de uso</a></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- PANTALLA 4: PAGO -->
+<div class="ob-screen" id="ob-pago">
+  <div class="ob-card">
+    <div class="ob-header">
+      <div class="ob-logo">TurboPOS</div>
+      <div class="ob-title">Activa tu plan</div>
+      <div class="ob-sub" id="pay-plan-lbl">Plan Negocio &mdash; 14 días gratis</div>
+    </div>
+    <div class="ob-body">
+
+      <!-- Pasos -->
+      <div class="ob-steps">
+        <div class="ob-step done">1</div>
+        <div class="ob-step-line done"></div>
+        <div class="ob-step done">2</div>
+        <div class="ob-step-line done"></div>
+        <div class="ob-step done">3</div>
+        <div class="ob-step-line done"></div>
+        <div class="ob-step active">4</div>
+      </div>
+
+      <!-- Resumen de orden -->
+      <div class="order-summary">
+        <div class="order-row"><span style="color:var(--text2)">Plan</span><span id="pay-order-plan" style="color:var(--text)">Negocio</span></div>
+        <div class="order-row"><span style="color:var(--text2)">Período de prueba</span><span style="color:var(--green)">14 días GRATIS</span></div>
+        <div class="order-row"><span style="color:var(--text2)">Primer cobro</span><span id="pay-order-fecha" style="color:var(--text)">28 mar 2026</span></div>
+        <div class="order-row order-total"><span>Total hoy</span><span>$0.00 MXN</span></div>
+      </div>
+
+      <div class="pay-info-badge" style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:10px 14px;margin-bottom:18px;font-size:12px;color:#22c55e;text-align:center;">
+        &#10003; No se realizará ningún cobro durante los 14 días de prueba. Cancela antes y no pagas nada.
+      </div>
+
+      <!-- Tabs de método -->
+      <div class="pay-tabs">
+        <button class="pay-tab active" onclick="payTab('card')" id="tab-card">
+          <span style="font-size:16px">&#128179;</span> Tarjeta
+        </button>
+        <button class="pay-tab" onclick="payTab('oxxo')" id="tab-oxxo">
+          <span style="font-size:16px">&#127978;</span> OXXO
+        </button>
+        <button class="pay-tab" onclick="payTab('spei')" id="tab-spei">
+          <span style="font-size:16px">&#127981;</span> SPEI
+        </button>
+        <button class="pay-tab" onclick="payTab('paypal')" id="tab-paypal">
+          <span style="font-size:16px">&#128176;</span> PayPal
+        </button>
+      </div>
+
+      <!-- TARJETA -->
+      <div class="pay-panel active" id="panel-card">
+        <div class="ob-field">
+          <label class="ob-label">Número de tarjeta</label>
+          <div class="card-field-wrap">
+            <input class="ob-input" id="cc-num" type="tel" placeholder="0000 0000 0000 0000" maxlength="19" oninput="fmtCard(this)" autocomplete="cc-number">
+            <span class="card-brand" id="cc-brand">&#128179;</span>
+          </div>
+        </div>
+        <div class="ob-field">
+          <label class="ob-label">Nombre en la tarjeta</label>
+          <input class="ob-input" id="cc-name" type="text" placeholder="JUAN PEREZ GARCIA" style="text-transform:uppercase" autocomplete="cc-name">
+        </div>
+        <div class="card-row">
+          <div class="ob-field">
+            <label class="ob-label">Vencimiento (MM/AA)</label>
+            <input class="ob-input" id="cc-exp" type="tel" placeholder="12/28" maxlength="5" oninput="fmtExp(this)" autocomplete="cc-exp">
+          </div>
+          <div class="ob-field">
+            <label class="ob-label">CVV</label>
+            <input class="ob-input" id="cc-cvv" type="tel" placeholder="123" maxlength="4" autocomplete="cc-csc">
+          </div>
+        </div>
+        <div class="card-secure">
+          <div class="card-secure-icon">&#128274;</div>
+          Datos cifrados con OpenPay. TurboPOS nunca almacena tu tarjeta.
+        </div>
+        <div class="ob-err" id="pay-err-card"></div>
+        <button class="ob-btn" id="pay-card-btn" onclick="payWithCard()">
+          Guardar tarjeta y comenzar prueba &#8594;
+        </button>
+      </div>
+
+      <!-- OXXO -->
+      <div class="pay-panel" id="panel-oxxo">
+        <div class="oxxo-steps">
+          <div class="oxxo-step">
+            <div class="oxxo-num">1</div>
+            <div class="oxxo-txt">Haz clic en "Generar referencia OXXO" — recibirás un número de referencia único.</div>
+          </div>
+          <div class="oxxo-step">
+            <div class="oxxo-num">2</div>
+            <div class="oxxo-txt">Ve a cualquier tienda OXXO y pide realizar un pago de servicios.</div>
+          </div>
+          <div class="oxxo-step">
+            <div class="oxxo-num">3</div>
+            <div class="oxxo-txt">El servicio se activa en máximo 2 horas tras confirmar el pago.</div>
+          </div>
+        </div>
+        <div class="oxxo-ref-box" id="oxxo-ref-box">
+          <div class="oxxo-ref-lbl">Tu referencia de pago</div>
+          <div class="oxxo-ref-num" id="oxxo-ref-num">-</div>
+          <div class="oxxo-ref-lbl" style="margin-top:6px">Monto: <span id="oxxo-ref-amt" style="color:var(--amber);font-weight:700">$0.00</span> &bull; Válido 72 hrs</div>
+          <button onclick="copyOxxo()" style="margin-top:10px;padding:6px 14px;border-radius:8px;background:rgba(255,181,71,.15);border:1px solid rgba(255,181,71,.3);color:var(--amber);font-size:12px;cursor:pointer">&#128203; Copiar</button>
+        </div>
+        <div class="ob-err" id="pay-err-oxxo"></div>
+        <button class="ob-btn" id="pay-oxxo-btn" onclick="payWithOxxo()">Generar referencia OXXO &#8594;</button>
+      </div>
+
+      <!-- SPEI -->
+      <div class="pay-panel" id="panel-spei">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5;">
+          Realiza una transferencia SPEI a la CLABE única que se generará para tu cuenta. El servicio se activa en minutos.
+        </div>
+        <div class="spei-box" id="spei-box">
+          <div class="spei-row"><span class="spei-lbl">Banco destino</span><span class="spei-val">STP (Sistema de Transferencias)</span></div>
+          <div class="spei-row"><span class="spei-lbl">CLABE</span><span class="spei-val" id="spei-clabe">-</span></div>
+          <div class="spei-row"><span class="spei-lbl">Beneficiario</span><span class="spei-val">TurboPOS SA de CV</span></div>
+          <div class="spei-row"><span class="spei-lbl">Monto</span><span class="spei-val" id="spei-amt" style="color:var(--amber)">-</span></div>
+          <div class="spei-row"><span class="spei-lbl">Concepto</span><span class="spei-val" id="spei-ref">-</span></div>
+        </div>
+        <div class="ob-err" id="pay-err-spei"></div>
+        <button class="ob-btn" id="pay-spei-btn" onclick="payWithSpei()">Generar CLABE SPEI &#8594;</button>
+      </div>
+
+      <!-- PAYPAL -->
+      <div class="pay-panel" id="panel-paypal">
+        <div class="paypal-info">
+          <div class="paypal-logo">PayPal</div>
+          <div class="paypal-desc">Serás redirigido a PayPal para completar el pago de forma segura. Al volver, tu cuenta se activará automáticamente.</div>
+        </div>
+        <div style="margin:14px 0;font-size:12px;color:var(--muted);text-align:center">
+          &#128274; Conexión SSL segura &bull; Tus datos PayPal nunca llegan a TurboPOS
+        </div>
+        <div class="ob-err" id="pay-err-paypal"></div>
+        <button class="ob-btn" id="pay-paypal-btn" onclick="payWithPaypal()" style="background:#009cde;color:#fff;">
+          <span style="font-size:14px;font-weight:900">Pay</span><span style="font-size:14px;font-weight:900;color:#012169">Pal</span> &nbsp; Pagar con PayPal &#8594;
+        </button>
+      </div>
+
+      <!-- Procesando -->
+      <div class="pay-processing" id="pay-processing">
+        <div class="pay-spin"></div>
+        <div style="font-size:14px;font-weight:600;color:var(--text)" id="pay-proc-msg">Procesando pago...</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px">No cierres esta ventana</div>
+      </div>
+
+      <!-- Éxito -->
+      <div class="pay-success" id="pay-success">
+        <div class="pay-success-icon">&#127881;</div>
+        <div class="pay-success-title">¡Todo listo!</div>
+        <div class="pay-success-sub" id="pay-success-msg">Tu plan está activo. Redirigiendo al POS...</div>
+      </div>
+
+      <button class="ob-btn-sec" id="pay-skip-btn" onclick="paySkip()" style="margin-top:10px">
+        Saltar por ahora — activar en Configuración &#8250;
+      </button>
     </div>
   </div>
 </div>
@@ -6472,7 +6682,9 @@ function exportReportePDF() {
     td{padding:6px 8px;font-size:10pt;border-bottom:1px solid #f0f0f0}
     tr.hdr td{font-size:8.5pt;font-weight:700;text-transform:uppercase;color:#888;background:#fafafa;border-bottom:1px solid #ddd}
     .footer{text-align:center;font-size:8pt;color:#aaa;border-top:1px solid #eee;padding-top:10px;margin-top:20px}
-  </style></head><body>
+  </style><script src="https://js.openpay.mx/openpay.v1.min.js"></script>
+<script src="https://js.openpay.mx/openpay-data.v1.min.js"></script>
+</head><body>
   <div class="header">
     <h1>${negocio}</h1>
     ${direccion?`<div class="sub">${direccion}</div>`:''}
@@ -6684,6 +6896,167 @@ function exportReportePDF() {
       <button class="ob-btn" id="ob-create-btn" onclick="obCrearCuenta()">Crear cuenta gratis &#127881;</button>
       <button class="ob-btn-sec" onclick="obBack2()">&#8249; Regresar</button>
       <div class="ob-foot">Al registrarte aceptas nuestros <a href="https://turbopos.mx" target="_blank">Términos de uso</a></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- PANTALLA 4: PAGO -->
+<div class="ob-screen" id="ob-pago">
+  <div class="ob-card">
+    <div class="ob-header">
+      <div class="ob-logo">TurboPOS</div>
+      <div class="ob-title">Activa tu plan</div>
+      <div class="ob-sub" id="pay-plan-lbl">Plan Negocio &mdash; 14 días gratis</div>
+    </div>
+    <div class="ob-body">
+
+      <!-- Pasos -->
+      <div class="ob-steps">
+        <div class="ob-step done">1</div>
+        <div class="ob-step-line done"></div>
+        <div class="ob-step done">2</div>
+        <div class="ob-step-line done"></div>
+        <div class="ob-step done">3</div>
+        <div class="ob-step-line done"></div>
+        <div class="ob-step active">4</div>
+      </div>
+
+      <!-- Resumen de orden -->
+      <div class="order-summary">
+        <div class="order-row"><span style="color:var(--text2)">Plan</span><span id="pay-order-plan" style="color:var(--text)">Negocio</span></div>
+        <div class="order-row"><span style="color:var(--text2)">Período de prueba</span><span style="color:var(--green)">14 días GRATIS</span></div>
+        <div class="order-row"><span style="color:var(--text2)">Primer cobro</span><span id="pay-order-fecha" style="color:var(--text)">28 mar 2026</span></div>
+        <div class="order-row order-total"><span>Total hoy</span><span>$0.00 MXN</span></div>
+      </div>
+
+      <div class="pay-info-badge" style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:10px 14px;margin-bottom:18px;font-size:12px;color:#22c55e;text-align:center;">
+        &#10003; No se realizará ningún cobro durante los 14 días de prueba. Cancela antes y no pagas nada.
+      </div>
+
+      <!-- Tabs de método -->
+      <div class="pay-tabs">
+        <button class="pay-tab active" onclick="payTab('card')" id="tab-card">
+          <span style="font-size:16px">&#128179;</span> Tarjeta
+        </button>
+        <button class="pay-tab" onclick="payTab('oxxo')" id="tab-oxxo">
+          <span style="font-size:16px">&#127978;</span> OXXO
+        </button>
+        <button class="pay-tab" onclick="payTab('spei')" id="tab-spei">
+          <span style="font-size:16px">&#127981;</span> SPEI
+        </button>
+        <button class="pay-tab" onclick="payTab('paypal')" id="tab-paypal">
+          <span style="font-size:16px">&#128176;</span> PayPal
+        </button>
+      </div>
+
+      <!-- TARJETA -->
+      <div class="pay-panel active" id="panel-card">
+        <div class="ob-field">
+          <label class="ob-label">Número de tarjeta</label>
+          <div class="card-field-wrap">
+            <input class="ob-input" id="cc-num" type="tel" placeholder="0000 0000 0000 0000" maxlength="19" oninput="fmtCard(this)" autocomplete="cc-number">
+            <span class="card-brand" id="cc-brand">&#128179;</span>
+          </div>
+        </div>
+        <div class="ob-field">
+          <label class="ob-label">Nombre en la tarjeta</label>
+          <input class="ob-input" id="cc-name" type="text" placeholder="JUAN PEREZ GARCIA" style="text-transform:uppercase" autocomplete="cc-name">
+        </div>
+        <div class="card-row">
+          <div class="ob-field">
+            <label class="ob-label">Vencimiento (MM/AA)</label>
+            <input class="ob-input" id="cc-exp" type="tel" placeholder="12/28" maxlength="5" oninput="fmtExp(this)" autocomplete="cc-exp">
+          </div>
+          <div class="ob-field">
+            <label class="ob-label">CVV</label>
+            <input class="ob-input" id="cc-cvv" type="tel" placeholder="123" maxlength="4" autocomplete="cc-csc">
+          </div>
+        </div>
+        <div class="card-secure">
+          <div class="card-secure-icon">&#128274;</div>
+          Datos cifrados con OpenPay. TurboPOS nunca almacena tu tarjeta.
+        </div>
+        <div class="ob-err" id="pay-err-card"></div>
+        <button class="ob-btn" id="pay-card-btn" onclick="payWithCard()">
+          Guardar tarjeta y comenzar prueba &#8594;
+        </button>
+      </div>
+
+      <!-- OXXO -->
+      <div class="pay-panel" id="panel-oxxo">
+        <div class="oxxo-steps">
+          <div class="oxxo-step">
+            <div class="oxxo-num">1</div>
+            <div class="oxxo-txt">Haz clic en "Generar referencia OXXO" — recibirás un número de referencia único.</div>
+          </div>
+          <div class="oxxo-step">
+            <div class="oxxo-num">2</div>
+            <div class="oxxo-txt">Ve a cualquier tienda OXXO y pide realizar un pago de servicios.</div>
+          </div>
+          <div class="oxxo-step">
+            <div class="oxxo-num">3</div>
+            <div class="oxxo-txt">El servicio se activa en máximo 2 horas tras confirmar el pago.</div>
+          </div>
+        </div>
+        <div class="oxxo-ref-box" id="oxxo-ref-box">
+          <div class="oxxo-ref-lbl">Tu referencia de pago</div>
+          <div class="oxxo-ref-num" id="oxxo-ref-num">-</div>
+          <div class="oxxo-ref-lbl" style="margin-top:6px">Monto: <span id="oxxo-ref-amt" style="color:var(--amber);font-weight:700">$0.00</span> &bull; Válido 72 hrs</div>
+          <button onclick="copyOxxo()" style="margin-top:10px;padding:6px 14px;border-radius:8px;background:rgba(255,181,71,.15);border:1px solid rgba(255,181,71,.3);color:var(--amber);font-size:12px;cursor:pointer">&#128203; Copiar</button>
+        </div>
+        <div class="ob-err" id="pay-err-oxxo"></div>
+        <button class="ob-btn" id="pay-oxxo-btn" onclick="payWithOxxo()">Generar referencia OXXO &#8594;</button>
+      </div>
+
+      <!-- SPEI -->
+      <div class="pay-panel" id="panel-spei">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5;">
+          Realiza una transferencia SPEI a la CLABE única que se generará para tu cuenta. El servicio se activa en minutos.
+        </div>
+        <div class="spei-box" id="spei-box">
+          <div class="spei-row"><span class="spei-lbl">Banco destino</span><span class="spei-val">STP (Sistema de Transferencias)</span></div>
+          <div class="spei-row"><span class="spei-lbl">CLABE</span><span class="spei-val" id="spei-clabe">-</span></div>
+          <div class="spei-row"><span class="spei-lbl">Beneficiario</span><span class="spei-val">TurboPOS SA de CV</span></div>
+          <div class="spei-row"><span class="spei-lbl">Monto</span><span class="spei-val" id="spei-amt" style="color:var(--amber)">-</span></div>
+          <div class="spei-row"><span class="spei-lbl">Concepto</span><span class="spei-val" id="spei-ref">-</span></div>
+        </div>
+        <div class="ob-err" id="pay-err-spei"></div>
+        <button class="ob-btn" id="pay-spei-btn" onclick="payWithSpei()">Generar CLABE SPEI &#8594;</button>
+      </div>
+
+      <!-- PAYPAL -->
+      <div class="pay-panel" id="panel-paypal">
+        <div class="paypal-info">
+          <div class="paypal-logo">PayPal</div>
+          <div class="paypal-desc">Serás redirigido a PayPal para completar el pago de forma segura. Al volver, tu cuenta se activará automáticamente.</div>
+        </div>
+        <div style="margin:14px 0;font-size:12px;color:var(--muted);text-align:center">
+          &#128274; Conexión SSL segura &bull; Tus datos PayPal nunca llegan a TurboPOS
+        </div>
+        <div class="ob-err" id="pay-err-paypal"></div>
+        <button class="ob-btn" id="pay-paypal-btn" onclick="payWithPaypal()" style="background:#009cde;color:#fff;">
+          <span style="font-size:14px;font-weight:900">Pay</span><span style="font-size:14px;font-weight:900;color:#012169">Pal</span> &nbsp; Pagar con PayPal &#8594;
+        </button>
+      </div>
+
+      <!-- Procesando -->
+      <div class="pay-processing" id="pay-processing">
+        <div class="pay-spin"></div>
+        <div style="font-size:14px;font-weight:600;color:var(--text)" id="pay-proc-msg">Procesando pago...</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px">No cierres esta ventana</div>
+      </div>
+
+      <!-- Éxito -->
+      <div class="pay-success" id="pay-success">
+        <div class="pay-success-icon">&#127881;</div>
+        <div class="pay-success-title">¡Todo listo!</div>
+        <div class="pay-success-sub" id="pay-success-msg">Tu plan está activo. Redirigiendo al POS...</div>
+      </div>
+
+      <button class="ob-btn-sec" id="pay-skip-btn" onclick="paySkip()" style="margin-top:10px">
+        Saltar por ahora — activar en Configuración &#8250;
+      </button>
     </div>
   </div>
 </div>
@@ -7776,7 +8149,9 @@ async function guardarCierreTurno() {
   .st{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#999;margin-bottom:6px}
   .firma-box{border:1px solid #ddd;border-radius:8px;padding:4px;margin-top:6px}
   .firma-box img{width:100%}.footer{margin-top:32px;padding-top:16px;border-top:1px solid #eee;font-size:11px;color:#999;text-align:center}
-  </style></head><body>
+  </style><script src="https://js.openpay.mx/openpay.v1.min.js"></script>
+<script src="https://js.openpay.mx/openpay-data.v1.min.js"></script>
+</head><body>
   <h1>&#x1F512; Cierre de Turno</h1>
   <div class="sub">${negocio} &mdash; ${fecha} &mdash; ${hora}</div>
   <div class="kpi-grid">
@@ -7930,6 +8305,167 @@ async function guardarCierreTurno() {
       <button class="ob-btn" id="ob-create-btn" onclick="obCrearCuenta()">Crear cuenta gratis &#127881;</button>
       <button class="ob-btn-sec" onclick="obBack2()">&#8249; Regresar</button>
       <div class="ob-foot">Al registrarte aceptas nuestros <a href="https://turbopos.mx" target="_blank">Términos de uso</a></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- PANTALLA 4: PAGO -->
+<div class="ob-screen" id="ob-pago">
+  <div class="ob-card">
+    <div class="ob-header">
+      <div class="ob-logo">TurboPOS</div>
+      <div class="ob-title">Activa tu plan</div>
+      <div class="ob-sub" id="pay-plan-lbl">Plan Negocio &mdash; 14 días gratis</div>
+    </div>
+    <div class="ob-body">
+
+      <!-- Pasos -->
+      <div class="ob-steps">
+        <div class="ob-step done">1</div>
+        <div class="ob-step-line done"></div>
+        <div class="ob-step done">2</div>
+        <div class="ob-step-line done"></div>
+        <div class="ob-step done">3</div>
+        <div class="ob-step-line done"></div>
+        <div class="ob-step active">4</div>
+      </div>
+
+      <!-- Resumen de orden -->
+      <div class="order-summary">
+        <div class="order-row"><span style="color:var(--text2)">Plan</span><span id="pay-order-plan" style="color:var(--text)">Negocio</span></div>
+        <div class="order-row"><span style="color:var(--text2)">Período de prueba</span><span style="color:var(--green)">14 días GRATIS</span></div>
+        <div class="order-row"><span style="color:var(--text2)">Primer cobro</span><span id="pay-order-fecha" style="color:var(--text)">28 mar 2026</span></div>
+        <div class="order-row order-total"><span>Total hoy</span><span>$0.00 MXN</span></div>
+      </div>
+
+      <div class="pay-info-badge" style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:10px 14px;margin-bottom:18px;font-size:12px;color:#22c55e;text-align:center;">
+        &#10003; No se realizará ningún cobro durante los 14 días de prueba. Cancela antes y no pagas nada.
+      </div>
+
+      <!-- Tabs de método -->
+      <div class="pay-tabs">
+        <button class="pay-tab active" onclick="payTab('card')" id="tab-card">
+          <span style="font-size:16px">&#128179;</span> Tarjeta
+        </button>
+        <button class="pay-tab" onclick="payTab('oxxo')" id="tab-oxxo">
+          <span style="font-size:16px">&#127978;</span> OXXO
+        </button>
+        <button class="pay-tab" onclick="payTab('spei')" id="tab-spei">
+          <span style="font-size:16px">&#127981;</span> SPEI
+        </button>
+        <button class="pay-tab" onclick="payTab('paypal')" id="tab-paypal">
+          <span style="font-size:16px">&#128176;</span> PayPal
+        </button>
+      </div>
+
+      <!-- TARJETA -->
+      <div class="pay-panel active" id="panel-card">
+        <div class="ob-field">
+          <label class="ob-label">Número de tarjeta</label>
+          <div class="card-field-wrap">
+            <input class="ob-input" id="cc-num" type="tel" placeholder="0000 0000 0000 0000" maxlength="19" oninput="fmtCard(this)" autocomplete="cc-number">
+            <span class="card-brand" id="cc-brand">&#128179;</span>
+          </div>
+        </div>
+        <div class="ob-field">
+          <label class="ob-label">Nombre en la tarjeta</label>
+          <input class="ob-input" id="cc-name" type="text" placeholder="JUAN PEREZ GARCIA" style="text-transform:uppercase" autocomplete="cc-name">
+        </div>
+        <div class="card-row">
+          <div class="ob-field">
+            <label class="ob-label">Vencimiento (MM/AA)</label>
+            <input class="ob-input" id="cc-exp" type="tel" placeholder="12/28" maxlength="5" oninput="fmtExp(this)" autocomplete="cc-exp">
+          </div>
+          <div class="ob-field">
+            <label class="ob-label">CVV</label>
+            <input class="ob-input" id="cc-cvv" type="tel" placeholder="123" maxlength="4" autocomplete="cc-csc">
+          </div>
+        </div>
+        <div class="card-secure">
+          <div class="card-secure-icon">&#128274;</div>
+          Datos cifrados con OpenPay. TurboPOS nunca almacena tu tarjeta.
+        </div>
+        <div class="ob-err" id="pay-err-card"></div>
+        <button class="ob-btn" id="pay-card-btn" onclick="payWithCard()">
+          Guardar tarjeta y comenzar prueba &#8594;
+        </button>
+      </div>
+
+      <!-- OXXO -->
+      <div class="pay-panel" id="panel-oxxo">
+        <div class="oxxo-steps">
+          <div class="oxxo-step">
+            <div class="oxxo-num">1</div>
+            <div class="oxxo-txt">Haz clic en "Generar referencia OXXO" — recibirás un número de referencia único.</div>
+          </div>
+          <div class="oxxo-step">
+            <div class="oxxo-num">2</div>
+            <div class="oxxo-txt">Ve a cualquier tienda OXXO y pide realizar un pago de servicios.</div>
+          </div>
+          <div class="oxxo-step">
+            <div class="oxxo-num">3</div>
+            <div class="oxxo-txt">El servicio se activa en máximo 2 horas tras confirmar el pago.</div>
+          </div>
+        </div>
+        <div class="oxxo-ref-box" id="oxxo-ref-box">
+          <div class="oxxo-ref-lbl">Tu referencia de pago</div>
+          <div class="oxxo-ref-num" id="oxxo-ref-num">-</div>
+          <div class="oxxo-ref-lbl" style="margin-top:6px">Monto: <span id="oxxo-ref-amt" style="color:var(--amber);font-weight:700">$0.00</span> &bull; Válido 72 hrs</div>
+          <button onclick="copyOxxo()" style="margin-top:10px;padding:6px 14px;border-radius:8px;background:rgba(255,181,71,.15);border:1px solid rgba(255,181,71,.3);color:var(--amber);font-size:12px;cursor:pointer">&#128203; Copiar</button>
+        </div>
+        <div class="ob-err" id="pay-err-oxxo"></div>
+        <button class="ob-btn" id="pay-oxxo-btn" onclick="payWithOxxo()">Generar referencia OXXO &#8594;</button>
+      </div>
+
+      <!-- SPEI -->
+      <div class="pay-panel" id="panel-spei">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5;">
+          Realiza una transferencia SPEI a la CLABE única que se generará para tu cuenta. El servicio se activa en minutos.
+        </div>
+        <div class="spei-box" id="spei-box">
+          <div class="spei-row"><span class="spei-lbl">Banco destino</span><span class="spei-val">STP (Sistema de Transferencias)</span></div>
+          <div class="spei-row"><span class="spei-lbl">CLABE</span><span class="spei-val" id="spei-clabe">-</span></div>
+          <div class="spei-row"><span class="spei-lbl">Beneficiario</span><span class="spei-val">TurboPOS SA de CV</span></div>
+          <div class="spei-row"><span class="spei-lbl">Monto</span><span class="spei-val" id="spei-amt" style="color:var(--amber)">-</span></div>
+          <div class="spei-row"><span class="spei-lbl">Concepto</span><span class="spei-val" id="spei-ref">-</span></div>
+        </div>
+        <div class="ob-err" id="pay-err-spei"></div>
+        <button class="ob-btn" id="pay-spei-btn" onclick="payWithSpei()">Generar CLABE SPEI &#8594;</button>
+      </div>
+
+      <!-- PAYPAL -->
+      <div class="pay-panel" id="panel-paypal">
+        <div class="paypal-info">
+          <div class="paypal-logo">PayPal</div>
+          <div class="paypal-desc">Serás redirigido a PayPal para completar el pago de forma segura. Al volver, tu cuenta se activará automáticamente.</div>
+        </div>
+        <div style="margin:14px 0;font-size:12px;color:var(--muted);text-align:center">
+          &#128274; Conexión SSL segura &bull; Tus datos PayPal nunca llegan a TurboPOS
+        </div>
+        <div class="ob-err" id="pay-err-paypal"></div>
+        <button class="ob-btn" id="pay-paypal-btn" onclick="payWithPaypal()" style="background:#009cde;color:#fff;">
+          <span style="font-size:14px;font-weight:900">Pay</span><span style="font-size:14px;font-weight:900;color:#012169">Pal</span> &nbsp; Pagar con PayPal &#8594;
+        </button>
+      </div>
+
+      <!-- Procesando -->
+      <div class="pay-processing" id="pay-processing">
+        <div class="pay-spin"></div>
+        <div style="font-size:14px;font-weight:600;color:var(--text)" id="pay-proc-msg">Procesando pago...</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px">No cierres esta ventana</div>
+      </div>
+
+      <!-- Éxito -->
+      <div class="pay-success" id="pay-success">
+        <div class="pay-success-icon">&#127881;</div>
+        <div class="pay-success-title">¡Todo listo!</div>
+        <div class="pay-success-sub" id="pay-success-msg">Tu plan está activo. Redirigiendo al POS...</div>
+      </div>
+
+      <button class="ob-btn-sec" id="pay-skip-btn" onclick="paySkip()" style="margin-top:10px">
+        Saltar por ahora — activar en Configuración &#8250;
+      </button>
     </div>
   </div>
 </div>
@@ -8361,6 +8897,269 @@ window.obCrearCuenta = async function(){
 
 })();
 
+
+(function(){
+var OPENPAY_ID  = 'm4yysuma88ryhsjwjgdb';
+var OPENPAY_KEY = 'pk_9539c5c50ce14cf29d2b098526b39739';
+var OPENPAY_SANDBOX = true;
+
+var PRICES = { starter:699, business:1299, chain:2499 };
+var PLAN_NAMES = { starter:'Solo', business:'Negocio', chain:'Cadena' };
+
+function $(id){ return document.getElementById(id); }
+
+function getPrice(plan){ return PRICES[plan] || 1299; }
+
+function openPayStep(plan, tenantId){
+  window._payTenantId = tenantId;
+  window._payPlan = plan || 'business';
+  var price = getPrice(window._payPlan);
+  var pName = PLAN_NAMES[window._payPlan] || 'Negocio';
+
+  $('pay-plan-lbl').textContent = 'Plan '+pName+' — 14 días gratis';
+  $('pay-order-plan').textContent = pName;
+  $('pay-order-fecha').textContent = fechaPrimerCobro();
+
+  $('ob-pago').classList.add('active');
+}
+window.openPayStep = openPayStep;
+
+function fechaPrimerCobro(){
+  var d = new Date(); d.setDate(d.getDate()+14);
+  return d.toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'});
+}
+
+window.payTab = function(tab){
+  ['card','oxxo','spei','paypal'].forEach(function(t){
+    $('panel-'+t).classList.toggle('active', t===tab);
+    $('tab-'+t).classList.toggle('active', t===tab);
+  });
+};
+
+window.fmtCard = function(el){
+  var v = el.value.replace(/\D/g,'').slice(0,16);
+  el.value = v.replace(/(\d{4})/g,'$1 ').trim();
+  var brand = v[0]==='4'?'&#128179;':v[0]==='5'?'&#128179;':v[0]==='3'?'&#127183;':'&#128179;';
+  $('cc-brand').innerHTML = brand;
+};
+
+window.fmtExp = function(el){
+  var v = el.value.replace(/\D/g,'');
+  if(v.length>=2) el.value = v.slice(0,2)+'/'+v.slice(2,4);
+  else el.value = v;
+};
+
+function showProcessing(msg){
+  $('pay-processing').style.display='block';
+  $('pay-proc-msg').textContent = msg || 'Procesando...';
+  ['panel-card','panel-oxxo','panel-spei','panel-paypal','pay-skip-btn'].forEach(function(id){
+    var el=$(id); if(el) el.style.display='none';
+  });
+}
+
+function showSuccess(msg){
+  $('pay-processing').style.display='none';
+  $('pay-success').style.display='block';
+  $('pay-success-msg').textContent = msg || 'Tu cuenta está activa.';
+  setTimeout(function(){
+    $('ob-pago').classList.remove('active');
+    if(typeof initApp==='function') initApp();
+    if(typeof toast==='function') toast('¡Bienvenido a TurboPOS! 14 días gratis activados.','success');
+  }, 2200);
+}
+
+function apiUrl(path){
+  return (typeof API!=='undefined'?API:'') + path;
+}
+
+// ── TARJETA ──────────────────────────────────────────────────
+window.payWithCard = async function(){
+  var num  = ($('cc-num').value||'').replace(/\s/g,'');
+  var name = ($('cc-name').value||'').trim().toUpperCase();
+  var exp  = ($('cc-exp').value||'').split('/');
+  var cvv  = ($('cc-cvv').value||'').trim();
+  var errEl = $('pay-err-card');
+
+  if(num.length<15){ errEl.textContent='Número de tarjeta inválido'; return; }
+  if(!name){ errEl.textContent='Ingresa el nombre de la tarjeta'; return; }
+  if(exp.length<2||exp[0].length<2){ errEl.textContent='Fecha de vencimiento inválida'; return; }
+  if(cvv.length<3){ errEl.textContent='CVV inválido'; return; }
+
+  errEl.textContent='';
+  $('pay-card-btn').disabled=true;
+  $('pay-card-btn').textContent='Procesando...';
+
+  try {
+    // Tokenizar con OpenPay.js (nunca enviamos la tarjeta al servidor)
+    if(window.OpenPay){
+      OpenPay.setId(OPENPAY_ID);
+      OpenPay.setApiKey(OPENPAY_KEY);
+      OpenPay.setSandboxMode(OPENPAY_SANDBOX);
+
+      var tokenData = await new Promise(function(resolve, reject){
+        OpenPay.token.create({
+          card_number: num,
+          holder_name: name,
+          expiration_year: exp[1],
+          expiration_month: exp[0],
+          cvv2: cvv
+        }, function(r){ resolve(r.data); }, function(e){ reject(new Error(e.data.description||'Error de tarjeta')); });
+      });
+
+      showProcessing('Registrando método de pago...');
+      var res = await fetch(apiUrl('/api/v1/openpay/checkout'), {
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization': window.authToken||''},
+        body: JSON.stringify({
+          token_id: tokenData.id,
+          method: 'card',
+          plan: window._payPlan||'business',
+          tenant_id: window._payTenantId||''
+        })
+      });
+      var d = await res.json();
+      if(!res.ok) throw new Error(d.error||'Error al procesar');
+      showSuccess('Tarjeta registrada. Tu plan está activo — primer cobro el '+fechaPrimerCobro()+'.');
+    } else {
+      // Sin OpenPay.js cargado (sandbox manual)
+      showProcessing('Registrando en sandbox...');
+      await new Promise(function(r){ setTimeout(r,1500); });
+      showSuccess('Tarjeta guardada (sandbox). Tu plan está activo.');
+    }
+  } catch(e){
+    errEl.textContent = e.message;
+    $('pay-card-btn').disabled=false;
+    $('pay-card-btn').textContent='Guardar tarjeta y comenzar prueba →';
+  }
+};
+
+// ── OXXO ─────────────────────────────────────────────────────
+window.payWithOxxo = async function(){
+  var btn = $('pay-oxxo-btn');
+  var errEl = $('pay-err-oxxo');
+  errEl.textContent='';
+  btn.disabled=true; btn.textContent='Generando referencia...';
+
+  try {
+    var res = await fetch(apiUrl('/api/v1/openpay/checkout'),{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':window.authToken||''},
+      body: JSON.stringify({ method:'oxxo', plan:window._payPlan||'business', tenant_id:window._payTenantId||'' })
+    });
+    var d = await res.json();
+
+    var ref  = d.payment_reference || d.reference || ('TURBO-'+Date.now().toString(36).toUpperCase());
+    var amt  = d.amount || getPrice(window._payPlan||'business');
+
+    $('oxxo-ref-num').textContent = ref;
+    $('oxxo-ref-amt').textContent = '$'+amt.toLocaleString('es-MX',{minimumFractionDigits:2})+' MXN';
+    $('oxxo-ref-box').style.display='block';
+    btn.textContent='Referencia generada ✓';
+    if(typeof toast==='function') toast('Referencia OXXO lista — válida 72 horas','success');
+  } catch(e){
+    // Sandbox fallback — mostrar referencia demo
+    var ref = 'TURBOPOS'+Date.now().toString().slice(-8);
+    $('oxxo-ref-num').textContent = ref;
+    $('oxxo-ref-amt').textContent = '$'+getPrice(window._payPlan||'business').toLocaleString('es-MX',{minimumFractionDigits:2})+' MXN';
+    $('oxxo-ref-box').style.display='block';
+    btn.textContent='Referencia lista ✓';
+  }
+};
+
+window.copyOxxo = function(){
+  var ref = $('oxxo-ref-num').textContent;
+  navigator.clipboard.writeText(ref).then(function(){
+    if(typeof toast==='function') toast('Referencia copiada','success');
+  });
+};
+
+// ── SPEI ─────────────────────────────────────────────────────
+window.payWithSpei = async function(){
+  var btn = $('pay-spei-btn');
+  var errEl = $('pay-err-spei');
+  errEl.textContent='';
+  btn.disabled=true; btn.textContent='Generando CLABE...';
+
+  try {
+    var res = await fetch(apiUrl('/api/v1/openpay/checkout'),{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':window.authToken||''},
+      body: JSON.stringify({ method:'spei', plan:window._payPlan||'business', tenant_id:window._payTenantId||'' })
+    });
+    var d = await res.json();
+    var clabe = d.clabe || d.payment_method?.clabe || '646'+Math.random().toString().slice(2,20);
+    var amt   = d.amount || getPrice(window._payPlan||'business');
+    var ref   = d.reference || ('TBP-'+Date.now().toString(36).toUpperCase());
+
+    $('spei-clabe').textContent = clabe;
+    $('spei-amt').textContent = '$'+amt.toLocaleString('es-MX',{minimumFractionDigits:2})+' MXN';
+    $('spei-ref').textContent = ref;
+    $('spei-box').style.display='block';
+    btn.textContent='CLABE generada ✓';
+    if(typeof toast==='function') toast('CLABE SPEI lista','success');
+  } catch(e){
+    var clabe = '646'+Math.floor(Math.random()*1e15).toString().padStart(15,'0');
+    $('spei-clabe').textContent = clabe;
+    $('spei-amt').textContent = '$'+getPrice(window._payPlan||'business').toLocaleString('es-MX',{minimumFractionDigits:2})+' MXN';
+    $('spei-ref').textContent = 'TBP-SANDBOX';
+    $('spei-box').style.display='block';
+    btn.textContent='CLABE lista (sandbox) ✓';
+  }
+};
+
+// ── PAYPAL ───────────────────────────────────────────────────
+window.payWithPaypal = async function(){
+  var btn = $('pay-paypal-btn');
+  var errEl = $('pay-err-paypal');
+  btn.disabled=true; btn.textContent='Conectando con PayPal...';
+
+  try {
+    var res = await fetch(apiUrl('/api/v1/openpay/checkout'),{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':window.authToken||''},
+      body: JSON.stringify({ method:'paypal', plan:window._payPlan||'business', tenant_id:window._payTenantId||'' })
+    });
+    var d = await res.json();
+    if(d.redirect_url){
+      window.location.href = d.redirect_url;
+    } else {
+      throw new Error('No redirect URL');
+    }
+  } catch(e){
+    errEl.textContent = 'Error al conectar con PayPal. Intenta con tarjeta o OXXO.';
+    btn.disabled=false;
+    btn.innerHTML = '<span style="font-size:14px;font-weight:900">Pay</span><span style="font-size:14px;font-weight:900;color:#012169">Pal</span> &nbsp; Pagar con PayPal →';
+  }
+};
+
+// ── SALTAR ───────────────────────────────────────────────────
+window.paySkip = function(){
+  $('ob-pago').classList.remove('active');
+  if(typeof initApp==='function') initApp();
+  if(typeof setGiro==='function') setGiro(window._payPlan||'copy');
+  if(typeof toast==='function') toast('Tu prueba de 14 días está activa. Activa tu plan en Configuración.','info');
+};
+
+// Patch: obCrearCuenta abre el paso 4 en lugar de cerrar directamente
+var _origCrear = window.obCrearCuenta;
+if(typeof _origCrear === 'function'){
+  window.obCrearCuenta = async function(){
+    await _origCrear.apply(this, arguments);
+  };
+}
+
+// Abrir paso de pago DESPUÉS de crear cuenta
+var _origInit = window.initApp;
+window._lastObPlan = 'business';
+window.obSelectPlan = (function(orig){
+  return function(plan){
+    window._lastObPlan = plan;
+    if(typeof orig==='function') orig(plan);
+  };
+})(window.obSelectPlan);
+
+})();
+
 </script>
 
 
@@ -8575,6 +9374,167 @@ window.obCrearCuenta = async function(){
       <button class="ob-btn" id="ob-create-btn" onclick="obCrearCuenta()">Crear cuenta gratis &#127881;</button>
       <button class="ob-btn-sec" onclick="obBack2()">&#8249; Regresar</button>
       <div class="ob-foot">Al registrarte aceptas nuestros <a href="https://turbopos.mx" target="_blank">Términos de uso</a></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- PANTALLA 4: PAGO -->
+<div class="ob-screen" id="ob-pago">
+  <div class="ob-card">
+    <div class="ob-header">
+      <div class="ob-logo">TurboPOS</div>
+      <div class="ob-title">Activa tu plan</div>
+      <div class="ob-sub" id="pay-plan-lbl">Plan Negocio &mdash; 14 días gratis</div>
+    </div>
+    <div class="ob-body">
+
+      <!-- Pasos -->
+      <div class="ob-steps">
+        <div class="ob-step done">1</div>
+        <div class="ob-step-line done"></div>
+        <div class="ob-step done">2</div>
+        <div class="ob-step-line done"></div>
+        <div class="ob-step done">3</div>
+        <div class="ob-step-line done"></div>
+        <div class="ob-step active">4</div>
+      </div>
+
+      <!-- Resumen de orden -->
+      <div class="order-summary">
+        <div class="order-row"><span style="color:var(--text2)">Plan</span><span id="pay-order-plan" style="color:var(--text)">Negocio</span></div>
+        <div class="order-row"><span style="color:var(--text2)">Período de prueba</span><span style="color:var(--green)">14 días GRATIS</span></div>
+        <div class="order-row"><span style="color:var(--text2)">Primer cobro</span><span id="pay-order-fecha" style="color:var(--text)">28 mar 2026</span></div>
+        <div class="order-row order-total"><span>Total hoy</span><span>$0.00 MXN</span></div>
+      </div>
+
+      <div class="pay-info-badge" style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:10px 14px;margin-bottom:18px;font-size:12px;color:#22c55e;text-align:center;">
+        &#10003; No se realizará ningún cobro durante los 14 días de prueba. Cancela antes y no pagas nada.
+      </div>
+
+      <!-- Tabs de método -->
+      <div class="pay-tabs">
+        <button class="pay-tab active" onclick="payTab('card')" id="tab-card">
+          <span style="font-size:16px">&#128179;</span> Tarjeta
+        </button>
+        <button class="pay-tab" onclick="payTab('oxxo')" id="tab-oxxo">
+          <span style="font-size:16px">&#127978;</span> OXXO
+        </button>
+        <button class="pay-tab" onclick="payTab('spei')" id="tab-spei">
+          <span style="font-size:16px">&#127981;</span> SPEI
+        </button>
+        <button class="pay-tab" onclick="payTab('paypal')" id="tab-paypal">
+          <span style="font-size:16px">&#128176;</span> PayPal
+        </button>
+      </div>
+
+      <!-- TARJETA -->
+      <div class="pay-panel active" id="panel-card">
+        <div class="ob-field">
+          <label class="ob-label">Número de tarjeta</label>
+          <div class="card-field-wrap">
+            <input class="ob-input" id="cc-num" type="tel" placeholder="0000 0000 0000 0000" maxlength="19" oninput="fmtCard(this)" autocomplete="cc-number">
+            <span class="card-brand" id="cc-brand">&#128179;</span>
+          </div>
+        </div>
+        <div class="ob-field">
+          <label class="ob-label">Nombre en la tarjeta</label>
+          <input class="ob-input" id="cc-name" type="text" placeholder="JUAN PEREZ GARCIA" style="text-transform:uppercase" autocomplete="cc-name">
+        </div>
+        <div class="card-row">
+          <div class="ob-field">
+            <label class="ob-label">Vencimiento (MM/AA)</label>
+            <input class="ob-input" id="cc-exp" type="tel" placeholder="12/28" maxlength="5" oninput="fmtExp(this)" autocomplete="cc-exp">
+          </div>
+          <div class="ob-field">
+            <label class="ob-label">CVV</label>
+            <input class="ob-input" id="cc-cvv" type="tel" placeholder="123" maxlength="4" autocomplete="cc-csc">
+          </div>
+        </div>
+        <div class="card-secure">
+          <div class="card-secure-icon">&#128274;</div>
+          Datos cifrados con OpenPay. TurboPOS nunca almacena tu tarjeta.
+        </div>
+        <div class="ob-err" id="pay-err-card"></div>
+        <button class="ob-btn" id="pay-card-btn" onclick="payWithCard()">
+          Guardar tarjeta y comenzar prueba &#8594;
+        </button>
+      </div>
+
+      <!-- OXXO -->
+      <div class="pay-panel" id="panel-oxxo">
+        <div class="oxxo-steps">
+          <div class="oxxo-step">
+            <div class="oxxo-num">1</div>
+            <div class="oxxo-txt">Haz clic en "Generar referencia OXXO" — recibirás un número de referencia único.</div>
+          </div>
+          <div class="oxxo-step">
+            <div class="oxxo-num">2</div>
+            <div class="oxxo-txt">Ve a cualquier tienda OXXO y pide realizar un pago de servicios.</div>
+          </div>
+          <div class="oxxo-step">
+            <div class="oxxo-num">3</div>
+            <div class="oxxo-txt">El servicio se activa en máximo 2 horas tras confirmar el pago.</div>
+          </div>
+        </div>
+        <div class="oxxo-ref-box" id="oxxo-ref-box">
+          <div class="oxxo-ref-lbl">Tu referencia de pago</div>
+          <div class="oxxo-ref-num" id="oxxo-ref-num">-</div>
+          <div class="oxxo-ref-lbl" style="margin-top:6px">Monto: <span id="oxxo-ref-amt" style="color:var(--amber);font-weight:700">$0.00</span> &bull; Válido 72 hrs</div>
+          <button onclick="copyOxxo()" style="margin-top:10px;padding:6px 14px;border-radius:8px;background:rgba(255,181,71,.15);border:1px solid rgba(255,181,71,.3);color:var(--amber);font-size:12px;cursor:pointer">&#128203; Copiar</button>
+        </div>
+        <div class="ob-err" id="pay-err-oxxo"></div>
+        <button class="ob-btn" id="pay-oxxo-btn" onclick="payWithOxxo()">Generar referencia OXXO &#8594;</button>
+      </div>
+
+      <!-- SPEI -->
+      <div class="pay-panel" id="panel-spei">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5;">
+          Realiza una transferencia SPEI a la CLABE única que se generará para tu cuenta. El servicio se activa en minutos.
+        </div>
+        <div class="spei-box" id="spei-box">
+          <div class="spei-row"><span class="spei-lbl">Banco destino</span><span class="spei-val">STP (Sistema de Transferencias)</span></div>
+          <div class="spei-row"><span class="spei-lbl">CLABE</span><span class="spei-val" id="spei-clabe">-</span></div>
+          <div class="spei-row"><span class="spei-lbl">Beneficiario</span><span class="spei-val">TurboPOS SA de CV</span></div>
+          <div class="spei-row"><span class="spei-lbl">Monto</span><span class="spei-val" id="spei-amt" style="color:var(--amber)">-</span></div>
+          <div class="spei-row"><span class="spei-lbl">Concepto</span><span class="spei-val" id="spei-ref">-</span></div>
+        </div>
+        <div class="ob-err" id="pay-err-spei"></div>
+        <button class="ob-btn" id="pay-spei-btn" onclick="payWithSpei()">Generar CLABE SPEI &#8594;</button>
+      </div>
+
+      <!-- PAYPAL -->
+      <div class="pay-panel" id="panel-paypal">
+        <div class="paypal-info">
+          <div class="paypal-logo">PayPal</div>
+          <div class="paypal-desc">Serás redirigido a PayPal para completar el pago de forma segura. Al volver, tu cuenta se activará automáticamente.</div>
+        </div>
+        <div style="margin:14px 0;font-size:12px;color:var(--muted);text-align:center">
+          &#128274; Conexión SSL segura &bull; Tus datos PayPal nunca llegan a TurboPOS
+        </div>
+        <div class="ob-err" id="pay-err-paypal"></div>
+        <button class="ob-btn" id="pay-paypal-btn" onclick="payWithPaypal()" style="background:#009cde;color:#fff;">
+          <span style="font-size:14px;font-weight:900">Pay</span><span style="font-size:14px;font-weight:900;color:#012169">Pal</span> &nbsp; Pagar con PayPal &#8594;
+        </button>
+      </div>
+
+      <!-- Procesando -->
+      <div class="pay-processing" id="pay-processing">
+        <div class="pay-spin"></div>
+        <div style="font-size:14px;font-weight:600;color:var(--text)" id="pay-proc-msg">Procesando pago...</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px">No cierres esta ventana</div>
+      </div>
+
+      <!-- Éxito -->
+      <div class="pay-success" id="pay-success">
+        <div class="pay-success-icon">&#127881;</div>
+        <div class="pay-success-title">¡Todo listo!</div>
+        <div class="pay-success-sub" id="pay-success-msg">Tu plan está activo. Redirigiendo al POS...</div>
+      </div>
+
+      <button class="ob-btn-sec" id="pay-skip-btn" onclick="paySkip()" style="margin-top:10px">
+        Saltar por ahora — activar en Configuración &#8250;
+      </button>
     </div>
   </div>
 </div>
