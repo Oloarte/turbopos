@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 
 <html lang="es">
 
@@ -5483,54 +5483,12 @@ function exportCortePDF() {
 
   
 <!-- Modal Cierre de Turno -->
-<div id="turno-modal" style="display:none;position:fixed;inset:0;background:rgba(8,12,20,.88);backdrop-filter:blur(4px);z-index:3000;align-items:center;justify-content:center">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.6)">
-    <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-      <div>
-        <div style="font-size:16px;font-weight:800">&#x1F512; Cierre de Turno</div>
-        <div style="font-size:11px;color:var(--muted)" id="turno-fecha-lbl"></div>
-      </div>
-      <button onclick="cerrarTurnoModal()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer">&#x2715;</button>
-    </div>
-    <div style="padding:24px;display:flex;flex-direction:column;gap:16px">
 
-      <!-- Resumen del dia -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="turno-kpis"></div>
+function loadCustomers(){
+  if(typeof cliLoad==='function') cliLoad();
+}
 
-      <!-- Cajero -->
-      <div style="display:flex;flex-direction:column;gap:5px">
-        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Cajero responsable</label>
-        <input id="turno-cajero" class="cfg-input" placeholder="Nombre del cajero" style="width:100%">
-      </div>
 
-      <!-- Observaciones -->
-      <div style="display:flex;flex-direction:column;gap:5px">
-        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Observaciones</label>
-        <textarea id="turno-obs" class="cfg-input" rows="2" placeholder="Notas del turno..." style="width:100%;resize:none;font-family:var(--font)"></textarea>
-      </div>
-
-      <!-- Firma digital -->
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Firma del responsable</label>
-          <button onclick="limpiarFirma()" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:underline">Limpiar</button>
-        </div>
-        <canvas id="firma-canvas" width="468" height="140"
-          style="background:#0d1117;border:1px solid var(--border);border-radius:8px;cursor:crosshair;touch-action:none;width:100%"
-          onmousedown="firmaStart(event)" onmousemove="firmaMove(event)" onmouseup="firmaEnd()"
-          onmouseleave="firmaEnd()" ontouchstart="firmaTouch(event)" ontouchmove="firmaTouch(event)"
-          ontouchend="firmaEnd()"></canvas>
-        <div style="font-size:10px;color:var(--muted);text-align:center">Firma con mouse o touch</div>
-      </div>
-
-      <!-- Botones -->
-      <div style="display:flex;gap:10px;margin-top:4px">
-        <button onclick="cerrarTurnoModal()" style="flex:1;padding:11px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);cursor:pointer;font-weight:600">Cancelar</button>
-        <button onclick="guardarCierreTurno()" style="flex:2;padding:11px;border-radius:8px;background:var(--amber);border:none;color:#000;cursor:pointer;font-weight:800;font-size:14px">&#x1F4BE; Guardar y cerrar turno</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 
 
@@ -5539,352 +5497,35 @@ function exportCortePDF() {
      ════════════════════════════════════════════════════════════ -->
 
 <!-- PANTALLA 1: PLANES -->
-<div class="ob-screen" id="ob-planes">
-  <div class="ob-card">
-    <div class="ob-header">
-      <div class="ob-logo">TurboPOS</div>
-      <div class="ob-title">Elige tu plan</div>
-      <div class="ob-sub">14 días gratis · Sin tarjeta de crédito</div>
-    </div>
-    <div class="ob-body">
-      <div class="trial-badge">&#128197; Prueba gratuita de 14 días — cancela cuando quieras</div>
-      <div class="plans-grid">
-        <div class="plan-card" id="pc-starter" >
-          <div class="plan-name">Solo</div>
-          <div class="plan-price">$699</div>
-          <div class="plan-per">/mes · 1 terminal</div>
-          <div class="plan-feat">
-            <span>POS + CFDI 4.0</span>
-            <span>Catálogo ilimitado</span>
-            <span>Reportes básicos</span>
-            <span>Soporte por email</span>
-          </div>
-        </div>
-        <div class="plan-card popular" id="pc-business" >
-          <div class="plan-name">Negocio<div style="margin-top:8px"><button onclick="openPlanDetail('starter')" style="width:100%;padding:5px;border-radius:7px;background:rgba(255,181,71,.1);border:1px solid rgba(255,181,71,.25);color:#FFB547;font-size:11px;cursor:pointer;font-weight:600">Ver detalles completos &#8250;</button></div></div>
-          <div class="plan-price">$1,299</div>
-          <div class="plan-per">/mes · hasta 3 terminales</div>
-          <div class="plan-feat">
-            <span>Todo lo del Solo</span>
-            <span>Programa de lealtad</span>
-            <span>Dashboard avanzado</span>
-            <span>Descuentos y cupones</span>
-          </div>
-        </div>
-        <div class="plan-card" id="pc-chain" >
-          <div class="plan-name">Cadena</div>
-          <div class="plan-price">$2,499</div>
-          <div class="plan-per">/mes · terminales ilimitadas</div>
-          <div class="plan-feat">
-            <span>Todo lo del Negocio</span>
-            <span>Multi-sucursal</span>
-            <span>API acceso</span>
-            <span>Soporte prioritario</span>
-          </div>
-        </div>
-      </div>
-      <button class="ob-btn" onclick="obGoStep2()">Continuar &#8250;</button>
-      <div class="ob-foot">Ya tienes cuenta? <a onclick="obShowLogin()">Iniciar sesión</a><div style="margin-top:8px"><button onclick="openPlanDetail('chain')" style="width:100%;padding:5px;border-radius:7px;background:rgba(255,181,71,.1);border:1px solid rgba(255,181,71,.25);color:#FFB547;font-size:11px;cursor:pointer;font-weight:600">Ver detalles completos &#8250;</button></div></div>
-    </div>
-  </div>
-</div>
+
 
 <!-- PANTALLA 2: DATOS DEL NEGOCIO -->
-<div class="ob-screen" id="ob-registro">
-  <div class="ob-card">
-    <div class="ob-header">
-      <div class="ob-logo">TurboPOS</div>
-      <div class="ob-title">Configura tu negocio</div>
-      <div class="ob-sub">Solo toma 1 minuto</div>
-    </div>
-    <div class="ob-body">
-      <div class="ob-steps">
-        <div class="ob-step done" id="os1">1</div>
-        <div class="ob-step-line done"></div>
-        <div class="ob-step active" id="os2">2</div>
-        <div class="ob-step-line"></div>
-        <div class="ob-step" id="os3">3</div>
-      </div>
 
-      <div class="ob-field">
-        <label class="ob-label">&#127968; Tipo de negocio</label>
-        <div class="giros-grid">
-          <div class="giro-chip" data-g="copy" onclick="obSelectGiro('copy')">&#128424; Copy Center</div>
-          <div class="giro-chip" data-g="restaurant" onclick="obSelectGiro('restaurant')">&#127828; Restaurante</div>
-          <div class="giro-chip" data-g="tienda" onclick="obSelectGiro('tienda')">&#128722; Tienda</div>
-          <div class="giro-chip" data-g="papeleria" onclick="obSelectGiro('papeleria')">&#9999; Papelería</div>
-          <div class="giro-chip" data-g="salon" onclick="obSelectGiro('salon')">&#9986; Salón</div>
-          <div class="giro-chip" data-g="custom" onclick="obSelectGiro('custom')">&#9881; Otro</div>
-        </div>
-      </div>
-
-      <div class="ob-field">
-        <label class="ob-label">Nombre del negocio *</label>
-        <input class="ob-input" id="ob-nombre" type="text" placeholder="Ej. Copy Center Vecino">
-      </div>
-      <div class="ob-row">
-        <div class="ob-field">
-          <label class="ob-label">RFC</label>
-          <input class="ob-input" id="ob-rfc" type="text" placeholder="XAXX010101000" style="text-transform:uppercase">
-        </div>
-        <div class="ob-field">
-          <label class="ob-label">Código postal</label>
-          <input class="ob-input" id="ob-cp" type="text" placeholder="55000">
-        </div>
-      </div>
-      <div class="ob-err" id="ob-err2"></div>
-      <button class="ob-btn" onclick="obGoStep3()">Siguiente &#8250;</button>
-      <button class="ob-btn-sec" onclick="obBack1()">&#8249; Regresar</button>
-    </div>
-  </div>
-</div>
 
 <!-- PANTALLA 3: CUENTA -->
-<div class="ob-screen" id="ob-cuenta">
-  <div class="ob-card">
-    <div class="ob-header">
-      <div class="ob-logo">TurboPOS</div>
-      <div class="ob-title">Crear tu cuenta</div>
-      <div class="ob-sub" id="ob-plan-lbl">Plan Negocio · 14 días gratis</div>
-    </div>
-    <div class="ob-body">
-      <div class="ob-steps">
-        <div class="ob-step done">1</div>
-        <div class="ob-step-line done"></div>
-        <div class="ob-step done">2</div>
-        <div class="ob-step-line done"></div>
-        <div class="ob-step active">3</div>
-      </div>
 
-      <div class="ob-field">
-        <label class="ob-label">Correo electrónico *</label>
-        <input class="ob-input" id="ob-email" type="email" placeholder="tu@negocio.com">
-      </div>
-      <div class="ob-row">
-        <div class="ob-field">
-          <label class="ob-label">Contraseña *</label>
-          <input class="ob-input" id="ob-pass" type="password" placeholder="Mínimo 8 caracteres">
-        </div>
-        <div class="ob-field">
-          <label class="ob-label">Confirmar *</label>
-          <input class="ob-input" id="ob-pass2" type="password" placeholder="Repite la contraseña">
-        </div>
-      </div>
-      <div class="ob-err" id="ob-err3"></div>
-      <button class="ob-btn" id="ob-create-btn" onclick="obCrearCuenta()">Crear cuenta gratis &#127881;</button>
-      <button class="ob-btn-sec" onclick="obBack2()">&#8249; Regresar</button>
-      <div class="ob-foot">Al registrarte aceptas nuestros <a href="/terminos" target="_blank">Términos de uso</a></div>
-    </div>
-  </div>
-</div>
 
 
 <!-- PANTALLA 4: PAGO -->
-<div class="ob-screen" id="ob-pago">
-  <div class="ob-card">
-    <div class="ob-header">
-      <div class="ob-logo">TurboPOS</div>
-      <div class="ob-title">Activa tu plan</div>
-      <div class="ob-sub" id="pay-plan-lbl">Plan Negocio &mdash; 14 días gratis</div>
+
+
+
+
+
+
+<div id="ticket-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:16px;width:380px;max-height:90vh;overflow-y:auto;padding:24px;position:relative">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <span style="font-weight:700;font-size:16px">&#129534; Comprobante</span>
+      <button onclick="closeTicket()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">&#215;</button>
     </div>
-    <div class="ob-body">
-
-      <!-- Pasos -->
-      <div class="ob-steps">
-        <div class="ob-step done">1</div>
-        <div class="ob-step-line done"></div>
-        <div class="ob-step done">2</div>
-        <div class="ob-step-line done"></div>
-        <div class="ob-step done">3</div>
-        <div class="ob-step-line done"></div>
-        <div class="ob-step active">4</div>
-      </div>
-
-      <!-- Resumen de orden -->
-      <div class="order-summary">
-        <div class="order-row"><span style="color:var(--text2)">Plan</span><span id="pay-order-plan" style="color:var(--text)">Negocio</span></div>
-        <div class="order-row"><span style="color:var(--text2)">Período de prueba</span><span style="color:var(--green)">14 días GRATIS</span></div>
-        <div class="order-row"><span style="color:var(--text2)">Primer cobro</span><span id="pay-order-fecha" style="color:var(--text)">28 mar 2026</span></div>
-        <div class="order-row order-total"><span>Total hoy</span><span>$0.00 MXN</span></div>
-      </div>
-
-      <div class="pay-info-badge" style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:10px 14px;margin-bottom:18px;font-size:12px;color:#22c55e;text-align:center;">
-        &#10003; No se realizará ningún cobro durante los 14 días de prueba. Cancela antes y no pagas nada.
-      </div>
-
-      <!-- Tabs de método -->
-      <div class="pay-tabs">
-        <button class="pay-tab active" onclick="payTab('card')" id="tab-card">
-          <span style="font-size:16px">&#128179;</span> Tarjeta
-        </button>
-        <button class="pay-tab" onclick="payTab('oxxo')" id="tab-oxxo">
-          <span style="font-size:16px">&#127978;</span> OXXO
-        </button>
-        <button class="pay-tab" onclick="payTab('spei')" id="tab-spei">
-          <span style="font-size:16px">&#127981;</span> SPEI
-        </button>
-        <button class="pay-tab" onclick="payTab('paypal')" id="tab-paypal">
-          <span style="font-size:16px">&#128176;</span> PayPal
-        </button>
-      </div>
-
-      <!-- TARJETA -->
-      <div class="pay-panel active" id="panel-card">
-        <div class="ob-field">
-          <label class="ob-label">Número de tarjeta</label>
-          <div class="card-field-wrap">
-            <input class="ob-input" id="cc-num" type="tel" placeholder="0000 0000 0000 0000" maxlength="19" oninput="fmtCard(this)" autocomplete="cc-number">
-            <span class="card-brand" id="cc-brand">&#128179;</span>
-          </div>
-        </div>
-        <div class="ob-field">
-          <label class="ob-label">Nombre en la tarjeta</label>
-          <input class="ob-input" id="cc-name" type="text" placeholder="JUAN PEREZ GARCIA" style="text-transform:uppercase" autocomplete="cc-name">
-        </div>
-        <div class="card-row">
-          <div class="ob-field">
-            <label class="ob-label">Vencimiento (MM/AA)</label>
-            <input class="ob-input" id="cc-exp" type="tel" placeholder="12/28" maxlength="5" oninput="fmtExp(this)" autocomplete="cc-exp">
-          </div>
-          <div class="ob-field">
-            <label class="ob-label">CVV</label>
-            <input class="ob-input" id="cc-cvv" type="tel" placeholder="123" maxlength="4" autocomplete="cc-csc">
-          </div>
-        </div>
-        <div class="card-secure">
-          <div class="card-secure-icon">&#128274;</div>
-          Datos cifrados con OpenPay. TurboPOS nunca almacena tu tarjeta.
-        </div>
-        <div class="ob-err" id="pay-err-card"></div>
-        <button class="ob-btn" id="pay-card-btn" onclick="payWithCard()">
-          Guardar tarjeta y comenzar prueba &#8594;
-        </button>
-      </div>
-
-      <!-- OXXO -->
-      <div class="pay-panel" id="panel-oxxo">
-        <div class="oxxo-steps">
-          <div class="oxxo-step">
-            <div class="oxxo-num">1</div>
-            <div class="oxxo-txt">Haz clic en "Generar referencia OXXO" — recibirás un número de referencia único.</div>
-          </div>
-          <div class="oxxo-step">
-            <div class="oxxo-num">2</div>
-            <div class="oxxo-txt">Ve a cualquier tienda OXXO y pide realizar un pago de servicios.</div>
-          </div>
-          <div class="oxxo-step">
-            <div class="oxxo-num">3</div>
-            <div class="oxxo-txt">El servicio se activa en máximo 2 horas tras confirmar el pago.</div>
-          </div>
-        </div>
-        <div class="oxxo-ref-box" id="oxxo-ref-box">
-          <div class="oxxo-ref-lbl">Tu referencia de pago</div>
-          <div class="oxxo-ref-num" id="oxxo-ref-num">-</div>
-          <div class="oxxo-ref-lbl" style="margin-top:6px">Monto: <span id="oxxo-ref-amt" style="color:var(--amber);font-weight:700">$0.00</span> &bull; Válido 72 hrs</div>
-          <button onclick="copyOxxo()" style="margin-top:10px;padding:6px 14px;border-radius:8px;background:rgba(255,181,71,.15);border:1px solid rgba(255,181,71,.3);color:var(--amber);font-size:12px;cursor:pointer">&#128203; Copiar</button>
-        </div>
-        <div class="ob-err" id="pay-err-oxxo"></div>
-        <button class="ob-btn" id="pay-oxxo-btn" onclick="payWithOxxo()">Generar referencia OXXO &#8594;</button>
-      </div>
-
-      <!-- SPEI -->
-      <div class="pay-panel" id="panel-spei">
-        <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5;">
-          Realiza una transferencia SPEI a la CLABE única que se generará para tu cuenta. El servicio se activa en minutos.
-        </div>
-        <div class="spei-box" id="spei-box">
-          <div class="spei-row"><span class="spei-lbl">Banco destino</span><span class="spei-val">STP (Sistema de Transferencias)</span></div>
-          <div class="spei-row"><span class="spei-lbl">CLABE</span><span class="spei-val" id="spei-clabe">-</span></div>
-          <div class="spei-row"><span class="spei-lbl">Beneficiario</span><span class="spei-val">TurboPOS SA de CV</span></div>
-          <div class="spei-row"><span class="spei-lbl">Monto</span><span class="spei-val" id="spei-amt" style="color:var(--amber)">-</span></div>
-          <div class="spei-row"><span class="spei-lbl">Concepto</span><span class="spei-val" id="spei-ref">-</span></div>
-        </div>
-        <div class="ob-err" id="pay-err-spei"></div>
-        <button class="ob-btn" id="pay-spei-btn" onclick="payWithSpei()">Generar CLABE SPEI &#8594;</button>
-      </div>
-
-      <!-- PAYPAL -->
-      <div class="pay-panel" id="panel-paypal">
-        <div class="paypal-info">
-          <div class="paypal-logo">PayPal</div>
-          <div class="paypal-desc">Serás redirigido a PayPal para completar el pago de forma segura. Al volver, tu cuenta se activará automáticamente.</div>
-        </div>
-        <div style="margin:14px 0;font-size:12px;color:var(--muted);text-align:center">
-          &#128274; Conexión SSL segura &bull; Tus datos PayPal nunca llegan a TurboPOS
-        </div>
-        <div class="ob-err" id="pay-err-paypal"></div>
-        <button class="ob-btn" id="pay-paypal-btn" onclick="payWithPaypal()" style="background:#009cde;color:#fff;">
-          <span style="font-size:14px;font-weight:900">Pay</span><span style="font-size:14px;font-weight:900;color:#012169">Pal</span> &nbsp; Pagar con PayPal &#8594;
-        </button>
-      </div>
-
-      <!-- Procesando -->
-      <div class="pay-processing" id="pay-processing">
-        <div class="pay-spin"></div>
-        <div style="font-size:14px;font-weight:600;color:var(--text)" id="pay-proc-msg">Procesando pago...</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:6px">No cierres esta ventana</div>
-      </div>
-
-      <!-- Éxito -->
-      <div class="pay-success" id="pay-success">
-        <div class="pay-success-icon">&#127881;</div>
-        <div class="pay-success-title">¡Todo listo!</div>
-        <div class="pay-success-sub" id="pay-success-msg">Tu plan está activo. Redirigiendo al POS...</div>
-      </div>
-
-      <button class="ob-btn-sec" id="pay-skip-btn" onclick="paySkip()" style="margin-top:10px">
-        Saltar por ahora — activar en Configuración &#8250;
-      </button>
+    <div id="ticket-content" style="font-size:13px;line-height:1.6"></div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button onclick="printTicket()" class="btn-primary" style="flex:1">&#x1F5A8; Imprimir</button>
+      <button onclick="closeTicket()" style="flex:1;padding:10px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);cursor:pointer">Cerrar</button>
     </div>
   </div>
 </div>
-
-
-<div class="plan-detail-overlay" id="plan-detail-overlay" onclick="if(event.target===this)closePlanDetail()">
-<div class="pds-sheet">
-  <div class="pds-handle"></div>
-  <div class="pds-top">
-    <div>
-      <div class="pds-name" id="pds-name">Plan Negocio</div>
-      <div id="pds-tag" style="font-size:12px;color:#9B9893;margin-top:2px"></div>
-    </div>
-    <div style="text-align:right">
-      <div class="pds-price-big" id="pds-price">$1,299</div>
-      <div class="pds-price-mo">/mes + IVA &bull; 14 días gratis</div>
-    </div>
-    <button class="pds-close" onclick="closePlanDetail()">&#215;</button>
-  </div>
-  <div class="pds-body">
-    <div class="pds-roi">
-      <div class="pds-roi-title">&#128200; Ahorro estimado vs Clip POS</div>
-      <div class="pds-roi-grid">
-        <div><div class="pds-roi-val" id="roi-ahorro">$0</div><div class="pds-roi-lbl">ahorro/año</div></div>
-        <div><div class="pds-roi-val" id="roi-clip">$0</div><div class="pds-roi-lbl">pagarías a Clip</div></div>
-        <div><div class="pds-roi-val" id="roi-x">0x</div><div class="pds-roi-lbl">ROI vs competencia</div></div>
-      </div>
-    </div>
-    <div class="pds-sec-title">Incluido desde el día 1</div>
-    <div id="pds-feats"></div>
-    <div class="pds-sec-title" style="margin-top:16px">Comparativa completa</div>
-    <div class="pds-cmp">
-      <div class="pds-cmp-hd"><div>Función</div><div>Solo</div><div>Negocio</div><div>Cadena</div></div>
-      <div class="pds-cmp-row"><div class="pds-cf">Terminales</div><div class="pds-cv" id="ct0">1</div><div class="pds-cv" id="ct1">3</div><div class="pds-cv" id="ct2">&#8734;</div></div>
-      <div class="pds-cmp-row"><div class="pds-cf">CFDI 4.0</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row"><div class="pds-cf">Scanner barras</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row"><div class="pds-cf">Corte Z + PDF</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row hl"><div class="pds-cf">Programa lealtad</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row hl"><div class="pds-cf">Descuentos/cupones</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row hl"><div class="pds-cf">Dashboard avanzado</div><div class="pds-cv" style="font-size:11px">Básico</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row"><div class="pds-cf">Multi-sucursal</div><div class="pds-cv">—</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row"><div class="pds-cf">Acceso API</div><div class="pds-cv">—</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row"><div class="pds-cf">Soporte</div><div class="pds-cv" style="font-size:11px">Email</div><div class="pds-cv" style="font-size:11px">Chat</div><div class="pds-cv ok" style="font-size:11px">24/7</div></div>
-    </div>
-    <button class="pds-btn" id="pds-cta" onclick="pdsElegir()">Empezar con este plan gratis &#8594;</button>
-    <button class="pds-btn2" onclick="closePlanDetail()">&#8249; Ver todos los planes</button>
-  </div>
-</div>
-</div>
-
 </body></html>`;
 
   const win = window.open('','_blank','width=800,height=900');
@@ -6784,54 +6425,7 @@ function exportReportePDF() {
   <div class="footer">TurboPOS v10 &nbsp;·&nbsp; Documento generado automáticamente &nbsp;·&nbsp; Este reporte no es un comprobante fiscal</div>
   
 <!-- Modal Cierre de Turno -->
-<div id="turno-modal" style="display:none;position:fixed;inset:0;background:rgba(8,12,20,.88);backdrop-filter:blur(4px);z-index:3000;align-items:center;justify-content:center">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.6)">
-    <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-      <div>
-        <div style="font-size:16px;font-weight:800">&#x1F512; Cierre de Turno</div>
-        <div style="font-size:11px;color:var(--muted)" id="turno-fecha-lbl"></div>
-      </div>
-      <button onclick="cerrarTurnoModal()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer">&#x2715;</button>
-    </div>
-    <div style="padding:24px;display:flex;flex-direction:column;gap:16px">
 
-      <!-- Resumen del dia -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="turno-kpis"></div>
-
-      <!-- Cajero -->
-      <div style="display:flex;flex-direction:column;gap:5px">
-        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Cajero responsable</label>
-        <input id="turno-cajero" class="cfg-input" placeholder="Nombre del cajero" style="width:100%">
-      </div>
-
-      <!-- Observaciones -->
-      <div style="display:flex;flex-direction:column;gap:5px">
-        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Observaciones</label>
-        <textarea id="turno-obs" class="cfg-input" rows="2" placeholder="Notas del turno..." style="width:100%;resize:none;font-family:var(--font)"></textarea>
-      </div>
-
-      <!-- Firma digital -->
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Firma del responsable</label>
-          <button onclick="limpiarFirma()" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:underline">Limpiar</button>
-        </div>
-        <canvas id="firma-canvas" width="468" height="140"
-          style="background:#0d1117;border:1px solid var(--border);border-radius:8px;cursor:crosshair;touch-action:none;width:100%"
-          onmousedown="firmaStart(event)" onmousemove="firmaMove(event)" onmouseup="firmaEnd()"
-          onmouseleave="firmaEnd()" ontouchstart="firmaTouch(event)" ontouchmove="firmaTouch(event)"
-          ontouchend="firmaEnd()"></canvas>
-        <div style="font-size:10px;color:var(--muted);text-align:center">Firma con mouse o touch</div>
-      </div>
-
-      <!-- Botones -->
-      <div style="display:flex;gap:10px;margin-top:4px">
-        <button onclick="cerrarTurnoModal()" style="flex:1;padding:11px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);cursor:pointer;font-weight:600">Cancelar</button>
-        <button onclick="guardarCierreTurno()" style="flex:2;padding:11px;border-radius:8px;background:var(--amber);border:none;color:#000;cursor:pointer;font-weight:800;font-size:14px">&#x1F4BE; Guardar y cerrar turno</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 
 <!-- ════════════════════════════════════════════════════════════
@@ -6839,352 +6433,35 @@ function exportReportePDF() {
      ════════════════════════════════════════════════════════════ -->
 
 <!-- PANTALLA 1: PLANES -->
-<div class="ob-screen" id="ob-planes">
-  <div class="ob-card">
-    <div class="ob-header">
-      <div class="ob-logo">TurboPOS</div>
-      <div class="ob-title">Elige tu plan</div>
-      <div class="ob-sub">14 días gratis · Sin tarjeta de crédito</div>
-    </div>
-    <div class="ob-body">
-      <div class="trial-badge">&#128197; Prueba gratuita de 14 días — cancela cuando quieras</div>
-      <div class="plans-grid">
-        <div class="plan-card" id="pc-starter" >
-          <div class="plan-name">Solo</div>
-          <div class="plan-price">$699</div>
-          <div class="plan-per">/mes · 1 terminal</div>
-          <div class="plan-feat">
-            <span>POS + CFDI 4.0</span>
-            <span>Catálogo ilimitado</span>
-            <span>Reportes básicos</span>
-            <span>Soporte por email</span>
-          </div>
-        </div>
-        <div class="plan-card popular" id="pc-business" >
-          <div class="plan-name">Negocio</div>
-          <div class="plan-price">$1,299</div>
-          <div class="plan-per">/mes · hasta 3 terminales</div>
-          <div class="plan-feat">
-            <span>Todo lo del Solo</span>
-            <span>Programa de lealtad</span>
-            <span>Dashboard avanzado</span>
-            <span>Descuentos y cupones</span>
-          </div>
-        </div>
-        <div class="plan-card" id="pc-chain" >
-          <div class="plan-name">Cadena</div>
-          <div class="plan-price">$2,499</div>
-          <div class="plan-per">/mes · terminales ilimitadas</div>
-          <div class="plan-feat">
-            <span>Todo lo del Negocio</span>
-            <span>Multi-sucursal</span>
-            <span>API acceso</span>
-            <span>Soporte prioritario</span>
-          </div>
-        </div>
-      </div>
-      <button class="ob-btn" onclick="obGoStep2()">Continuar &#8250;</button>
-      <div class="ob-foot">Ya tienes cuenta? <a onclick="obShowLogin()">Iniciar sesión</a></div>
-    </div>
-  </div>
-</div>
+
 
 <!-- PANTALLA 2: DATOS DEL NEGOCIO -->
-<div class="ob-screen" id="ob-registro">
-  <div class="ob-card">
-    <div class="ob-header">
-      <div class="ob-logo">TurboPOS</div>
-      <div class="ob-title">Configura tu negocio</div>
-      <div class="ob-sub">Solo toma 1 minuto</div>
-    </div>
-    <div class="ob-body">
-      <div class="ob-steps">
-        <div class="ob-step done" id="os1">1</div>
-        <div class="ob-step-line done"></div>
-        <div class="ob-step active" id="os2">2</div>
-        <div class="ob-step-line"></div>
-        <div class="ob-step" id="os3">3</div>
-      </div>
 
-      <div class="ob-field">
-        <label class="ob-label">&#127968; Tipo de negocio</label>
-        <div class="giros-grid">
-          <div class="giro-chip" data-g="copy" onclick="obSelectGiro('copy')">&#128424; Copy Center</div>
-          <div class="giro-chip" data-g="restaurant" onclick="obSelectGiro('restaurant')">&#127828; Restaurante</div>
-          <div class="giro-chip" data-g="tienda" onclick="obSelectGiro('tienda')">&#128722; Tienda</div>
-          <div class="giro-chip" data-g="papeleria" onclick="obSelectGiro('papeleria')">&#9999; Papelería</div>
-          <div class="giro-chip" data-g="salon" onclick="obSelectGiro('salon')">&#9986; Salón</div>
-          <div class="giro-chip" data-g="custom" onclick="obSelectGiro('custom')">&#9881; Otro</div>
-        </div>
-      </div>
-
-      <div class="ob-field">
-        <label class="ob-label">Nombre del negocio *</label>
-        <input class="ob-input" id="ob-nombre" type="text" placeholder="Ej. Copy Center Vecino">
-      </div>
-      <div class="ob-row">
-        <div class="ob-field">
-          <label class="ob-label">RFC</label>
-          <input class="ob-input" id="ob-rfc" type="text" placeholder="XAXX010101000" style="text-transform:uppercase">
-        </div>
-        <div class="ob-field">
-          <label class="ob-label">Código postal</label>
-          <input class="ob-input" id="ob-cp" type="text" placeholder="55000">
-        </div>
-      </div>
-      <div class="ob-err" id="ob-err2"></div>
-      <button class="ob-btn" onclick="obGoStep3()">Siguiente &#8250;</button>
-      <button class="ob-btn-sec" onclick="obBack1()">&#8249; Regresar</button>
-    </div>
-  </div>
-</div>
 
 <!-- PANTALLA 3: CUENTA -->
-<div class="ob-screen" id="ob-cuenta">
-  <div class="ob-card">
-    <div class="ob-header">
-      <div class="ob-logo">TurboPOS</div>
-      <div class="ob-title">Crear tu cuenta</div>
-      <div class="ob-sub" id="ob-plan-lbl">Plan Negocio · 14 días gratis</div>
-    </div>
-    <div class="ob-body">
-      <div class="ob-steps">
-        <div class="ob-step done">1</div>
-        <div class="ob-step-line done"></div>
-        <div class="ob-step done">2</div>
-        <div class="ob-step-line done"></div>
-        <div class="ob-step active">3</div>
-      </div>
 
-      <div class="ob-field">
-        <label class="ob-label">Correo electrónico *</label>
-        <input class="ob-input" id="ob-email" type="email" placeholder="tu@negocio.com">
-      </div>
-      <div class="ob-row">
-        <div class="ob-field">
-          <label class="ob-label">Contraseña *</label>
-          <input class="ob-input" id="ob-pass" type="password" placeholder="Mínimo 8 caracteres">
-        </div>
-        <div class="ob-field">
-          <label class="ob-label">Confirmar *</label>
-          <input class="ob-input" id="ob-pass2" type="password" placeholder="Repite la contraseña">
-        </div>
-      </div>
-      <div class="ob-err" id="ob-err3"></div>
-      <button class="ob-btn" id="ob-create-btn" onclick="obCrearCuenta()">Crear cuenta gratis &#127881;</button>
-      <button class="ob-btn-sec" onclick="obBack2()">&#8249; Regresar</button>
-      <div class="ob-foot">Al registrarte aceptas nuestros <a href="/terminos" target="_blank">Términos de uso</a></div>
-    </div>
-  </div>
-</div>
 
 
 <!-- PANTALLA 4: PAGO -->
-<div class="ob-screen" id="ob-pago">
-  <div class="ob-card">
-    <div class="ob-header">
-      <div class="ob-logo">TurboPOS</div>
-      <div class="ob-title">Activa tu plan</div>
-      <div class="ob-sub" id="pay-plan-lbl">Plan Negocio &mdash; 14 días gratis</div>
+
+
+
+
+
+
+<div id="ticket-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:16px;width:380px;max-height:90vh;overflow-y:auto;padding:24px;position:relative">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <span style="font-weight:700;font-size:16px">&#129534; Comprobante</span>
+      <button onclick="closeTicket()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">&#215;</button>
     </div>
-    <div class="ob-body">
-
-      <!-- Pasos -->
-      <div class="ob-steps">
-        <div class="ob-step done">1</div>
-        <div class="ob-step-line done"></div>
-        <div class="ob-step done">2</div>
-        <div class="ob-step-line done"></div>
-        <div class="ob-step done">3</div>
-        <div class="ob-step-line done"></div>
-        <div class="ob-step active">4</div>
-      </div>
-
-      <!-- Resumen de orden -->
-      <div class="order-summary">
-        <div class="order-row"><span style="color:var(--text2)">Plan</span><span id="pay-order-plan" style="color:var(--text)">Negocio</span></div>
-        <div class="order-row"><span style="color:var(--text2)">Período de prueba</span><span style="color:var(--green)">14 días GRATIS</span></div>
-        <div class="order-row"><span style="color:var(--text2)">Primer cobro</span><span id="pay-order-fecha" style="color:var(--text)">28 mar 2026</span></div>
-        <div class="order-row order-total"><span>Total hoy</span><span>$0.00 MXN</span></div>
-      </div>
-
-      <div class="pay-info-badge" style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:10px 14px;margin-bottom:18px;font-size:12px;color:#22c55e;text-align:center;">
-        &#10003; No se realizará ningún cobro durante los 14 días de prueba. Cancela antes y no pagas nada.
-      </div>
-
-      <!-- Tabs de método -->
-      <div class="pay-tabs">
-        <button class="pay-tab active" onclick="payTab('card')" id="tab-card">
-          <span style="font-size:16px">&#128179;</span> Tarjeta
-        </button>
-        <button class="pay-tab" onclick="payTab('oxxo')" id="tab-oxxo">
-          <span style="font-size:16px">&#127978;</span> OXXO
-        </button>
-        <button class="pay-tab" onclick="payTab('spei')" id="tab-spei">
-          <span style="font-size:16px">&#127981;</span> SPEI
-        </button>
-        <button class="pay-tab" onclick="payTab('paypal')" id="tab-paypal">
-          <span style="font-size:16px">&#128176;</span> PayPal
-        </button>
-      </div>
-
-      <!-- TARJETA -->
-      <div class="pay-panel active" id="panel-card">
-        <div class="ob-field">
-          <label class="ob-label">Número de tarjeta</label>
-          <div class="card-field-wrap">
-            <input class="ob-input" id="cc-num" type="tel" placeholder="0000 0000 0000 0000" maxlength="19" oninput="fmtCard(this)" autocomplete="cc-number">
-            <span class="card-brand" id="cc-brand">&#128179;</span>
-          </div>
-        </div>
-        <div class="ob-field">
-          <label class="ob-label">Nombre en la tarjeta</label>
-          <input class="ob-input" id="cc-name" type="text" placeholder="JUAN PEREZ GARCIA" style="text-transform:uppercase" autocomplete="cc-name">
-        </div>
-        <div class="card-row">
-          <div class="ob-field">
-            <label class="ob-label">Vencimiento (MM/AA)</label>
-            <input class="ob-input" id="cc-exp" type="tel" placeholder="12/28" maxlength="5" oninput="fmtExp(this)" autocomplete="cc-exp">
-          </div>
-          <div class="ob-field">
-            <label class="ob-label">CVV</label>
-            <input class="ob-input" id="cc-cvv" type="tel" placeholder="123" maxlength="4" autocomplete="cc-csc">
-          </div>
-        </div>
-        <div class="card-secure">
-          <div class="card-secure-icon">&#128274;</div>
-          Datos cifrados con OpenPay. TurboPOS nunca almacena tu tarjeta.
-        </div>
-        <div class="ob-err" id="pay-err-card"></div>
-        <button class="ob-btn" id="pay-card-btn" onclick="payWithCard()">
-          Guardar tarjeta y comenzar prueba &#8594;
-        </button>
-      </div>
-
-      <!-- OXXO -->
-      <div class="pay-panel" id="panel-oxxo">
-        <div class="oxxo-steps">
-          <div class="oxxo-step">
-            <div class="oxxo-num">1</div>
-            <div class="oxxo-txt">Haz clic en "Generar referencia OXXO" — recibirás un número de referencia único.</div>
-          </div>
-          <div class="oxxo-step">
-            <div class="oxxo-num">2</div>
-            <div class="oxxo-txt">Ve a cualquier tienda OXXO y pide realizar un pago de servicios.</div>
-          </div>
-          <div class="oxxo-step">
-            <div class="oxxo-num">3</div>
-            <div class="oxxo-txt">El servicio se activa en máximo 2 horas tras confirmar el pago.</div>
-          </div>
-        </div>
-        <div class="oxxo-ref-box" id="oxxo-ref-box">
-          <div class="oxxo-ref-lbl">Tu referencia de pago</div>
-          <div class="oxxo-ref-num" id="oxxo-ref-num">-</div>
-          <div class="oxxo-ref-lbl" style="margin-top:6px">Monto: <span id="oxxo-ref-amt" style="color:var(--amber);font-weight:700">$0.00</span> &bull; Válido 72 hrs</div>
-          <button onclick="copyOxxo()" style="margin-top:10px;padding:6px 14px;border-radius:8px;background:rgba(255,181,71,.15);border:1px solid rgba(255,181,71,.3);color:var(--amber);font-size:12px;cursor:pointer">&#128203; Copiar</button>
-        </div>
-        <div class="ob-err" id="pay-err-oxxo"></div>
-        <button class="ob-btn" id="pay-oxxo-btn" onclick="payWithOxxo()">Generar referencia OXXO &#8594;</button>
-      </div>
-
-      <!-- SPEI -->
-      <div class="pay-panel" id="panel-spei">
-        <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5;">
-          Realiza una transferencia SPEI a la CLABE única que se generará para tu cuenta. El servicio se activa en minutos.
-        </div>
-        <div class="spei-box" id="spei-box">
-          <div class="spei-row"><span class="spei-lbl">Banco destino</span><span class="spei-val">STP (Sistema de Transferencias)</span></div>
-          <div class="spei-row"><span class="spei-lbl">CLABE</span><span class="spei-val" id="spei-clabe">-</span></div>
-          <div class="spei-row"><span class="spei-lbl">Beneficiario</span><span class="spei-val">TurboPOS SA de CV</span></div>
-          <div class="spei-row"><span class="spei-lbl">Monto</span><span class="spei-val" id="spei-amt" style="color:var(--amber)">-</span></div>
-          <div class="spei-row"><span class="spei-lbl">Concepto</span><span class="spei-val" id="spei-ref">-</span></div>
-        </div>
-        <div class="ob-err" id="pay-err-spei"></div>
-        <button class="ob-btn" id="pay-spei-btn" onclick="payWithSpei()">Generar CLABE SPEI &#8594;</button>
-      </div>
-
-      <!-- PAYPAL -->
-      <div class="pay-panel" id="panel-paypal">
-        <div class="paypal-info">
-          <div class="paypal-logo">PayPal</div>
-          <div class="paypal-desc">Serás redirigido a PayPal para completar el pago de forma segura. Al volver, tu cuenta se activará automáticamente.</div>
-        </div>
-        <div style="margin:14px 0;font-size:12px;color:var(--muted);text-align:center">
-          &#128274; Conexión SSL segura &bull; Tus datos PayPal nunca llegan a TurboPOS
-        </div>
-        <div class="ob-err" id="pay-err-paypal"></div>
-        <button class="ob-btn" id="pay-paypal-btn" onclick="payWithPaypal()" style="background:#009cde;color:#fff;">
-          <span style="font-size:14px;font-weight:900">Pay</span><span style="font-size:14px;font-weight:900;color:#012169">Pal</span> &nbsp; Pagar con PayPal &#8594;
-        </button>
-      </div>
-
-      <!-- Procesando -->
-      <div class="pay-processing" id="pay-processing">
-        <div class="pay-spin"></div>
-        <div style="font-size:14px;font-weight:600;color:var(--text)" id="pay-proc-msg">Procesando pago...</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:6px">No cierres esta ventana</div>
-      </div>
-
-      <!-- Éxito -->
-      <div class="pay-success" id="pay-success">
-        <div class="pay-success-icon">&#127881;</div>
-        <div class="pay-success-title">¡Todo listo!</div>
-        <div class="pay-success-sub" id="pay-success-msg">Tu plan está activo. Redirigiendo al POS...</div>
-      </div>
-
-      <button class="ob-btn-sec" id="pay-skip-btn" onclick="paySkip()" style="margin-top:10px">
-        Saltar por ahora — activar en Configuración &#8250;
-      </button>
+    <div id="ticket-content" style="font-size:13px;line-height:1.6"></div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button onclick="printTicket()" class="btn-primary" style="flex:1">&#x1F5A8; Imprimir</button>
+      <button onclick="closeTicket()" style="flex:1;padding:10px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);cursor:pointer">Cerrar</button>
     </div>
   </div>
 </div>
-
-
-<div class="plan-detail-overlay" id="plan-detail-overlay" onclick="if(event.target===this)closePlanDetail()">
-<div class="pds-sheet">
-  <div class="pds-handle"></div>
-  <div class="pds-top">
-    <div>
-      <div class="pds-name" id="pds-name">Plan Negocio</div>
-      <div id="pds-tag" style="font-size:12px;color:#9B9893;margin-top:2px"></div>
-    </div>
-    <div style="text-align:right">
-      <div class="pds-price-big" id="pds-price">$1,299</div>
-      <div class="pds-price-mo">/mes + IVA &bull; 14 días gratis</div>
-    </div>
-    <button class="pds-close" onclick="closePlanDetail()">&#215;</button>
-  </div>
-  <div class="pds-body">
-    <div class="pds-roi">
-      <div class="pds-roi-title">&#128200; Ahorro estimado vs Clip POS</div>
-      <div class="pds-roi-grid">
-        <div><div class="pds-roi-val" id="roi-ahorro">$0</div><div class="pds-roi-lbl">ahorro/año</div></div>
-        <div><div class="pds-roi-val" id="roi-clip">$0</div><div class="pds-roi-lbl">pagarías a Clip</div></div>
-        <div><div class="pds-roi-val" id="roi-x">0x</div><div class="pds-roi-lbl">ROI vs competencia</div></div>
-      </div>
-    </div>
-    <div class="pds-sec-title">Incluido desde el día 1</div>
-    <div id="pds-feats"></div>
-    <div class="pds-sec-title" style="margin-top:16px">Comparativa completa</div>
-    <div class="pds-cmp">
-      <div class="pds-cmp-hd"><div>Función</div><div>Solo</div><div>Negocio</div><div>Cadena</div></div>
-      <div class="pds-cmp-row"><div class="pds-cf">Terminales</div><div class="pds-cv" id="ct0">1</div><div class="pds-cv" id="ct1">3</div><div class="pds-cv" id="ct2">&#8734;</div></div>
-      <div class="pds-cmp-row"><div class="pds-cf">CFDI 4.0</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row"><div class="pds-cf">Scanner barras</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row"><div class="pds-cf">Corte Z + PDF</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row hl"><div class="pds-cf">Programa lealtad</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row hl"><div class="pds-cf">Descuentos/cupones</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row hl"><div class="pds-cf">Dashboard avanzado</div><div class="pds-cv" style="font-size:11px">Básico</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row"><div class="pds-cf">Multi-sucursal</div><div class="pds-cv">—</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row"><div class="pds-cf">Acceso API</div><div class="pds-cv">—</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row"><div class="pds-cf">Soporte</div><div class="pds-cv" style="font-size:11px">Email</div><div class="pds-cv" style="font-size:11px">Chat</div><div class="pds-cv ok" style="font-size:11px">24/7</div></div>
-    </div>
-    <button class="pds-btn" id="pds-cta" onclick="pdsElegir()">Empezar con este plan gratis &#8594;</button>
-    <button class="pds-btn2" onclick="closePlanDetail()">&#8249; Ver todos los planes</button>
-  </div>
-</div>
-</div>
-
 </body></html>`;
 
   const win=window.open('','_blank','width=820,height:920');
@@ -8297,352 +7574,35 @@ async function guardarCierreTurno() {
      ════════════════════════════════════════════════════════════ -->
 
 <!-- PANTALLA 1: PLANES -->
-<div class="ob-screen" id="ob-planes">
-  <div class="ob-card">
-    <div class="ob-header">
-      <div class="ob-logo">TurboPOS</div>
-      <div class="ob-title">Elige tu plan</div>
-      <div class="ob-sub">14 días gratis · Sin tarjeta de crédito</div>
-    </div>
-    <div class="ob-body">
-      <div class="trial-badge">&#128197; Prueba gratuita de 14 días — cancela cuando quieras</div>
-      <div class="plans-grid">
-        <div class="plan-card" id="pc-starter" >
-          <div class="plan-name">Solo</div>
-          <div class="plan-price">$699</div>
-          <div class="plan-per">/mes · 1 terminal</div>
-          <div class="plan-feat">
-            <span>POS + CFDI 4.0</span>
-            <span>Catálogo ilimitado</span>
-            <span>Reportes básicos</span>
-            <span>Soporte por email</span>
-          </div>
-        </div>
-        <div class="plan-card popular" id="pc-business" >
-          <div class="plan-name">Negocio</div>
-          <div class="plan-price">$1,299</div>
-          <div class="plan-per">/mes · hasta 3 terminales</div>
-          <div class="plan-feat">
-            <span>Todo lo del Solo</span>
-            <span>Programa de lealtad</span>
-            <span>Dashboard avanzado</span>
-            <span>Descuentos y cupones</span>
-          </div>
-        </div>
-        <div class="plan-card" id="pc-chain" >
-          <div class="plan-name">Cadena</div>
-          <div class="plan-price">$2,499</div>
-          <div class="plan-per">/mes · terminales ilimitadas</div>
-          <div class="plan-feat">
-            <span>Todo lo del Negocio</span>
-            <span>Multi-sucursal</span>
-            <span>API acceso</span>
-            <span>Soporte prioritario</span>
-          </div>
-        </div>
-      </div>
-      <button class="ob-btn" onclick="obGoStep2()">Continuar &#8250;</button>
-      <div class="ob-foot">Ya tienes cuenta? <a onclick="obShowLogin()">Iniciar sesión</a></div>
-    </div>
-  </div>
-</div>
+
 
 <!-- PANTALLA 2: DATOS DEL NEGOCIO -->
-<div class="ob-screen" id="ob-registro">
-  <div class="ob-card">
-    <div class="ob-header">
-      <div class="ob-logo">TurboPOS</div>
-      <div class="ob-title">Configura tu negocio</div>
-      <div class="ob-sub">Solo toma 1 minuto</div>
-    </div>
-    <div class="ob-body">
-      <div class="ob-steps">
-        <div class="ob-step done" id="os1">1</div>
-        <div class="ob-step-line done"></div>
-        <div class="ob-step active" id="os2">2</div>
-        <div class="ob-step-line"></div>
-        <div class="ob-step" id="os3">3</div>
-      </div>
 
-      <div class="ob-field">
-        <label class="ob-label">&#127968; Tipo de negocio</label>
-        <div class="giros-grid">
-          <div class="giro-chip" data-g="copy" onclick="obSelectGiro('copy')">&#128424; Copy Center</div>
-          <div class="giro-chip" data-g="restaurant" onclick="obSelectGiro('restaurant')">&#127828; Restaurante</div>
-          <div class="giro-chip" data-g="tienda" onclick="obSelectGiro('tienda')">&#128722; Tienda</div>
-          <div class="giro-chip" data-g="papeleria" onclick="obSelectGiro('papeleria')">&#9999; Papelería</div>
-          <div class="giro-chip" data-g="salon" onclick="obSelectGiro('salon')">&#9986; Salón</div>
-          <div class="giro-chip" data-g="custom" onclick="obSelectGiro('custom')">&#9881; Otro</div>
-        </div>
-      </div>
-
-      <div class="ob-field">
-        <label class="ob-label">Nombre del negocio *</label>
-        <input class="ob-input" id="ob-nombre" type="text" placeholder="Ej. Copy Center Vecino">
-      </div>
-      <div class="ob-row">
-        <div class="ob-field">
-          <label class="ob-label">RFC</label>
-          <input class="ob-input" id="ob-rfc" type="text" placeholder="XAXX010101000" style="text-transform:uppercase">
-        </div>
-        <div class="ob-field">
-          <label class="ob-label">Código postal</label>
-          <input class="ob-input" id="ob-cp" type="text" placeholder="55000">
-        </div>
-      </div>
-      <div class="ob-err" id="ob-err2"></div>
-      <button class="ob-btn" onclick="obGoStep3()">Siguiente &#8250;</button>
-      <button class="ob-btn-sec" onclick="obBack1()">&#8249; Regresar</button>
-    </div>
-  </div>
-</div>
 
 <!-- PANTALLA 3: CUENTA -->
-<div class="ob-screen" id="ob-cuenta">
-  <div class="ob-card">
-    <div class="ob-header">
-      <div class="ob-logo">TurboPOS</div>
-      <div class="ob-title">Crear tu cuenta</div>
-      <div class="ob-sub" id="ob-plan-lbl">Plan Negocio · 14 días gratis</div>
-    </div>
-    <div class="ob-body">
-      <div class="ob-steps">
-        <div class="ob-step done">1</div>
-        <div class="ob-step-line done"></div>
-        <div class="ob-step done">2</div>
-        <div class="ob-step-line done"></div>
-        <div class="ob-step active">3</div>
-      </div>
 
-      <div class="ob-field">
-        <label class="ob-label">Correo electrónico *</label>
-        <input class="ob-input" id="ob-email" type="email" placeholder="tu@negocio.com">
-      </div>
-      <div class="ob-row">
-        <div class="ob-field">
-          <label class="ob-label">Contraseña *</label>
-          <input class="ob-input" id="ob-pass" type="password" placeholder="Mínimo 8 caracteres">
-        </div>
-        <div class="ob-field">
-          <label class="ob-label">Confirmar *</label>
-          <input class="ob-input" id="ob-pass2" type="password" placeholder="Repite la contraseña">
-        </div>
-      </div>
-      <div class="ob-err" id="ob-err3"></div>
-      <button class="ob-btn" id="ob-create-btn" onclick="obCrearCuenta()">Crear cuenta gratis &#127881;</button>
-      <button class="ob-btn-sec" onclick="obBack2()">&#8249; Regresar</button>
-      <div class="ob-foot">Al registrarte aceptas nuestros <a href="/terminos" target="_blank">Términos de uso</a></div>
-    </div>
-  </div>
-</div>
 
 
 <!-- PANTALLA 4: PAGO -->
-<div class="ob-screen" id="ob-pago">
-  <div class="ob-card">
-    <div class="ob-header">
-      <div class="ob-logo">TurboPOS</div>
-      <div class="ob-title">Activa tu plan</div>
-      <div class="ob-sub" id="pay-plan-lbl">Plan Negocio &mdash; 14 días gratis</div>
+
+
+
+
+
+
+<div id="ticket-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:16px;width:380px;max-height:90vh;overflow-y:auto;padding:24px;position:relative">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <span style="font-weight:700;font-size:16px">&#129534; Comprobante</span>
+      <button onclick="closeTicket()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">&#215;</button>
     </div>
-    <div class="ob-body">
-
-      <!-- Pasos -->
-      <div class="ob-steps">
-        <div class="ob-step done">1</div>
-        <div class="ob-step-line done"></div>
-        <div class="ob-step done">2</div>
-        <div class="ob-step-line done"></div>
-        <div class="ob-step done">3</div>
-        <div class="ob-step-line done"></div>
-        <div class="ob-step active">4</div>
-      </div>
-
-      <!-- Resumen de orden -->
-      <div class="order-summary">
-        <div class="order-row"><span style="color:var(--text2)">Plan</span><span id="pay-order-plan" style="color:var(--text)">Negocio</span></div>
-        <div class="order-row"><span style="color:var(--text2)">Período de prueba</span><span style="color:var(--green)">14 días GRATIS</span></div>
-        <div class="order-row"><span style="color:var(--text2)">Primer cobro</span><span id="pay-order-fecha" style="color:var(--text)">28 mar 2026</span></div>
-        <div class="order-row order-total"><span>Total hoy</span><span>$0.00 MXN</span></div>
-      </div>
-
-      <div class="pay-info-badge" style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:10px 14px;margin-bottom:18px;font-size:12px;color:#22c55e;text-align:center;">
-        &#10003; No se realizará ningún cobro durante los 14 días de prueba. Cancela antes y no pagas nada.
-      </div>
-
-      <!-- Tabs de método -->
-      <div class="pay-tabs">
-        <button class="pay-tab active" onclick="payTab('card')" id="tab-card">
-          <span style="font-size:16px">&#128179;</span> Tarjeta
-        </button>
-        <button class="pay-tab" onclick="payTab('oxxo')" id="tab-oxxo">
-          <span style="font-size:16px">&#127978;</span> OXXO
-        </button>
-        <button class="pay-tab" onclick="payTab('spei')" id="tab-spei">
-          <span style="font-size:16px">&#127981;</span> SPEI
-        </button>
-        <button class="pay-tab" onclick="payTab('paypal')" id="tab-paypal">
-          <span style="font-size:16px">&#128176;</span> PayPal
-        </button>
-      </div>
-
-      <!-- TARJETA -->
-      <div class="pay-panel active" id="panel-card">
-        <div class="ob-field">
-          <label class="ob-label">Número de tarjeta</label>
-          <div class="card-field-wrap">
-            <input class="ob-input" id="cc-num" type="tel" placeholder="0000 0000 0000 0000" maxlength="19" oninput="fmtCard(this)" autocomplete="cc-number">
-            <span class="card-brand" id="cc-brand">&#128179;</span>
-          </div>
-        </div>
-        <div class="ob-field">
-          <label class="ob-label">Nombre en la tarjeta</label>
-          <input class="ob-input" id="cc-name" type="text" placeholder="JUAN PEREZ GARCIA" style="text-transform:uppercase" autocomplete="cc-name">
-        </div>
-        <div class="card-row">
-          <div class="ob-field">
-            <label class="ob-label">Vencimiento (MM/AA)</label>
-            <input class="ob-input" id="cc-exp" type="tel" placeholder="12/28" maxlength="5" oninput="fmtExp(this)" autocomplete="cc-exp">
-          </div>
-          <div class="ob-field">
-            <label class="ob-label">CVV</label>
-            <input class="ob-input" id="cc-cvv" type="tel" placeholder="123" maxlength="4" autocomplete="cc-csc">
-          </div>
-        </div>
-        <div class="card-secure">
-          <div class="card-secure-icon">&#128274;</div>
-          Datos cifrados con OpenPay. TurboPOS nunca almacena tu tarjeta.
-        </div>
-        <div class="ob-err" id="pay-err-card"></div>
-        <button class="ob-btn" id="pay-card-btn" onclick="payWithCard()">
-          Guardar tarjeta y comenzar prueba &#8594;
-        </button>
-      </div>
-
-      <!-- OXXO -->
-      <div class="pay-panel" id="panel-oxxo">
-        <div class="oxxo-steps">
-          <div class="oxxo-step">
-            <div class="oxxo-num">1</div>
-            <div class="oxxo-txt">Haz clic en "Generar referencia OXXO" — recibirás un número de referencia único.</div>
-          </div>
-          <div class="oxxo-step">
-            <div class="oxxo-num">2</div>
-            <div class="oxxo-txt">Ve a cualquier tienda OXXO y pide realizar un pago de servicios.</div>
-          </div>
-          <div class="oxxo-step">
-            <div class="oxxo-num">3</div>
-            <div class="oxxo-txt">El servicio se activa en máximo 2 horas tras confirmar el pago.</div>
-          </div>
-        </div>
-        <div class="oxxo-ref-box" id="oxxo-ref-box">
-          <div class="oxxo-ref-lbl">Tu referencia de pago</div>
-          <div class="oxxo-ref-num" id="oxxo-ref-num">-</div>
-          <div class="oxxo-ref-lbl" style="margin-top:6px">Monto: <span id="oxxo-ref-amt" style="color:var(--amber);font-weight:700">$0.00</span> &bull; Válido 72 hrs</div>
-          <button onclick="copyOxxo()" style="margin-top:10px;padding:6px 14px;border-radius:8px;background:rgba(255,181,71,.15);border:1px solid rgba(255,181,71,.3);color:var(--amber);font-size:12px;cursor:pointer">&#128203; Copiar</button>
-        </div>
-        <div class="ob-err" id="pay-err-oxxo"></div>
-        <button class="ob-btn" id="pay-oxxo-btn" onclick="payWithOxxo()">Generar referencia OXXO &#8594;</button>
-      </div>
-
-      <!-- SPEI -->
-      <div class="pay-panel" id="panel-spei">
-        <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5;">
-          Realiza una transferencia SPEI a la CLABE única que se generará para tu cuenta. El servicio se activa en minutos.
-        </div>
-        <div class="spei-box" id="spei-box">
-          <div class="spei-row"><span class="spei-lbl">Banco destino</span><span class="spei-val">STP (Sistema de Transferencias)</span></div>
-          <div class="spei-row"><span class="spei-lbl">CLABE</span><span class="spei-val" id="spei-clabe">-</span></div>
-          <div class="spei-row"><span class="spei-lbl">Beneficiario</span><span class="spei-val">TurboPOS SA de CV</span></div>
-          <div class="spei-row"><span class="spei-lbl">Monto</span><span class="spei-val" id="spei-amt" style="color:var(--amber)">-</span></div>
-          <div class="spei-row"><span class="spei-lbl">Concepto</span><span class="spei-val" id="spei-ref">-</span></div>
-        </div>
-        <div class="ob-err" id="pay-err-spei"></div>
-        <button class="ob-btn" id="pay-spei-btn" onclick="payWithSpei()">Generar CLABE SPEI &#8594;</button>
-      </div>
-
-      <!-- PAYPAL -->
-      <div class="pay-panel" id="panel-paypal">
-        <div class="paypal-info">
-          <div class="paypal-logo">PayPal</div>
-          <div class="paypal-desc">Serás redirigido a PayPal para completar el pago de forma segura. Al volver, tu cuenta se activará automáticamente.</div>
-        </div>
-        <div style="margin:14px 0;font-size:12px;color:var(--muted);text-align:center">
-          &#128274; Conexión SSL segura &bull; Tus datos PayPal nunca llegan a TurboPOS
-        </div>
-        <div class="ob-err" id="pay-err-paypal"></div>
-        <button class="ob-btn" id="pay-paypal-btn" onclick="payWithPaypal()" style="background:#009cde;color:#fff;">
-          <span style="font-size:14px;font-weight:900">Pay</span><span style="font-size:14px;font-weight:900;color:#012169">Pal</span> &nbsp; Pagar con PayPal &#8594;
-        </button>
-      </div>
-
-      <!-- Procesando -->
-      <div class="pay-processing" id="pay-processing">
-        <div class="pay-spin"></div>
-        <div style="font-size:14px;font-weight:600;color:var(--text)" id="pay-proc-msg">Procesando pago...</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:6px">No cierres esta ventana</div>
-      </div>
-
-      <!-- Éxito -->
-      <div class="pay-success" id="pay-success">
-        <div class="pay-success-icon">&#127881;</div>
-        <div class="pay-success-title">¡Todo listo!</div>
-        <div class="pay-success-sub" id="pay-success-msg">Tu plan está activo. Redirigiendo al POS...</div>
-      </div>
-
-      <button class="ob-btn-sec" id="pay-skip-btn" onclick="paySkip()" style="margin-top:10px">
-        Saltar por ahora — activar en Configuración &#8250;
-      </button>
+    <div id="ticket-content" style="font-size:13px;line-height:1.6"></div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button onclick="printTicket()" class="btn-primary" style="flex:1">&#x1F5A8; Imprimir</button>
+      <button onclick="closeTicket()" style="flex:1;padding:10px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);cursor:pointer">Cerrar</button>
     </div>
   </div>
 </div>
-
-
-<div class="plan-detail-overlay" id="plan-detail-overlay" onclick="if(event.target===this)closePlanDetail()">
-<div class="pds-sheet">
-  <div class="pds-handle"></div>
-  <div class="pds-top">
-    <div>
-      <div class="pds-name" id="pds-name">Plan Negocio</div>
-      <div id="pds-tag" style="font-size:12px;color:#9B9893;margin-top:2px"></div>
-    </div>
-    <div style="text-align:right">
-      <div class="pds-price-big" id="pds-price">$1,299</div>
-      <div class="pds-price-mo">/mes + IVA &bull; 14 días gratis</div>
-    </div>
-    <button class="pds-close" onclick="closePlanDetail()">&#215;</button>
-  </div>
-  <div class="pds-body">
-    <div class="pds-roi">
-      <div class="pds-roi-title">&#128200; Ahorro estimado vs Clip POS</div>
-      <div class="pds-roi-grid">
-        <div><div class="pds-roi-val" id="roi-ahorro">$0</div><div class="pds-roi-lbl">ahorro/año</div></div>
-        <div><div class="pds-roi-val" id="roi-clip">$0</div><div class="pds-roi-lbl">pagarías a Clip</div></div>
-        <div><div class="pds-roi-val" id="roi-x">0x</div><div class="pds-roi-lbl">ROI vs competencia</div></div>
-      </div>
-    </div>
-    <div class="pds-sec-title">Incluido desde el día 1</div>
-    <div id="pds-feats"></div>
-    <div class="pds-sec-title" style="margin-top:16px">Comparativa completa</div>
-    <div class="pds-cmp">
-      <div class="pds-cmp-hd"><div>Función</div><div>Solo</div><div>Negocio</div><div>Cadena</div></div>
-      <div class="pds-cmp-row"><div class="pds-cf">Terminales</div><div class="pds-cv" id="ct0">1</div><div class="pds-cv" id="ct1">3</div><div class="pds-cv" id="ct2">&#8734;</div></div>
-      <div class="pds-cmp-row"><div class="pds-cf">CFDI 4.0</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row"><div class="pds-cf">Scanner barras</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row"><div class="pds-cf">Corte Z + PDF</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row hl"><div class="pds-cf">Programa lealtad</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row hl"><div class="pds-cf">Descuentos/cupones</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row hl"><div class="pds-cf">Dashboard avanzado</div><div class="pds-cv" style="font-size:11px">Básico</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row"><div class="pds-cf">Multi-sucursal</div><div class="pds-cv">—</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row"><div class="pds-cf">Acceso API</div><div class="pds-cv">—</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div></div>
-      <div class="pds-cmp-row"><div class="pds-cf">Soporte</div><div class="pds-cv" style="font-size:11px">Email</div><div class="pds-cv" style="font-size:11px">Chat</div><div class="pds-cv ok" style="font-size:11px">24/7</div></div>
-    </div>
-    <button class="pds-btn" id="pds-cta" onclick="pdsElegir()">Empezar con este plan gratis &#8594;</button>
-    <button class="pds-btn2" onclick="closePlanDetail()">&#8249; Ver todos los planes</button>
-  </div>
-</div>
-</div>
-
 </body></html>`);
   printWin.document.close();
   setTimeout(()=>{ printWin.print(); }, 600);
@@ -9469,5 +8429,19 @@ window.paySkip=function(){
 </div>
 </div>
 
+
+<div id="ticket-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:16px;width:380px;max-height:90vh;overflow-y:auto;padding:24px;position:relative">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <span style="font-weight:700;font-size:16px">&#129534; Comprobante</span>
+      <button onclick="closeTicket()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">&#215;</button>
+    </div>
+    <div id="ticket-content" style="font-size:13px;line-height:1.6"></div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button onclick="printTicket()" class="btn-primary" style="flex:1">&#x1F5A8; Imprimir</button>
+      <button onclick="closeTicket()" style="flex:1;padding:10px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);cursor:pointer">Cerrar</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
