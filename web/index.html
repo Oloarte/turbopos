@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 
 <html lang="es">
 
@@ -2334,6 +2334,53 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .pds-cf{color:#9B9893;font-size:12px;}
 .pds-btn{width:100%;padding:13px;border-radius:12px;background:#FFB547;border:none;color:#000;font-weight:800;font-size:14px;cursor:pointer;margin-top:4px;}
 .pds-btn2{width:100%;padding:10px;border-radius:12px;background:transparent;border:1px solid rgba(255,255,255,.12);color:#9B9893;font-size:13px;cursor:pointer;margin-top:8px;}
+
+
+/* ── PRODUCT TOUR ─────────────────────────────────────────────── */
+.tour-overlay{position:fixed;inset:0;z-index:9000;pointer-events:none;}
+.tour-overlay.active{pointer-events:all;}
+.tour-backdrop{position:fixed;inset:0;background:rgba(8,12,20,.72);opacity:0;transition:.3s;}
+.tour-overlay.active .tour-backdrop{opacity:1;}
+.tour-spotlight{position:fixed;border:2.5px solid var(--amber);border-radius:12px;
+  box-shadow:0 0 0 4000px rgba(8,12,20,.72);
+  transition:all .35s cubic-bezier(.22,1,.36,1);pointer-events:none;z-index:9001;}
+.tour-tooltip{position:fixed;background:var(--surface1);border:1px solid var(--border);
+  border-radius:16px;padding:20px 22px;width:300px;max-width:92vw;
+  box-shadow:0 12px 40px rgba(0,0,0,.4);z-index:9002;
+  transition:all .3s cubic-bezier(.22,1,.36,1);}
+.tour-tip-step{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--amber);margin-bottom:4px;}
+.tour-tip-title{font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px;}
+.tour-tip-desc{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:16px;}
+.tour-tip-btns{display:flex;align-items:center;justify-content:space-between;}
+.tour-skip{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:0;}
+.tour-skip:hover{color:var(--text2);}
+.tour-dots{display:flex;gap:5px;align-items:center;}
+.tour-dot{width:6px;height:6px;border-radius:50%;background:var(--border2);
+  cursor:pointer;transition:.2s;}
+.tour-dot.on{background:var(--amber);width:18px;border-radius:3px;}
+.tour-next{padding:9px 18px;border-radius:10px;background:var(--amber);
+  border:none;color:#000;font-weight:800;font-size:13px;cursor:pointer;transition:.15s;}
+.tour-next:hover{filter:brightness(1.1);}
+.tour-next.finish{background:var(--green);color:#fff;}
+.tour-arrow{position:fixed;width:10px;height:10px;background:var(--surface1);
+  border:1px solid var(--border);transform:rotate(45deg);z-index:9001;}
+/* Welcome screen */
+.tour-welcome{position:fixed;inset:0;z-index:9100;display:none;align-items:center;
+  justify-content:center;background:rgba(8,12,20,.9);}
+.tour-welcome.show{display:flex;}
+.tour-welcome-card{background:var(--surface1);border:1px solid var(--border);
+  border-radius:24px;padding:36px 32px;max-width:480px;width:92vw;text-align:center;}
+.tour-emoji{font-size:52px;margin-bottom:16px;}
+.tour-welcome-title{font-size:24px;font-weight:900;color:var(--text);margin-bottom:8px;}
+.tour-welcome-sub{font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:24px;}
+.tour-welcome-name{color:var(--amber);font-weight:800;}
+.tour-start-btn{width:100%;padding:14px;border-radius:12px;background:var(--amber);
+  border:none;color:#000;font-weight:800;font-size:15px;cursor:pointer;margin-bottom:10px;}
+.tour-later-btn{width:100%;padding:11px;border-radius:12px;background:transparent;
+  border:1px solid var(--border2);color:var(--muted);font-size:13px;cursor:pointer;}
+.tour-progress{height:3px;background:var(--border2);border-radius:2px;margin-bottom:16px;overflow:hidden;}
+.tour-progress-fill{height:100%;background:var(--amber);border-radius:2px;transition:.3s;}
 
 </style>
 
@@ -5532,6 +5579,37 @@ function loadCustomers(){
 
 
 
+
+<!-- ── PRODUCT TOUR ──────────────────────────────────────────── -->
+<div class="tour-welcome" id="tour-welcome">
+  <div class="tour-welcome-card">
+    <div class="tour-emoji">&#127881;</div>
+    <div class="tour-welcome-title">&#161;Bienvenido a <span class="tour-welcome-name">TurboPOS</span>!</div>
+    <div class="tour-welcome-sub" id="tour-welcome-msg">
+      Tu sistema de punto de venta est&#225; listo. Te mostramos un recorrido r&#225;pido de 2 minutos para que empieces a vender hoy mismo.
+    </div>
+    <div class="tour-progress"><div class="tour-progress-fill" id="tour-prog-fill" style="width:0%"></div></div>
+    <button class="tour-start-btn" onclick="tourStart()">Mostrarme c&#243;mo funciona &#8594;</button>
+    <button class="tour-later-btn" onclick="tourSkip()">Ya s&#233; usarlo, omitir</button>
+  </div>
+</div>
+
+<div class="tour-overlay" id="tour-overlay">
+  <div class="tour-backdrop" onclick="tourSkip()"></div>
+  <div class="tour-spotlight" id="tour-spotlight"></div>
+  <div class="tour-tooltip" id="tour-tooltip">
+    <div class="tour-progress" style="margin-bottom:12px"><div class="tour-progress-fill" id="tour-prog2"></div></div>
+    <div class="tour-tip-step" id="tour-step-lbl">Paso 1 de 6</div>
+    <div class="tour-tip-title" id="tour-tip-title">T&#237;tulo</div>
+    <div class="tour-tip-desc" id="tour-tip-desc">Descripci&#243;n</div>
+    <div class="tour-tip-btns">
+      <button class="tour-skip" onclick="tourSkip()">Saltar recorrido</button>
+      <div class="tour-dots" id="tour-dots"></div>
+      <button class="tour-next" id="tour-next-btn" onclick="tourNext()">Siguiente &#8250;</button>
+    </div>
+  </div>
+</div>
+
 </body></html>`;
 
   const win = window.open('','_blank','width=800,height=900');
@@ -6455,6 +6533,37 @@ function exportReportePDF() {
 
 
 
+
+
+<!-- ── PRODUCT TOUR ──────────────────────────────────────────── -->
+<div class="tour-welcome" id="tour-welcome">
+  <div class="tour-welcome-card">
+    <div class="tour-emoji">&#127881;</div>
+    <div class="tour-welcome-title">&#161;Bienvenido a <span class="tour-welcome-name">TurboPOS</span>!</div>
+    <div class="tour-welcome-sub" id="tour-welcome-msg">
+      Tu sistema de punto de venta est&#225; listo. Te mostramos un recorrido r&#225;pido de 2 minutos para que empieces a vender hoy mismo.
+    </div>
+    <div class="tour-progress"><div class="tour-progress-fill" id="tour-prog-fill" style="width:0%"></div></div>
+    <button class="tour-start-btn" onclick="tourStart()">Mostrarme c&#243;mo funciona &#8594;</button>
+    <button class="tour-later-btn" onclick="tourSkip()">Ya s&#233; usarlo, omitir</button>
+  </div>
+</div>
+
+<div class="tour-overlay" id="tour-overlay">
+  <div class="tour-backdrop" onclick="tourSkip()"></div>
+  <div class="tour-spotlight" id="tour-spotlight"></div>
+  <div class="tour-tooltip" id="tour-tooltip">
+    <div class="tour-progress" style="margin-bottom:12px"><div class="tour-progress-fill" id="tour-prog2"></div></div>
+    <div class="tour-tip-step" id="tour-step-lbl">Paso 1 de 6</div>
+    <div class="tour-tip-title" id="tour-tip-title">T&#237;tulo</div>
+    <div class="tour-tip-desc" id="tour-tip-desc">Descripci&#243;n</div>
+    <div class="tour-tip-btns">
+      <button class="tour-skip" onclick="tourSkip()">Saltar recorrido</button>
+      <div class="tour-dots" id="tour-dots"></div>
+      <button class="tour-next" id="tour-next-btn" onclick="tourNext()">Siguiente &#8250;</button>
+    </div>
+  </div>
+</div>
 
 </body></html>`;
 
@@ -7585,6 +7694,37 @@ async function guardarCierreTurno() {
 
 
 
+
+<!-- ── PRODUCT TOUR ──────────────────────────────────────────── -->
+<div class="tour-welcome" id="tour-welcome">
+  <div class="tour-welcome-card">
+    <div class="tour-emoji">&#127881;</div>
+    <div class="tour-welcome-title">&#161;Bienvenido a <span class="tour-welcome-name">TurboPOS</span>!</div>
+    <div class="tour-welcome-sub" id="tour-welcome-msg">
+      Tu sistema de punto de venta est&#225; listo. Te mostramos un recorrido r&#225;pido de 2 minutos para que empieces a vender hoy mismo.
+    </div>
+    <div class="tour-progress"><div class="tour-progress-fill" id="tour-prog-fill" style="width:0%"></div></div>
+    <button class="tour-start-btn" onclick="tourStart()">Mostrarme c&#243;mo funciona &#8594;</button>
+    <button class="tour-later-btn" onclick="tourSkip()">Ya s&#233; usarlo, omitir</button>
+  </div>
+</div>
+
+<div class="tour-overlay" id="tour-overlay">
+  <div class="tour-backdrop" onclick="tourSkip()"></div>
+  <div class="tour-spotlight" id="tour-spotlight"></div>
+  <div class="tour-tooltip" id="tour-tooltip">
+    <div class="tour-progress" style="margin-bottom:12px"><div class="tour-progress-fill" id="tour-prog2"></div></div>
+    <div class="tour-tip-step" id="tour-step-lbl">Paso 1 de 6</div>
+    <div class="tour-tip-title" id="tour-tip-title">T&#237;tulo</div>
+    <div class="tour-tip-desc" id="tour-tip-desc">Descripci&#243;n</div>
+    <div class="tour-tip-btns">
+      <button class="tour-skip" onclick="tourSkip()">Saltar recorrido</button>
+      <div class="tour-dots" id="tour-dots"></div>
+      <button class="tour-next" id="tour-next-btn" onclick="tourNext()">Siguiente &#8250;</button>
+    </div>
+  </div>
+</div>
+
 </body></html>`);
   printWin.document.close();
   setTimeout(()=>{ printWin.print(); }, 600);
@@ -7984,6 +8124,238 @@ window.paySkip=function(){
   if(typeof setGiro==='function') setGiro(window._payPlan||'copy');
   if(typeof toast==='function') toast('Prueba de 14 d\u00edas activa. Activa tu plan en Configuraci\u00f3n.','info');
 };
+})();
+
+
+// ══════════════════════════════════════════════════════════════════
+// TURBOPOS PRODUCT TOUR
+// ══════════════════════════════════════════════════════════════════
+(function(){
+var TOUR_KEY = 'turbopos_tour_done';
+var tourStep = 0;
+var tourActive = false;
+
+var STEPS = [
+  {
+    title: 'Tu punto de venta',
+    desc: 'Aqu\u00ed cobras. Busca un producto en la barra de b\u00fasqueda o toca cualquier bot\u00f3n del cat\u00e1logo para agregarlo al carrito.',
+    target: '.p-grid, #product-list, .products-grid, [id*="pos"]',
+    pos: 'bottom',
+    view: 'pos'
+  },
+  {
+    title: 'El carrito de cobro',
+    desc: 'Los productos seleccionados aparecen aqu\u00ed. Puedes cambiar cantidades, aplicar descuentos o cupones antes de cobrar.',
+    target: '.cart-area, #cart-items, [id*="cart"]',
+    pos: 'left',
+    view: 'pos'
+  },
+  {
+    title: 'Cobra en segundos',
+    desc: 'Elige Efectivo, Tarjeta o Transferencia y presiona Cobrar. El ticket se genera autom\u00e1ticamente.',
+    target: '.pay-methods, .payment-section, [onclick*="cobrar"], .btn-cobrar',
+    pos: 'top',
+    view: 'pos'
+  },
+  {
+    title: 'Factura CFDI 4.0',
+    desc: 'Activa el switch de CFDI antes de cobrar para generar una factura v\u00e1lida ante el SAT. Solo necesitas el RFC del cliente.',
+    target: '#factura-check, [id*="cfdi"], [id*="factura"]',
+    pos: 'top',
+    view: 'pos'
+  },
+  {
+    title: 'Tu cat\u00e1logo de productos',
+    desc: 'Agrega, edita y organiza todos tus productos. Importa desde CSV o escanea el c\u00f3digo de barras con la c\u00e1mara.',
+    target: '#view-catalog, #nav-catalog, [onclick*="catalog"]',
+    pos: 'right',
+    view: 'catalog'
+  },
+  {
+    title: 'Reportes y dashboard',
+    desc: 'Ve tus ventas del d\u00eda, semana y mes. Exporta reportes en PDF para tu contador. Todo en tiempo real.',
+    target: '#view-dash, #nav-dash, [onclick*="dash"]',
+    pos: 'right',
+    view: 'dash'
+  }
+];
+
+function $(id){ return document.getElementById(id); }
+function $q(sel){ return document.querySelector(sel); }
+
+window.tourInit = function(){
+  if(localStorage.getItem(TOUR_KEY)) return;
+  // Mostrar bienvenida 1 segundo despues del login
+  setTimeout(function(){
+    var w = $('tour-welcome');
+    if(w){
+      // Personalizar con nombre del negocio
+      var nombre = localStorage.getItem('turbopos_nombre') || '';
+      if(nombre){
+        var msg = $('tour-welcome-msg');
+        if(msg) msg.innerHTML = 'Hola, <span class="tour-welcome-name">'+nombre+'</span>. Tu sistema est\u00e1 listo. Te mostramos c\u00f3mo empezar a vender en 2 minutos.';
+      }
+      w.classList.add('show');
+      if(typeof trackEvent==='function') trackEvent('tour_shown','Onboarding','welcome');
+    }
+  }, 1200);
+};
+
+window.tourStart = function(){
+  var w = $('tour-welcome');
+  if(w) w.classList.remove('show');
+  tourStep = 0;
+  tourActive = true;
+  tourShow(0);
+  if(typeof trackEvent==='function') trackEvent('tour_started','Onboarding','step_0');
+};
+
+window.tourSkip = function(){
+  tourActive = false;
+  var w = $('tour-welcome'); if(w) w.classList.remove('show');
+  var ov = $('tour-overlay'); if(ov) ov.classList.remove('active');
+  var sp = $('tour-spotlight'); if(sp) sp.style.display='none';
+  localStorage.setItem(TOUR_KEY, '1');
+  if(typeof trackEvent==='function') trackEvent('tour_skipped','Onboarding','step_'+tourStep);
+};
+
+window.tourNext = function(){
+  tourStep++;
+  if(tourStep >= STEPS.length){
+    tourComplete();
+  } else {
+    tourShow(tourStep);
+  }
+};
+
+function tourComplete(){
+  tourActive = false;
+  var ov = $('tour-overlay'); if(ov) ov.classList.remove('active');
+  var sp = $('tour-spotlight'); if(sp) sp.style.display='none';
+  localStorage.setItem(TOUR_KEY, '1');
+  if(typeof toast==='function') toast('\u00a1Recorrido completado! Ya est\u00e1s listo para vender. \uD83D\uDE80','success');
+  if(typeof trackEvent==='function') trackEvent('tour_completed','Onboarding','done');
+}
+
+function tourShow(idx){
+  var s = STEPS[idx];
+  var total = STEPS.length;
+  var pct = Math.round((idx/total)*100);
+
+  // Navegar a la vista correcta si es necesario
+  if(s.view && typeof showView==='function'){
+    showView(s.view);
+  }
+
+  // Actualizar tooltip content
+  var lbl = $('tour-step-lbl'); if(lbl) lbl.textContent = 'Paso '+(idx+1)+' de '+total;
+  var ttl = $('tour-tip-title'); if(ttl) ttl.textContent = s.title;
+  var dsc = $('tour-tip-desc'); if(dsc) dsc.textContent = s.desc;
+
+  // Dots
+  var dotsEl = $('tour-dots');
+  if(dotsEl) dotsEl.innerHTML = STEPS.map(function(_,i){
+    return '<div class="tour-dot'+(i===idx?' on':'')+'" onclick="tourShowDirect('+i+')"></div>';
+  }).join('');
+
+  // Next button
+  var nb = $('tour-next-btn');
+  if(nb){
+    if(idx === total-1){
+      nb.textContent = '\u00a1Empezar! \uD83D\uDE80';
+      nb.className = 'tour-next finish';
+    } else {
+      nb.textContent = 'Siguiente \u203A';
+      nb.className = 'tour-next';
+    }
+  }
+
+  // Progress bars
+  var p1 = $('tour-prog-fill'); if(p1) p1.style.width = pct+'%';
+  var p2 = $('tour-prog2'); if(p2) p2.style.width = pct+'%';
+
+  // Spotlight
+  setTimeout(function(){
+    var target = null;
+    if(s.target){
+      var selectors = s.target.split(',');
+      for(var i=0;i<selectors.length;i++){
+        target = document.querySelector(selectors[i].trim());
+        if(target) break;
+      }
+    }
+
+    var sp = $('tour-spotlight');
+    var tt = $('tour-tooltip');
+    var ov = $('tour-overlay');
+    if(!ov) return;
+    ov.classList.add('active');
+
+    if(target && sp){
+      var rect = target.getBoundingClientRect();
+      var pad = 6;
+      sp.style.display = 'block';
+      sp.style.top = (rect.top-pad)+'px';
+      sp.style.left = (rect.left-pad)+'px';
+      sp.style.width = (rect.width+pad*2)+'px';
+      sp.style.height = (rect.height+pad*2)+'px';
+      sp.style.boxShadow = '0 0 0 4000px rgba(8,12,20,.75)';
+
+      // Posicion del tooltip
+      if(tt){
+        var ttW = 300;
+        var ttH = 180;
+        var vw = window.innerWidth;
+        var vh = window.innerHeight;
+        var tx, ty;
+
+        if(s.pos==='right'){
+          tx = Math.min(rect.right+16, vw-ttW-8);
+          ty = Math.max(8, Math.min(rect.top, vh-ttH-8));
+        } else if(s.pos==='left'){
+          tx = Math.max(8, rect.left-ttW-16);
+          ty = Math.max(8, Math.min(rect.top, vh-ttH-8));
+        } else if(s.pos==='top'){
+          tx = Math.max(8, Math.min(rect.left+rect.width/2-ttW/2, vw-ttW-8));
+          ty = Math.max(8, rect.top-ttH-16);
+        } else { // bottom
+          tx = Math.max(8, Math.min(rect.left+rect.width/2-ttW/2, vw-ttW-8));
+          ty = Math.min(vh-ttH-8, rect.bottom+16);
+        }
+        tt.style.left = tx+'px';
+        tt.style.top = ty+'px';
+        tt.style.transform = 'none';
+      }
+    } else {
+      // Sin target — centrado
+      if(sp) sp.style.display='none';
+      if(tt){
+        tt.style.left = '50%';
+        tt.style.top = '50%';
+        tt.style.transform = 'translateX(-50%) translateY(-50%)';
+      }
+    }
+  }, s.view ? 400 : 100);
+}
+
+window.tourShowDirect = function(i){
+  tourStep = i;
+  tourShow(i);
+};
+
+window.tourReset = function(){
+  localStorage.removeItem(TOUR_KEY);
+  if(typeof toast==='function') toast('Recorrido reiniciado','info');
+};
+
+// Hook: llamar tourInit despues de initApp
+var _origInit = window.initApp;
+if(typeof _origInit === 'function'){
+  window.initApp = function(){
+    _origInit.apply(this, arguments);
+    setTimeout(window.tourInit, 800);
+  };
+}
 })();
 
 </script>
@@ -8425,5 +8797,36 @@ window.paySkip=function(){
     </div>
   </div>
 </div>
+
+<!-- ── PRODUCT TOUR ──────────────────────────────────────────── -->
+<div class="tour-welcome" id="tour-welcome">
+  <div class="tour-welcome-card">
+    <div class="tour-emoji">&#127881;</div>
+    <div class="tour-welcome-title">&#161;Bienvenido a <span class="tour-welcome-name">TurboPOS</span>!</div>
+    <div class="tour-welcome-sub" id="tour-welcome-msg">
+      Tu sistema de punto de venta est&#225; listo. Te mostramos un recorrido r&#225;pido de 2 minutos para que empieces a vender hoy mismo.
+    </div>
+    <div class="tour-progress"><div class="tour-progress-fill" id="tour-prog-fill" style="width:0%"></div></div>
+    <button class="tour-start-btn" onclick="tourStart()">Mostrarme c&#243;mo funciona &#8594;</button>
+    <button class="tour-later-btn" onclick="tourSkip()">Ya s&#233; usarlo, omitir</button>
+  </div>
+</div>
+
+<div class="tour-overlay" id="tour-overlay">
+  <div class="tour-backdrop" onclick="tourSkip()"></div>
+  <div class="tour-spotlight" id="tour-spotlight"></div>
+  <div class="tour-tooltip" id="tour-tooltip">
+    <div class="tour-progress" style="margin-bottom:12px"><div class="tour-progress-fill" id="tour-prog2"></div></div>
+    <div class="tour-tip-step" id="tour-step-lbl">Paso 1 de 6</div>
+    <div class="tour-tip-title" id="tour-tip-title">T&#237;tulo</div>
+    <div class="tour-tip-desc" id="tour-tip-desc">Descripci&#243;n</div>
+    <div class="tour-tip-btns">
+      <button class="tour-skip" onclick="tourSkip()">Saltar recorrido</button>
+      <div class="tour-dots" id="tour-dots"></div>
+      <button class="tour-next" id="tour-next-btn" onclick="tourNext()">Siguiente &#8250;</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
