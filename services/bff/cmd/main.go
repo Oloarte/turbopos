@@ -95,6 +95,32 @@ func startTrialCron(db *sql.DB) {
 	log.Println("[Cron] Trial checker iniciado (cada hora)")
 }
 
+
+// ── RATE LIMITER para login ─────────────────────────────────────
+var loginAttempts = make(map[string][]time.Time)
+var loginMu sync.Mutex
+
+func checkRateLimit(ip string) bool {
+	loginMu.Lock()
+	defer loginMu.Unlock()
+	now := time.Now()
+	window := 15 * time.Minute
+	max := 5
+	// Limpiar intentos viejos
+	var recent []time.Time
+	for _, t := range loginAttempts[ip] {
+		if now.Sub(t) < window {
+			recent = append(recent, t)
+		}
+	}
+	loginAttempts[ip] = recent
+	if len(recent) >= max {
+		return false
+	}
+	loginAttempts[ip] = append(loginAttempts[ip], now)
+	return true
+}
+
 func main() {
 	godotenv.Load()
 	// Iniciar cron de trials - se llama después de conectar DB
@@ -1980,6 +2006,14 @@ func jwtMiddleware(next http.Handler) http.Handler {
 
 // POST /api/v1/login — autentica usuario y devuelve JWT
 func (gw *Gateway) handleLogin(w http.ResponseWriter, r *http.Request) {
+	// Rate limiting
+	ip := r.Header.Get("X-Real-IP")
+	if ip == "" { ip = r.RemoteAddr }
+	if !checkRateLimit(ip) {
+		w.WriteHeader(http.StatusTooManyRequests)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Demasiados intentos. Espera 15 minutos."})
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	// Rate limiting: max 5 intentos por IP en 5 minutos
 	ip := r.RemoteAddr
