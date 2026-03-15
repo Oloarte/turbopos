@@ -3,126 +3,190 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
 <title>Aviso de Privacidad — TurboPOS</title>
+
 <style>
-:root{--amber:#FFB547;--bg:#080C14;--text:#E8E6E0;--text2:#9B9893;--border:rgba(255,255,255,.1);}
+:root{--amber:#FFB547;--bg:#080C14;--text:#E8E6E0;--text2:#9B9893;--border:rgba(255,255,255,.1);--green:#22c55e;}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.7;font-size:16px;}
-.container{max-width:720px;margin:0 auto;padding:60px 24px;}
-.logo{font-size:20px;font-weight:900;color:var(--amber);margin-bottom:40px;display:inline-block;text-decoration:none;}
-h1{font-size:30px;font-weight:800;margin-bottom:8px;}
-.fecha{font-size:13px;color:var(--text2);margin-bottom:40px;}
-h2{font-size:17px;font-weight:700;margin:28px 0 10px;padding-top:28px;border-top:1px solid var(--border);}
-h2:first-of-type{border-top:none;padding-top:0;}
-p,li{color:var(--text2);margin-bottom:12px;}
-ul{padding-left:20px;margin-bottom:14px;}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.8;font-size:16px;}
+.container{max-width:760px;margin:0 auto;padding:60px 24px 80px;}
+.logo{font-size:20px;font-weight:900;color:var(--amber);margin-bottom:48px;display:inline-block;text-decoration:none;letter-spacing:-0.5px;}
+h1{font-size:32px;font-weight:800;margin-bottom:6px;letter-spacing:-0.5px;}
+.meta{font-size:13px;color:var(--text2);margin-bottom:48px;display:flex;gap:20px;flex-wrap:wrap;}
+.meta span{display:flex;align-items:center;gap:5px;}
+h2{font-size:16px;font-weight:700;margin:36px 0 12px;padding-top:36px;border-top:1px solid var(--border);color:var(--amber);letter-spacing:.03em;text-transform:uppercase;font-size:11px;}
+h3{font-size:16px;font-weight:700;color:var(--text);margin:20px 0 8px;}
+p{color:var(--text2);margin-bottom:14px;font-size:15px;}
+ul,ol{color:var(--text2);padding-left:22px;margin-bottom:14px;font-size:15px;}
+li{margin-bottom:7px;}
 strong{color:var(--text);font-weight:600;}
-.highlight{background:rgba(255,181,71,.08);border:1px solid rgba(255,181,71,.2);border-radius:10px;padding:14px 18px;margin:16px 0;}
-.highlight p{margin:0;color:var(--amber);font-size:14px;}
-.arco{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:16px 0;}
-.arco-item{background:rgba(255,255,255,.04);border-radius:10px;padding:14px;}
-.arco-item strong{color:var(--amber);display:block;margin-bottom:4px;font-size:14px;}
-.arco-item span{font-size:13px;color:var(--text2);}
-footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--border);font-size:13px;color:var(--text2);text-align:center;}
-footer a{color:var(--amber);text-decoration:none;}
+a{color:var(--amber);text-decoration:none;}
+a:hover{text-decoration:underline;}
+.alert{background:rgba(255,181,71,.08);border-left:3px solid var(--amber);border-radius:0 10px 10px 0;padding:14px 18px;margin:20px 0;}
+.alert p{margin:0;color:var(--amber);font-size:14px;}
+.alert-green{background:rgba(34,197,94,.08);border-left-color:var(--green);}
+.alert-green p{color:var(--green);}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:16px 0;}
+.grid-item{background:rgba(255,255,255,.04);border-radius:10px;padding:14px;border:1px solid rgba(255,255,255,.06);}
+.grid-item strong{color:var(--amber);display:block;margin-bottom:4px;font-size:13px;}
+.grid-item span{font-size:13px;color:var(--text2);}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;}
+th{text-align:left;padding:10px 14px;background:rgba(255,255,255,.05);color:var(--amber);font-weight:700;border-bottom:1px solid var(--border);font-size:12px;letter-spacing:.05em;text-transform:uppercase;}
+td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text2);vertical-align:top;}
+tr:last-child td{border-bottom:none;}
+.nav-legal{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:32px;padding:16px 20px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid rgba(255,255,255,.06);}
+.nav-legal a{font-size:13px;color:var(--text2);}
+.nav-legal a:hover{color:var(--amber);}
+.nav-legal a.active{color:var(--amber);font-weight:600;}
+footer{margin-top:60px;padding-top:24px;border-top:1px solid var(--border);font-size:13px;color:var(--text2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+footer a{color:var(--amber);}
+@media(max-width:600px){.grid2{grid-template-columns:1fr;}.meta{flex-direction:column;gap:6px;}}
 </style>
+
 </head>
 <body>
 <div class="container">
-<a href="/app" class="logo">TurboPOS</a>
-<h1>Aviso de Privacidad</h1>
-<p class="fecha">Fecha de última actualización: 15 de marzo de 2026</p>
+<a href="/" class="logo">TurboPOS</a>
 
-<div class="highlight">
-<p>De conformidad con la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP), TurboPOS pone a tu disposición el presente Aviso de Privacidad.</p>
+<div class="nav-legal">
+  <a href="/terminos" >Términos de Uso</a>
+  <a href="/privacidad" class='active'>Aviso de Privacidad</a>
+  <a href="/sla" >SLA</a>
+  <a href="/app">← Regresar al POS</a>
 </div>
 
-<h2>I. Identidad y domicilio del responsable</h2>
-<p><strong>Responsable:</strong> Daniel Oloarte, operador de TurboPOS<br>
-<strong>Correo de contacto:</strong> privacidad@turbopos.mx / hola@turbopos.mx<br>
-<strong>Domicilio:</strong> Ecatepec de Morelos, Estado de México, México<br>
+
+<h1>Aviso de Privacidad Integral</h1>
+<div class="meta">
+  <span>&#128197; Última actualización: 15 de marzo de 2026</span>
+  <span>&#9878; Versión: 2.0</span>
+</div>
+
+<div class="alert alert-green">
+<p>De conformidad con la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP), su Reglamento y los Lineamientos del INAI, TurboPOS pone a tu disposición el presente Aviso de Privacidad Integral.</p>
+</div>
+
+<h2>I. Identidad y domicilio del Responsable</h2>
+<p><strong>Nombre:</strong> Daniel Oloarte, operador de TurboPOS<br>
+<strong>Domicilio:</strong> Ecatepec de Morelos, Estado de México, C.P. 55000, México<br>
+<strong>Correo de privacidad:</strong> <a href="mailto:privacidad@turbopos.mx">privacidad@turbopos.mx</a><br>
+<strong>Correo general:</strong> <a href="mailto:hola@turbopos.mx">hola@turbopos.mx</a><br>
+<strong>Teléfono:</strong> +52 (55) 6128-7993<br>
 <strong>Sitio web:</strong> turbopos.mx</p>
 
 <h2>II. Datos personales que recabamos</h2>
-<p>Para la prestación de nuestros servicios recabamos los siguientes datos:</p>
+<h3>2.1 Datos del suscriptor (Cliente)</h3>
 <ul>
-<li><strong>Datos de identificación:</strong> Nombre del negocio, RFC, nombre del responsable</li>
-<li><strong>Datos de contacto:</strong> Correo electrónico, teléfono, código postal</li>
-<li><strong>Datos de autenticación:</strong> Correo y contraseña (almacenada con hash bcrypt — nunca en texto plano)</li>
-<li><strong>Datos de operación:</strong> Ventas, productos, clientes del negocio, CFDIs emitidos</li>
-<li><strong>Datos de pago:</strong> Solo el token de pago tokenizado por OpenPay — TurboPOS nunca almacena números de tarjeta</li>
-<li><strong>Datos de uso:</strong> Páginas visitadas, eventos de la aplicación (mediante Google Analytics)</li>
+<li><strong>Identificación:</strong> Nombre completo o razón social, RFC</li>
+<li><strong>Contacto:</strong> Correo electrónico, teléfono, código postal, municipio y estado</li>
+<li><strong>Autenticación:</strong> Correo electrónico y contraseña — almacenada exclusivamente como hash bcrypt; nunca como texto plano</li>
+<li><strong>Fiscales:</strong> RFC del negocio, régimen fiscal, datos del CSD para timbrado CFDI (certificado y llave privada cifrada)</li>
+<li><strong>Pago:</strong> Token de pago emitido por OpenPay — TurboPOS <strong>nunca almacena</strong> números de tarjeta, CVV ni datos bancarios directos</li>
+<li><strong>Uso:</strong> Páginas visitadas, acciones en la plataforma, dispositivo y navegador, dirección IP</li>
 </ul>
+<h3>2.2 Datos de clientes finales del suscriptor</h3>
+<p>El suscriptor puede registrar en TurboPOS datos de sus propios clientes finales (nombre, RFC, teléfono, correo, puntos de lealtad). Para estos datos, el suscriptor actúa como <strong>Responsable</strong> y TurboPOS como <strong>Encargado</strong> del tratamiento. TurboPOS los procesa únicamente bajo instrucción del suscriptor y no los usa para fines propios.</p>
 
 <h2>III. Finalidades del tratamiento</h2>
-<p><strong>Finalidades primarias (necesarias para el servicio):</strong></p>
+<h3>3.1 Finalidades primarias — necesarias para el servicio</h3>
 <ul>
-<li>Proveer el servicio de punto de venta (POS) y facturación electrónica CFDI 4.0</li>
+<li>Proveer el servicio de POS y facturación electrónica CFDI 4.0</li>
 <li>Procesar pagos de suscripción a través de OpenPay</li>
-<li>Emitir facturas y timbrar CFDIs ante el SAT mediante Finkok (PAC autorizado)</li>
-<li>Enviar notificaciones del servicio: confirmaciones, alertas de vencimiento, facturas</li>
+<li>Timbrar CFDIs ante el SAT mediante Finkok (PAC autorizado)</li>
+<li>Gestionar la cuenta, acceso y seguridad del servicio</li>
+<li>Enviar notificaciones del servicio: confirmaciones, alertas de vencimiento, facturas de suscripción</li>
 <li>Brindar soporte técnico</li>
+<li>Cumplir obligaciones legales y fiscales</li>
 </ul>
-<p><strong>Finalidades secundarias (puedes oponerte):</strong></p>
+<h3>3.2 Finalidades secundarias — puedes oponerte</h3>
 <ul>
-<li>Enviarte información sobre nuevas funciones, planes y promociones de TurboPOS</li>
-<li>Realizar análisis estadísticos agregados y anonimizados sobre el uso de la plataforma</li>
+<li>Enviarte información sobre nuevas funciones, actualizaciones y promociones de TurboPOS</li>
+<li>Realizar análisis estadísticos <strong>agregados y anonimizados</strong> sobre patrones de uso de la plataforma</li>
+<li>Mostrarte publicidad relevante de TurboPOS en plataformas de terceros mediante audiencias anonimizadas</li>
 </ul>
-<p>Si no deseas que tus datos sean utilizados para las finalidades secundarias, escríbenos a hola@turbopos.mx con el asunto "Oposición datos secundarios".</p>
-
-<h2>IV. Derechos ARCO</h2>
-<p>Tienes derecho a:</p>
-<div class="arco">
-<div class="arco-item"><strong>Acceso</strong><span>Solicitar qué datos personales tenemos sobre ti</span></div>
-<div class="arco-item"><strong>Rectificación</strong><span>Corregir datos inexactos o incompletos</span></div>
-<div class="arco-item"><strong>Cancelación</strong><span>Solicitar la eliminación de tus datos</span></div>
-<div class="arco-item"><strong>Oposición</strong><span>Oponerte al tratamiento de tus datos</span></div>
+<div class="alert">
+<p>Si no deseas que tus datos se usen para finalidades secundarias, escríbenos a privacidad@turbopos.mx con el asunto "Oposición finalidades secundarias" en cualquier momento, incluso desde el momento del registro.</p>
 </div>
-<p>Para ejercer tus derechos ARCO, envía un correo a <strong>privacidad@turbopos.mx</strong> con: nombre completo, RFC del negocio, derecho que deseas ejercer y documentación que acredite tu identidad. Responderemos en un plazo máximo de 20 días hábiles.</p>
 
-<h2>V. Transferencia de datos</h2>
-<p>TurboPOS puede compartir tus datos con los siguientes terceros para la operación del servicio:</p>
+<h2>IV. Transferencia y remisión de datos</h2>
+<p>TurboPOS transfiere datos personales a los siguientes terceros para la operación del servicio. Al aceptar estos Términos, el titular otorga su consentimiento expreso para dichas transferencias conforme al Art. 37 de la LFPDPPP:</p>
+<table>
+<tr><th>Tercero</th><th>País</th><th>Propósito</th><th>Base legal</th></tr>
+<tr><td><strong>Finkok S.A. de C.V.</strong></td><td>México</td><td>Timbrado de CFDIs ante el SAT</td><td>Necesaria para el servicio</td></tr>
+<tr><td><strong>OpenPay (BBVA México)</strong></td><td>México / EE.UU.</td><td>Procesamiento de pagos electrónicos</td><td>Necesaria para el servicio</td></tr>
+<tr><td><strong>Google LLC</strong></td><td>EE.UU.</td><td>Analytics de uso (anonimizado) y Firebase Auth</td><td>Consentimiento</td></tr>
+<tr><td><strong>Contabo GmbH</strong></td><td>Alemania / EE.UU.</td><td>Infraestructura de servidor y almacenamiento</td><td>Necesaria para el servicio</td></tr>
+</table>
+<p>Para las transferencias a EE.UU. y Alemania, TurboPOS adopta las medidas de seguridad descritas en la Sección VI y requiere a los terceros el mantenimiento de estándares equivalentes de protección. TurboPOS no vende, arrienda ni cede datos personales a terceros para fines comerciales ajenos al servicio.</p>
+
+<h2>V. Derechos ARCO y revocación del consentimiento</h2>
+<p>El titular de los datos tiene derecho a:</p>
+<div class="grid2">
+<div class="grid-item"><strong>Acceso</strong><span>Conocer qué datos personales tenemos y cómo los usamos</span></div>
+<div class="grid-item"><strong>Rectificación</strong><span>Corregir datos inexactos, incompletos o desactualizados</span></div>
+<div class="grid-item"><strong>Cancelación</strong><span>Solicitar la supresión de sus datos cuando sea procedente</span></div>
+<div class="grid-item"><strong>Oposición</strong><span>Oponerse al tratamiento de sus datos para finalidades específicas</span></div>
+</div>
+<p>También puede <strong>revocar el consentimiento</strong> otorgado para el tratamiento de sus datos en cualquier momento, sin efectos retroactivos, teniendo en cuenta que esto puede imposibilitar la prestación del servicio.</p>
+<p><strong>Procedimiento:</strong> Envía un correo a <a href="mailto:privacidad@turbopos.mx">privacidad@turbopos.mx</a> con:</p>
 <ul>
-<li><strong>Finkok S.A. de C.V.</strong> — PAC autorizado por el SAT para timbrado de CFDIs</li>
-<li><strong>OpenPay (BBVA México)</strong> — procesador de pagos con tarjeta, OXXO y SPEI</li>
-<li><strong>Google LLC</strong> — Google Analytics para estadísticas de uso (datos anonimizados)</li>
-<li><strong>Contabo GmbH</strong> — proveedor de infraestructura de servidor</li>
-<li><strong>Firebase (Google)</strong> — autenticación y notificaciones push</li>
+<li>Nombre completo y RFC del negocio registrado</li>
+<li>Derecho que deseas ejercer</li>
+<li>Descripción clara de lo que solicitas</li>
+<li>Documento que acredite tu identidad (INE, pasaporte)</li>
 </ul>
-<p>No vendemos, arrendamos ni cedemos tus datos personales a terceros no mencionados para fines comerciales propios.</p>
+<p>Daremos respuesta en un plazo máximo de <strong>20 días hábiles</strong> contados a partir de la recepción de la solicitud completa. La resolución se comunicará en los 15 días hábiles siguientes.</p>
 
-<h2>VI. Seguridad de los datos</h2>
-<p>Implementamos medidas técnicas y organizativas para proteger tus datos:</p>
+<h2>VI. Medidas de seguridad</h2>
+<p>TurboPOS implementa las siguientes medidas técnicas y organizativas para proteger los datos personales:</p>
 <ul>
-<li>Transmisión cifrada mediante HTTPS/TLS (certificado SSL activo)</li>
-<li>Contraseñas almacenadas con hash bcrypt (nunca en texto plano)</li>
-<li>Base de datos PostgreSQL no expuesta a internet — acceso solo local</li>
-<li>Tokens JWT con expiración de 24 horas</li>
-<li>Respaldos automáticos diarios de la base de datos</li>
-<li>Aislamiento de datos por tenant (tu información nunca es visible para otros clientes)</li>
+<li><strong>Cifrado en tránsito:</strong> HTTPS/TLS con certificado SSL (Let's Encrypt), HSTS activado</li>
+<li><strong>Contraseñas:</strong> Hash bcrypt con 10 rondas; nunca almacenadas en texto plano</li>
+<li><strong>Autenticación:</strong> Tokens JWT con expiración de 24 horas; bloqueo automático tras 5 intentos fallidos por 15 minutos</li>
+<li><strong>Base de datos:</strong> PostgreSQL en red privada; no expuesto a internet</li>
+<li><strong>Aislamiento:</strong> Arquitectura multi-tenant; los datos de cada cliente son inaccesibles para otros</li>
+<li><strong>Respaldos:</strong> Backups automáticos diarios con retención de 7 días</li>
+<li><strong>Control de acceso:</strong> Acceso al servidor restringido por SSH con autenticación por contraseña robusta</li>
 </ul>
 
-<h2>VII. Retención de datos</h2>
+<h2>VII. Notificación de brechas de seguridad</h2>
+<p>En caso de que TurboPOS detecte una vulneración de seguridad que afecte de forma significativa los derechos patrimoniales o morales de los titulares, notificará a los afectados y al INAI en un plazo no mayor a <strong>72 horas</strong> desde que se tenga conocimiento del incidente, conforme al Art. 20 de la LFPDPPP. La notificación incluirá: naturaleza del incidente, datos comprometidos, acciones correctivas tomadas y recomendaciones al titular.</p>
+
+<h2>VIII. Retención de datos</h2>
+<table>
+<tr><th>Tipo de dato</th><th>Plazo de retención</th></tr>
+<tr><td>Datos de cuenta activa</td><td>Durante la vigencia del contrato</td></tr>
+<tr><td>Datos tras cancelación</td><td>60 días adicionales para exportación, luego eliminación definitiva</td></tr>
+<tr><td>CFDIs emitidos (XML)</td><td>5 años conforme al Art. 30 del CFF</td></tr>
+<tr><td>Logs de acceso y seguridad</td><td>90 días</td></tr>
+<tr><td>Datos de facturación</td><td>5 años conforme al CFF</td></tr>
+<tr><td>Datos de soporte técnico</td><td>1 año desde la resolución del caso</td></tr>
+</table>
+
+<h2>IX. Uso de cookies y tecnologías de rastreo</h2>
+<p>TurboPOS utiliza las siguientes tecnologías de rastreo:</p>
 <ul>
-<li>Datos de cuentas activas: se conservan mientras dure la relación contractual</li>
-<li>Datos de cuentas canceladas: disponibles para exportación durante 60 días, eliminados al día 60</li>
-<li>CFDIs emitidos: conservados 5 años conforme al Código Fiscal de la Federación</li>
-<li>Logs de acceso: 90 días</li>
+<li><strong>Google Analytics (G-6W85YL2WQL):</strong> Mide visitas, fuentes de tráfico y comportamiento en la plataforma. Los datos se pseudoanonimizan antes de enviarse a Google. Puedes optar por no participar instalando la <a href="https://tools.google.com/dlpage/gaoptout" target="_blank">extensión oficial de opt-out de Google Analytics</a>.</li>
+<li><strong>sessionStorage:</strong> Almacena el token de sesión en el navegador. Se elimina al cerrar la pestaña.</li>
+<li><strong>localStorage:</strong> Almacena preferencias de la aplicación (giro, plan, estado del tour). No contiene datos personales sensibles.</li>
+</ul>
+<p>El uso de la plataforma no se ve afectado por desactivar las cookies analíticas de terceros.</p>
+
+<h2>X. Modificaciones al Aviso de Privacidad</h2>
+<p>TurboPOS puede actualizar este Aviso. Los cambios que impliquen tratamiento de nuevas categorías de datos o nuevas finalidades serán notificados por correo electrónico con <strong>15 días de anticipación</strong>. La versión vigente siempre estará disponible en <a href="/privacidad">turbopos.mx/privacidad</a>.</p>
+
+<h2>XI. Autoridad supervisora</h2>
+<p>Si consideras que el tratamiento de tus datos personales infringe la LFPDPPP, puedes presentar una queja ante el <strong>Instituto Nacional de Transparencia, Acceso a la Información y Protección de Datos Personales (INAI)</strong>:</p>
+<ul>
+<li>Sitio web: <a href="https://home.inai.org.mx" target="_blank">home.inai.org.mx</a></li>
+<li>Teléfono: 800 835 4324</li>
 </ul>
 
-<h2>VIII. Cookies y tecnologías de rastreo</h2>
-<p>TurboPOS utiliza Google Analytics para medir el uso de la plataforma. Puedes desactivar el rastreo mediante la extensión oficial de Google Analytics para navegadores o configurando tu navegador para rechazar cookies de terceros. El uso de la plataforma no se ve afectado por desactivar las cookies analíticas.</p>
-
-<h2>IX. Cambios al Aviso de Privacidad</h2>
-<p>TurboPOS puede actualizar este aviso. Los cambios materiales serán notificados por correo electrónico con 15 días de anticipación. La versión vigente siempre estará disponible en turbopos.mx/privacidad.</p>
-
-<h2>X. Contacto y quejas</h2>
-<p>Para cualquier duda, solicitud o queja relacionada con el tratamiento de tus datos personales:<br>
-<strong>Email:</strong> privacidad@turbopos.mx<br>
-<strong>Teléfono:</strong> +52 56 1287 9939<br>
-<strong>INAI:</strong> Si consideras que tu derecho a la protección de datos fue vulnerado, puedes presentar queja ante el Instituto Nacional de Transparencia, Acceso a la Información y Protección de Datos Personales (INAI) en inai.org.mx</p>
-
-<footer>&copy; 2026 TurboPOS &mdash; <a href="/terminos">Términos de Uso</a> &bull; <a href="/app">Acceder</a> &bull; hola@turbopos.mx</footer>
+<footer>
+  <span>&copy; 2026 TurboPOS — LFPDPPP v2.0</span>
+  <span><a href="/terminos">Términos</a> &bull; <a href="/sla">SLA</a> &bull; <a href="/app">Acceder</a></span>
+</footer>
 </div>
 </body>
 </html>

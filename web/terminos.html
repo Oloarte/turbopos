@@ -3,71 +3,178 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
 <title>Términos de Uso — TurboPOS</title>
+
 <style>
-:root{--amber:#FFB547;--bg:#080C14;--text:#E8E6E0;--text2:#9B9893;--border:rgba(255,255,255,.1);}
+:root{--amber:#FFB547;--bg:#080C14;--text:#E8E6E0;--text2:#9B9893;--border:rgba(255,255,255,.1);--green:#22c55e;}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.7;font-size:16px;}
-.container{max-width:720px;margin:0 auto;padding:60px 24px;}
-.logo{font-size:20px;font-weight:900;color:var(--amber);margin-bottom:40px;display:inline-block;text-decoration:none;}
-h1{font-size:32px;font-weight:800;margin-bottom:8px;}
-.fecha{font-size:13px;color:var(--text2);margin-bottom:40px;}
-h2{font-size:18px;font-weight:700;margin:32px 0 12px;padding-top:32px;border-top:1px solid var(--border);}
-p{color:var(--text2);margin-bottom:14px;}
-ul{color:var(--text2);padding-left:20px;margin-bottom:14px;}
-li{margin-bottom:6px;}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.8;font-size:16px;}
+.container{max-width:760px;margin:0 auto;padding:60px 24px 80px;}
+.logo{font-size:20px;font-weight:900;color:var(--amber);margin-bottom:48px;display:inline-block;text-decoration:none;letter-spacing:-0.5px;}
+h1{font-size:32px;font-weight:800;margin-bottom:6px;letter-spacing:-0.5px;}
+.meta{font-size:13px;color:var(--text2);margin-bottom:48px;display:flex;gap:20px;flex-wrap:wrap;}
+.meta span{display:flex;align-items:center;gap:5px;}
+h2{font-size:16px;font-weight:700;margin:36px 0 12px;padding-top:36px;border-top:1px solid var(--border);color:var(--amber);letter-spacing:.03em;text-transform:uppercase;font-size:11px;}
+h3{font-size:16px;font-weight:700;color:var(--text);margin:20px 0 8px;}
+p{color:var(--text2);margin-bottom:14px;font-size:15px;}
+ul,ol{color:var(--text2);padding-left:22px;margin-bottom:14px;font-size:15px;}
+li{margin-bottom:7px;}
 strong{color:var(--text);font-weight:600;}
-.highlight{background:rgba(255,181,71,.08);border:1px solid rgba(255,181,71,.2);border-radius:10px;padding:16px 20px;margin:20px 0;}
-.highlight p{margin:0;color:var(--amber);font-size:14px;}
-footer{margin-top:60px;padding-top:24px;border-top:1px solid var(--border);font-size:13px;color:var(--text2);text-align:center;}
-footer a{color:var(--amber);text-decoration:none;}
+a{color:var(--amber);text-decoration:none;}
+a:hover{text-decoration:underline;}
+.alert{background:rgba(255,181,71,.08);border-left:3px solid var(--amber);border-radius:0 10px 10px 0;padding:14px 18px;margin:20px 0;}
+.alert p{margin:0;color:var(--amber);font-size:14px;}
+.alert-green{background:rgba(34,197,94,.08);border-left-color:var(--green);}
+.alert-green p{color:var(--green);}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:16px 0;}
+.grid-item{background:rgba(255,255,255,.04);border-radius:10px;padding:14px;border:1px solid rgba(255,255,255,.06);}
+.grid-item strong{color:var(--amber);display:block;margin-bottom:4px;font-size:13px;}
+.grid-item span{font-size:13px;color:var(--text2);}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;}
+th{text-align:left;padding:10px 14px;background:rgba(255,255,255,.05);color:var(--amber);font-weight:700;border-bottom:1px solid var(--border);font-size:12px;letter-spacing:.05em;text-transform:uppercase;}
+td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text2);vertical-align:top;}
+tr:last-child td{border-bottom:none;}
+.nav-legal{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:32px;padding:16px 20px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid rgba(255,255,255,.06);}
+.nav-legal a{font-size:13px;color:var(--text2);}
+.nav-legal a:hover{color:var(--amber);}
+.nav-legal a.active{color:var(--amber);font-weight:600;}
+footer{margin-top:60px;padding-top:24px;border-top:1px solid var(--border);font-size:13px;color:var(--text2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+footer a{color:var(--amber);}
+@media(max-width:600px){.grid2{grid-template-columns:1fr;}.meta{flex-direction:column;gap:6px;}}
 </style>
+
 </head>
 <body>
 <div class="container">
-<a href="/app" class="logo">TurboPOS</a>
+<a href="/" class="logo">TurboPOS</a>
+
+<div class="nav-legal">
+  <a href="/terminos" class='active'>Términos de Uso</a>
+  <a href="/privacidad" >Aviso de Privacidad</a>
+  <a href="/sla" >SLA</a>
+  <a href="/app">← Regresar al POS</a>
+</div>
+
+
 <h1>Términos de Uso</h1>
-<p class="fecha">Última actualización: 14 de marzo de 2026</p>
-<div class="highlight"><p>Al crear una cuenta en TurboPOS aceptas estos términos. Son claros y sin letra chica.</p></div>
-<h2>1. Descripción del Servicio</h2>
-<p>TurboPOS es un sistema de punto de venta (POS) en la nube para PyMEs mexicanas. Incluye: POS web/móvil, emisión de CFDI 4.0, inventario, programa de lealtad y reportes. Operado por <strong>Daniel Oloarte</strong> — <strong>hola@turbopos.mx</strong>.</p>
-<h2>2. Cuenta y Acceso</h2>
+<div class="meta">
+  <span>&#128197; Vigentes desde: 15 de marzo de 2026</span>
+  <span>&#128203; Versión: 2.0</span>
+</div>
+
+<div class="alert">
+<p>Al crear una cuenta en TurboPOS, el usuario acepta estos Términos en su totalidad. Si no estás de acuerdo, no debes usar el servicio. Estos Términos constituyen un contrato vinculante conforme a la legislación mexicana.</p>
+</div>
+
+<h2>1. Definiciones</h2>
+<p><strong>"TurboPOS"</strong> se refiere al servicio de punto de venta en la nube operado por Daniel Oloarte (en adelante "el Proveedor"), con correo hola@turbopos.mx.</p>
+<p><strong>"Cliente"</strong> es la persona física o moral que contrata el servicio.</p>
+<p><strong>"Usuario"</strong> es cualquier persona que accede a TurboPOS bajo la cuenta del Cliente.</p>
+<p><strong>"Terminal"</strong> es cada dispositivo o sesión de navegador activa simultáneamente que procesa ventas. Dos dispositivos activos al mismo tiempo = 2 terminales.</p>
+<p><strong>"Datos del Negocio"</strong> son los datos de ventas, productos, clientes finales y CFDIs generados por el Cliente dentro de TurboPOS.</p>
+
+<h2>2. Descripción del Servicio</h2>
+<p>TurboPOS es un sistema de punto de venta (POS) en la nube para PyMEs mexicanas que incluye: POS web/móvil, emisión de CFDI 4.0 mediante PAC autorizado, control de inventario, programa de lealtad, reportes analíticos y módulo de pagos electrónicos.</p>
+<p>El servicio se presta "tal cual disponible". TurboPOS puede modificar, agregar o descontinuar funciones con 30 días de aviso previo, salvo que el cambio sea requerido por ley o por disposición del SAT, en cuyo caso se implementa de inmediato.</p>
+
+<h2>3. Cuenta, Acceso y Seguridad</h2>
+<p>Cada cuenta corresponde a un negocio (tenant) con datos completamente aislados de otros clientes. El Cliente es responsable de:</p>
 <ul>
-<li>Cada cuenta es un negocio (tenant) con datos aislados.</li>
-<li>Eres responsable de mantener tu contraseña segura.</li>
-<li>TurboPOS puede suspender cuentas con actividad fraudulenta.</li>
+<li>Mantener la confidencialidad de sus credenciales de acceso.</li>
+<li>Todas las acciones realizadas bajo su cuenta, incluyendo las de sus Usuarios.</li>
+<li>Notificar a TurboPOS inmediatamente ante cualquier acceso no autorizado a hola@turbopos.mx.</li>
 </ul>
-<h2>3. Período de Prueba</h2>
-<p>Las cuentas nuevas tienen <strong>14 días gratuitos</strong> sin tarjeta. Al terminar, el servicio se suspende hasta activar un plan. Tus datos se conservan 30 días adicionales.</p>
-<h2>4. Planes y Pagos</h2>
+<p>TurboPOS puede suspender o cancelar cuentas que incurran en: (a) actividad fraudulenta documentada, (b) uso que ponga en riesgo la seguridad del servicio para otros clientes, (c) violación de estos Términos después de notificación con 48 horas de plazo para subsanar, salvo casos de fraude o uso ilegal que justifiquen suspensión inmediata.</p>
+
+<h2>4. Período de Prueba</h2>
+<p>Las cuentas nuevas tienen acceso completo al servicio durante <strong>14 días calendario sin costo</strong> y sin necesidad de registrar método de pago. Al concluir el período de prueba sin que el Cliente haya activado un plan de pago:</p>
 <ul>
-<li><strong>Plan Solo:</strong> $699 MXN/mes — 1 terminal, POS y CFDI básico.</li>
-<li><strong>Plan Negocio:</strong> $1,299 MXN/mes — hasta 3 terminales, lealtad y descuentos.</li>
-<li><strong>Plan Cadena:</strong> $2,499 MXN/mes — terminales ilimitadas, multi-sucursal y API.</li>
+<li>El acceso al servicio se suspende de forma automática.</li>
+<li>Los Datos del Negocio se conservan durante <strong>60 días adicionales</strong> contados desde la suspensión.</li>
+<li>El Cliente puede exportar sus datos en cualquier momento durante esos 60 días.</li>
+<li>Transcurridos los 60 días sin reactivación, los datos se eliminan de forma permanente.</li>
 </ul>
-<p>Precios sin IVA (16%). Facturación mensual por adelantado. Se cobra adicionalmente <strong>$1.50 MXN por CFDI timbrado</strong> al superar los 500 timbres/mes en Plan Solo.</p>
-<h2>5. Cancelación y Reembolsos</h2>
+
+<h2>5. Planes y Facturación</h2>
+<table>
+<tr><th>Plan</th><th>Precio base</th><th>Terminales</th><th>Usuarios</th></tr>
+<tr><td><strong>Solo</strong></td><td>$699 MXN/mes</td><td>1</td><td>1</td></tr>
+<tr><td><strong>Negocio</strong></td><td>$1,299 MXN/mes</td><td>3</td><td>3</td></tr>
+<tr><td><strong>Cadena</strong></td><td>$2,499 MXN/mes</td><td>Ilimitadas</td><td>Ilimitados</td></tr>
+</table>
+<p>Los precios no incluyen el Impuesto al Valor Agregado (IVA) del 16%. La facturación es mensual y por adelantado. El Proveedor emitirá CFDI por cada cargo al RFC registrado en la cuenta.</p>
+<p>El Plan Solo incluye hasta 500 timbres CFDI por mes. Los timbres adicionales se cobran a <strong>$1.50 MXN + IVA por timbre</strong>. Los planes Negocio y Cadena tienen timbres ilimitados.</p>
+<p>TurboPOS puede ajustar sus precios con <strong>30 días de aviso previo</strong> por correo electrónico. El Cliente puede cancelar antes de que entre en vigor el nuevo precio sin penalización.</p>
+
+<h2>6. Cancelación y Terminación</h2>
+<p>El Cliente puede cancelar su suscripción en cualquier momento desde el panel de Configuración. Efectos de la cancelación:</p>
 <ul>
-<li>Cancela cuando quieras desde Configuración.</li>
-<li>El acceso continúa hasta fin del período pagado.</li>
-<li>No hay reembolsos proporcionales.</li>
-<li>Datos disponibles para exportar y eliminados a los 60 días.</li>
+<li>El acceso al servicio continúa activo hasta el último día del período pagado.</li>
+<li>No se emiten reembolsos por días no utilizados del período en curso.</li>
+<li>Los Datos del Negocio permanecen disponibles para exportación durante <strong>60 días</strong> posteriores a la fecha efectiva de cancelación.</li>
+<li>Transcurridos los 60 días, los datos se eliminan de forma permanente e irrecuperable.</li>
 </ul>
-<h2>6. Datos y Privacidad</h2>
-<p>Tus datos se almacenan en servidores en EE.UU. (Contabo, Dallas). No se venden ni comparten. Se respaldan diariamente. Finkok (PAC SAT) los procesa únicamente para CFDI. Para eliminación: <strong>hola@turbopos.mx</strong>.</p>
-<h2>7. Disponibilidad</h2>
-<p>Uptime objetivo: 99% mensual. TurboPOS no es responsable por pérdidas derivadas de interrupciones del servicio o del PAC.</p>
-<h2>8. Uso Aceptable</h2>
-<p>Prohibido: CFDIs con datos fiscales falsos, actividades ilegales, acceso no autorizado a otras cuentas, reventa sin autorización.</p>
-<h2>9. Limitación de Responsabilidad</h2>
-<p>Servicio "tal cual". Responsabilidad máxima: monto pagado en los últimos 3 meses.</p>
-<h2>10. Modificaciones</h2>
-<p>TurboPOS puede modificar estos términos con 15 días de aviso por email.</p>
-<h2>11. Ley Aplicable</h2>
-<p>Leyes de los Estados Unidos Mexicanos. Disputas ante tribunales de la Ciudad de México.</p>
-<h2>12. Contacto</h2>
-<p><strong>hola@turbopos.mx</strong></p>
-<footer>&copy; 2026 TurboPOS &mdash; <a href="/app">Acceder</a> &bull; hola@turbopos.mx</footer>
+<p>TurboPOS puede terminar el servicio con 30 días de aviso, en cuyo caso se reembolsará el proporcional del período pagado no utilizado.</p>
+
+<h2>7. Propiedad de los Datos</h2>
+<p>Los Datos del Negocio son propiedad exclusiva del Cliente. TurboPOS los almacena y procesa únicamente para prestar el servicio contratado. El Proveedor no vende, arrienda ni cede los Datos del Negocio a terceros, salvo:</p>
+<ul>
+<li>Cuando sea necesario para la operación del servicio (PAC Finkok para timbrado CFDI, OpenPay para procesamiento de pagos).</li>
+<li>Por requerimiento de autoridad competente conforme a la ley.</li>
+</ul>
+<p>El Cliente otorga a TurboPOS una licencia limitada, no exclusiva y revocable para procesar los Datos del Negocio con el único fin de prestar el servicio. TurboPOS puede usar datos estadísticos <strong>agregados y anonimizados</strong> (que no permitan identificar al Cliente ni a sus clientes finales) para mejorar el servicio.</p>
+
+<h2>8. Responsabilidad del Cliente sobre Datos de Terceros</h2>
+<p>El Cliente que almacene en TurboPOS datos personales de sus propios clientes finales actúa como <strong>responsable del tratamiento</strong> de dichos datos conforme a la LFPDPPP. TurboPOS actúa como <strong>encargado del tratamiento</strong> bajo las instrucciones del Cliente.</p>
+<p>El Cliente declara y garantiza que:</p>
+<ul>
+<li>Cuenta con base legal para recopilar y compartir con TurboPOS los datos de sus clientes finales.</li>
+<li>Ha informado a sus clientes finales sobre el uso de sus datos conforme a la LFPDPPP.</li>
+<li>TurboPOS no es responsable por el tratamiento que el Cliente dé a los datos de sus clientes finales.</li>
+</ul>
+
+<h2>9. Uso Aceptable</h2>
+<p>El Cliente se compromete a no usar TurboPOS para:</p>
+<ul>
+<li>Emitir CFDIs con datos fiscales falsos, simulados o con RFC de terceros sin autorización — lo cual constituye un delito fiscal conforme al CFF.</li>
+<li>Cualquier actividad ilegal conforme a la legislación mexicana o internacional.</li>
+<li>Acceder sin autorización a cuentas de otros usuarios o interferir con la infraestructura del servicio.</li>
+<li>Revender, sublicenciar o comercializar el acceso al servicio sin autorización expresa por escrito del Proveedor.</li>
+<li>Cargar o procesar datos que infrinjan derechos de propiedad intelectual de terceros.</li>
+</ul>
+
+<h2>10. Disponibilidad y Mantenimiento</h2>
+<p>TurboPOS se compromete a una disponibilidad objetivo del <strong>99% mensual</strong> del servicio, conforme al SLA disponible en turbopos.mx/sla. Quedan excluidos del cálculo de disponibilidad: mantenimientos programados notificados con 24 horas de anticipación, incidentes en sistemas de terceros (SAT, Finkok, OpenPay, Firebase) y casos de fuerza mayor.</p>
+
+<h2>11. Limitación de Responsabilidad</h2>
+<p>En la máxima medida permitida por la legislación mexicana aplicable:</p>
+<ul>
+<li>La responsabilidad total del Proveedor por cualquier reclamación no excederá el <strong>monto total pagado por el Cliente en los 3 meses inmediatamente anteriores</strong> al evento que originó la reclamación, o $1,000 MXN si el Cliente lleva menos de 3 meses activo, lo que sea mayor.</li>
+<li>El Proveedor no será responsable por daños indirectos, lucro cesante, pérdida de datos o daños consecuentes, incluso si fue informado de la posibilidad de dichos daños.</li>
+<li>Esta limitación no aplica en casos de dolo o mala fe comprobada del Proveedor.</li>
+</ul>
+
+<h2>12. Indemnización</h2>
+<p>El Cliente acuerda indemnizar, defender y mantener indemne al Proveedor, sus empleados y colaboradores, de cualquier reclamación, demanda, daño, multa o gasto (incluidos honorarios legales razonables) derivados de: (a) el incumplimiento por parte del Cliente de estos Términos, (b) el uso indebido del servicio, (c) la violación de derechos de terceros, o (d) reclamaciones de autoridades fiscales relacionadas con CFDIs emitidos por el Cliente.</p>
+
+<h2>13. Cesión</h2>
+<p>El Proveedor puede ceder o transferir estos Términos y los derechos y obligaciones derivados de ellos a un tercero en el contexto de una fusión, adquisición o venta de activos, notificando al Cliente con 30 días de anticipación. El Cliente tendrá derecho a cancelar sin penalización si la cesión implica un cambio material en las condiciones del servicio. El Cliente no puede ceder sus derechos bajo estos Términos sin consentimiento previo por escrito del Proveedor.</p>
+
+<h2>14. Modificaciones a los Términos</h2>
+<p>TurboPOS puede modificar estos Términos con <strong>15 días calendario de aviso</strong> por correo electrónico al correo registrado en la cuenta. El uso continuado del servicio después de la fecha de entrada en vigor constituye aceptación de los nuevos Términos. Si el Cliente no acepta los cambios, puede cancelar su suscripción sin penalización antes de la fecha de entrada en vigor.</p>
+
+<h2>15. Ley Aplicable y Resolución de Disputas</h2>
+<p>Estos Términos se rigen por las leyes de los <strong>Estados Unidos Mexicanos</strong>. Para cualquier controversia, las partes intentarán resolverla de forma amigable en un plazo de 30 días. En caso de no llegar a un acuerdo, se someterán a la jurisdicción de los <strong>tribunales competentes de la Ciudad de México</strong>, renunciando a cualquier otro fuero que pudiera corresponderles por razón de su domicilio presente o futuro.</p>
+
+<h2>16. Contacto</h2>
+<p><strong>hola@turbopos.mx</strong> — para consultas generales<br>
+<strong>legal@turbopos.mx</strong> — para asuntos legales y contractuales</p>
+
+<footer>
+  <span>&copy; 2026 TurboPOS</span>
+  <span><a href="/privacidad">Privacidad</a> &bull; <a href="/sla">SLA</a> &bull; <a href="/app">Acceder</a></span>
+</footer>
 </div>
 </body>
 </html>
