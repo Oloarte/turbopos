@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 
 <html lang="es">
 
@@ -5513,19 +5513,7 @@ function loadCustomers(){
 
 
 
-<div id="ticket-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center">
-  <div style="background:var(--surface);border-radius:16px;width:380px;max-height:90vh;overflow-y:auto;padding:24px;position:relative">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <span style="font-weight:700;font-size:16px">&#129534; Comprobante</span>
-      <button onclick="closeTicket()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">&#215;</button>
-    </div>
-    <div id="ticket-content" style="font-size:13px;line-height:1.6"></div>
-    <div style="display:flex;gap:8px;margin-top:16px">
-      <button onclick="printTicket()" class="btn-primary" style="flex:1">&#x1F5A8; Imprimir</button>
-      <button onclick="closeTicket()" style="flex:1;padding:10px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);cursor:pointer">Cerrar</button>
-    </div>
-  </div>
-</div>
+
 </body></html>`;
 
   const win = window.open('','_blank','width=800,height=900');
@@ -6449,19 +6437,7 @@ function exportReportePDF() {
 
 
 
-<div id="ticket-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center">
-  <div style="background:var(--surface);border-radius:16px;width:380px;max-height:90vh;overflow-y:auto;padding:24px;position:relative">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <span style="font-weight:700;font-size:16px">&#129534; Comprobante</span>
-      <button onclick="closeTicket()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">&#215;</button>
-    </div>
-    <div id="ticket-content" style="font-size:13px;line-height:1.6"></div>
-    <div style="display:flex;gap:8px;margin-top:16px">
-      <button onclick="printTicket()" class="btn-primary" style="flex:1">&#x1F5A8; Imprimir</button>
-      <button onclick="closeTicket()" style="flex:1;padding:10px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);cursor:pointer">Cerrar</button>
-    </div>
-  </div>
-</div>
+
 </body></html>`;
 
   const win=window.open('','_blank','width=820,height:920');
@@ -7590,19 +7566,7 @@ async function guardarCierreTurno() {
 
 
 
-<div id="ticket-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center">
-  <div style="background:var(--surface);border-radius:16px;width:380px;max-height:90vh;overflow-y:auto;padding:24px;position:relative">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <span style="font-weight:700;font-size:16px">&#129534; Comprobante</span>
-      <button onclick="closeTicket()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">&#215;</button>
-    </div>
-    <div id="ticket-content" style="font-size:13px;line-height:1.6"></div>
-    <div style="display:flex;gap:8px;margin-top:16px">
-      <button onclick="printTicket()" class="btn-primary" style="flex:1">&#x1F5A8; Imprimir</button>
-      <button onclick="closeTicket()" style="flex:1;padding:10px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);cursor:pointer">Cerrar</button>
-    </div>
-  </div>
-</div>
+
 </body></html>`);
   printWin.document.close();
   setTimeout(()=>{ printWin.print(); }, 600);
