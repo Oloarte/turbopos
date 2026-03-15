@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -771,10 +771,21 @@ footer a{color:var(--amber);text-decoration:none;}
   .calc-box-val{font-size:24px;font-weight:900;}
   .calc-box-lbl{font-size:11px;color:#9B9893;margin-top:4px;}
   .calc-cta-btn{display:inline-block;margin-top:24px;padding:14px 36px;border-radius:12px;background:#FFB547;color:#000;font-weight:800;font-size:15px;text-decoration:none;cursor:pointer;border:none;}</style>
-  <!-- Google Analytics — reemplazar G-XXXXXXXXXX con tu ID -->
-  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script> -->
-</head>
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6W85YL2WQL"></script>
+  <script>
+    window.dataLayer=window.dataLayer||[];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js',new Date());
+    gtag('config','G-6W85YL2WQL');
+    // Eventos de conversion
+    window.trackEvent=function(action,category,label){
+      gtag('event',action,{event_category:category,event_label:label});
+    };
+  </script>
+  </head>
 <body>
 
   <!-- URGENCY BANNER -->
@@ -1136,7 +1147,7 @@ footer a{color:var(--amber);text-decoration:none;}
           <div class="calc-box-lbl">ahorras al año &#127881;</div>
         </div>
       </div>
-      <button class="calc-cta-btn" onclick="window.location.href='/app?plan=business'">
+      <button class="calc-cta-btn" onclick="trackEvent('click','CTA','empezar_gratis');window.location.href='/app?plan=business'">
         Empezar a ahorrar — 14 días gratis &#8594;
       </button>
     </div>
@@ -1288,7 +1299,7 @@ document.querySelectorAll('.prod-chip').forEach(chip => {
 </script>
 
   <!-- WHATSAPP FLOTANTE -->
-  <a href="https://wa.me/5215612879939?text=Hola%2C%20me%20interesa%20TurboPOS%20para%20mi%20negocio"
+  <a onclick="trackEvent('click','WhatsApp','flotante')" href="https://wa.me/5215612879939?text=Hola%2C%20me%20interesa%20TurboPOS%20para%20mi%20negocio"
      target="_blank" rel="noopener"
      style="position:fixed;bottom:24px;right:24px;z-index:9999;width:56px;height:56px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(37,211,102,.4);text-decoration:none;"
      title="Chatear por WhatsApp">

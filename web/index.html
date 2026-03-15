@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 
 <html lang="es">
 
@@ -2345,7 +2345,19 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   <meta name="twitter:card" content="summary">
   <meta name="robots" content="noindex">
   <link rel="canonical" href="https://turbopos.mx/app">
-</head>
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6W85YL2WQL"></script>
+  <script>
+    window.dataLayer=window.dataLayer||[];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js',new Date());
+    gtag('config','G-6W85YL2WQL');
+    // Eventos de conversion
+    window.trackEvent=function(action,category,label){
+      gtag('event',action,{event_category:category,event_label:label});
+    };
+  </script>
+  </head>
 
 <body>
 
