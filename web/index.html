@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 
 <html lang="es">
 
@@ -2691,7 +2691,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
             <label class="cfdi-row" for="factura-check">
 
-              <input type="checkbox" class="cfdi-check" id="factura-check" checked>
+              <input type="checkbox" class="cfdi-check" id="factura-check">
 
               <span class="cfdi-lbl">✅ Generar CFDI 4.0</span>
 
@@ -5594,10 +5594,10 @@ function loadCustomers(){
   </div>
 </div>
 
-<div class="tour-overlay" id="tour-overlay">
-  <div class="tour-backdrop" onclick="tourSkip()"></div>
-  <div class="tour-spotlight" id="tour-spotlight"></div>
-  <div class="tour-tooltip" id="tour-tooltip">
+<div class="tour-overlay" id="tour-overlay" style="pointer-events:none">
+  <div class="tour-backdrop" style="opacity:0;pointer-events:none" onclick="tourSkip()"></div>
+  <div class="tour-spotlight" id="tour-spotlight" style="display:none"></div>
+  <div class="tour-tooltip" id="tour-tooltip" style="display:none">
     <div class="tour-progress" style="margin-bottom:12px"><div class="tour-progress-fill" id="tour-prog2"></div></div>
     <div class="tour-tip-step" id="tour-step-lbl">Paso 1 de 6</div>
     <div class="tour-tip-title" id="tour-tip-title">T&#237;tulo</div>
@@ -6549,10 +6549,10 @@ function exportReportePDF() {
   </div>
 </div>
 
-<div class="tour-overlay" id="tour-overlay">
-  <div class="tour-backdrop" onclick="tourSkip()"></div>
-  <div class="tour-spotlight" id="tour-spotlight"></div>
-  <div class="tour-tooltip" id="tour-tooltip">
+<div class="tour-overlay" id="tour-overlay" style="pointer-events:none">
+  <div class="tour-backdrop" style="opacity:0;pointer-events:none" onclick="tourSkip()"></div>
+  <div class="tour-spotlight" id="tour-spotlight" style="display:none"></div>
+  <div class="tour-tooltip" id="tour-tooltip" style="display:none">
     <div class="tour-progress" style="margin-bottom:12px"><div class="tour-progress-fill" id="tour-prog2"></div></div>
     <div class="tour-tip-step" id="tour-step-lbl">Paso 1 de 6</div>
     <div class="tour-tip-title" id="tour-tip-title">T&#237;tulo</div>
@@ -7709,10 +7709,10 @@ async function guardarCierreTurno() {
   </div>
 </div>
 
-<div class="tour-overlay" id="tour-overlay">
-  <div class="tour-backdrop" onclick="tourSkip()"></div>
-  <div class="tour-spotlight" id="tour-spotlight"></div>
-  <div class="tour-tooltip" id="tour-tooltip">
+<div class="tour-overlay" id="tour-overlay" style="pointer-events:none">
+  <div class="tour-backdrop" style="opacity:0;pointer-events:none" onclick="tourSkip()"></div>
+  <div class="tour-spotlight" id="tour-spotlight" style="display:none"></div>
+  <div class="tour-tooltip" id="tour-tooltip" style="display:none">
     <div class="tour-progress" style="margin-bottom:12px"><div class="tour-progress-fill" id="tour-prog2"></div></div>
     <div class="tour-tip-step" id="tour-step-lbl">Paso 1 de 6</div>
     <div class="tour-tip-title" id="tour-tip-title">T&#237;tulo</div>
@@ -8213,7 +8213,7 @@ window.tourStart = function(){
 window.tourSkip = function(){
   tourActive = false;
   var w = $('tour-welcome'); if(w) w.classList.remove('show');
-  var ov = $('tour-overlay'); if(ov) ov.classList.remove('active');
+  var ov = $('tour-overlay'); if(ov) ov.classList.remove('active'); var tt3=document.getElementById('tour-tooltip'); if(tt3) tt3.style.display='none';
   var sp = $('tour-spotlight'); if(sp) sp.style.display='none';
   localStorage.setItem(TOUR_KEY, '1');
   if(typeof trackEvent==='function') trackEvent('tour_skipped','Onboarding','step_'+tourStep);
@@ -8230,7 +8230,7 @@ window.tourNext = function(){
 
 function tourComplete(){
   tourActive = false;
-  var ov = $('tour-overlay'); if(ov) ov.classList.remove('active');
+  var ov = $('tour-overlay'); if(ov) ov.classList.remove('active'); var tt3=document.getElementById('tour-tooltip'); if(tt3) tt3.style.display='none';
   var sp = $('tour-spotlight'); if(sp) sp.style.display='none';
   localStorage.setItem(TOUR_KEY, '1');
   if(typeof toast==='function') toast('\u00a1Recorrido completado! Ya est\u00e1s listo para vender. \uD83D\uDE80','success');
@@ -8289,7 +8289,7 @@ function tourShow(idx){
     var tt = $('tour-tooltip');
     var ov = $('tour-overlay');
     if(!ov) return;
-    ov.classList.add('active');
+    ov.classList.add('active'); var tt2=document.getElementById('tour-tooltip'); if(tt2) tt2.style.display='block';
 
     if(target && sp){
       var rect = target.getBoundingClientRect();
@@ -8812,10 +8812,10 @@ if(typeof _origInit === 'function'){
   </div>
 </div>
 
-<div class="tour-overlay" id="tour-overlay">
-  <div class="tour-backdrop" onclick="tourSkip()"></div>
-  <div class="tour-spotlight" id="tour-spotlight"></div>
-  <div class="tour-tooltip" id="tour-tooltip">
+<div class="tour-overlay" id="tour-overlay" style="pointer-events:none">
+  <div class="tour-backdrop" style="opacity:0;pointer-events:none" onclick="tourSkip()"></div>
+  <div class="tour-spotlight" id="tour-spotlight" style="display:none"></div>
+  <div class="tour-tooltip" id="tour-tooltip" style="display:none">
     <div class="tour-progress" style="margin-bottom:12px"><div class="tour-progress-fill" id="tour-prog2"></div></div>
     <div class="tour-tip-step" id="tour-step-lbl">Paso 1 de 6</div>
     <div class="tour-tip-title" id="tour-tip-title">T&#237;tulo</div>
