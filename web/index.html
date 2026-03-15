@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 
 <html lang="es">
 
@@ -2298,6 +2298,42 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .pay-success-icon{font-size:52px;margin-bottom:12px;}
 .pay-success-title{font-size:20px;font-weight:800;color:var(--text);}
 .pay-success-sub{font-size:13px;color:var(--muted);margin-top:6px;}
+
+
+.plan-detail-overlay{position:fixed;inset:0;z-index:4000;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.6);}
+.plan-detail-overlay.open{display:flex;}
+.pds-sheet{background:#111827;border-radius:24px 24px 0 0;width:100%;max-width:620px;max-height:90vh;overflow-y:auto;padding-bottom:32px;animation:slideUp .28s cubic-bezier(.22,1,.36,1);}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.pds-handle{width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:10px auto 0;}
+.pds-top{padding:18px 24px 0;display:flex;justify-content:space-between;align-items:flex-start;}
+.pds-name{font-size:22px;font-weight:800;color:#E8E6E0;}
+.pds-price-big{font-size:34px;font-weight:900;color:#FFB547;}
+.pds-price-mo{font-size:12px;color:#9B9893;}
+.pds-close{background:rgba(255,255,255,.08);border:none;border-radius:50%;width:30px;height:30px;color:#9B9893;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.pds-body{padding:16px 24px 0;}
+.pds-roi{background:rgba(255,181,71,.1);border:1px solid rgba(255,181,71,.25);border-radius:12px;padding:12px 16px;margin-bottom:16px;}
+.pds-roi-title{font-size:11px;color:#FFB547;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;}
+.pds-roi-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;text-align:center;}
+.pds-roi-val{font-size:20px;font-weight:800;color:#FFB547;}
+.pds-roi-lbl{font-size:10px;color:#9B9893;margin-top:1px;}
+.pds-sec-title{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#9B9893;margin:14px 0 8px;}
+.pds-feat{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.pds-feat:last-child{border-bottom:none;}
+.pds-feat-ic{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
+.pds-feat-ic.y{background:rgba(34,197,94,.15);color:#22c55e;}
+.pds-feat-ic.n{background:rgba(255,255,255,.05);color:#9B9893;}
+.pds-feat-name{font-size:13px;font-weight:600;color:#E8E6E0;}
+.pds-feat-desc{font-size:11px;color:#9B9893;margin-top:1px;line-height:1.4;}
+.pds-cmp{border:1px solid rgba(255,255,255,.1);border-radius:12px;overflow:hidden;margin-bottom:16px;}
+.pds-cmp-hd{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;background:rgba(255,255,255,.04);padding:7px 12px;font-size:10px;font-weight:700;color:#9B9893;letter-spacing:.05em;}
+.pds-cmp-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:8px 12px;border-top:1px solid rgba(255,255,255,.05);font-size:12px;align-items:center;}
+.pds-cmp-row.hl{background:rgba(255,181,71,.04);}
+.pds-cv{text-align:center;color:#9B9893;}
+.pds-cv.ok{color:#22c55e;font-weight:700;}
+.pds-cv.cur{color:#FFB547;font-weight:800;}
+.pds-cf{color:#9B9893;font-size:12px;}
+.pds-btn{width:100%;padding:13px;border-radius:12px;background:#FFB547;border:none;color:#000;font-weight:800;font-size:14px;cursor:pointer;margin-top:4px;}
+.pds-btn2{width:100%;padding:10px;border-radius:12px;background:transparent;border:1px solid rgba(255,255,255,.12);color:#9B9893;font-size:13px;cursor:pointer;margin-top:8px;}
 
 </style>
 
@@ -5406,9 +5442,7 @@ function exportCortePDF() {
     .kpi-box .val.blue  { color: #1565c0; }
     .footer { text-align: center; font-size: 8.5pt; color: #aaa; border-top: 1px solid #eee; padding-top: 12px; margin-top: 24px; }
     .logo { font-size: 9pt; font-weight: 700; color: #FFB547; letter-spacing: 1px; }
-  </style><script src="https://js.openpay.mx/openpay.v1.min.js"></script>
-<script src="https://js.openpay.mx/openpay-data.v1.min.js"></script>
-</head><body>
+  </style></head><body>
 
   <div class="header">
     <h1>${negocio}</h1>
@@ -5515,7 +5549,7 @@ function exportCortePDF() {
     <div class="ob-body">
       <div class="trial-badge">&#128197; Prueba gratuita de 14 días — cancela cuando quieras</div>
       <div class="plans-grid">
-        <div class="plan-card" id="pc-starter" onclick="obSelectPlan('starter')">
+        <div class="plan-card" id="pc-starter" >
           <div class="plan-name">Solo</div>
           <div class="plan-price">$699</div>
           <div class="plan-per">/mes · 1 terminal</div>
@@ -5526,8 +5560,8 @@ function exportCortePDF() {
             <span>Soporte por email</span>
           </div>
         </div>
-        <div class="plan-card popular" id="pc-business" onclick="obSelectPlan('business')">
-          <div class="plan-name">Negocio</div>
+        <div class="plan-card popular" id="pc-business" >
+          <div class="plan-name">Negocio<div style="margin-top:8px"><button onclick="openPlanDetail('starter')" style="width:100%;padding:5px;border-radius:7px;background:rgba(255,181,71,.1);border:1px solid rgba(255,181,71,.25);color:#FFB547;font-size:11px;cursor:pointer;font-weight:600">Ver detalles completos &#8250;</button></div></div>
           <div class="plan-price">$1,299</div>
           <div class="plan-per">/mes · hasta 3 terminales</div>
           <div class="plan-feat">
@@ -5537,7 +5571,7 @@ function exportCortePDF() {
             <span>Descuentos y cupones</span>
           </div>
         </div>
-        <div class="plan-card" id="pc-chain" onclick="obSelectPlan('chain')">
+        <div class="plan-card" id="pc-chain" >
           <div class="plan-name">Cadena</div>
           <div class="plan-price">$2,499</div>
           <div class="plan-per">/mes · terminales ilimitadas</div>
@@ -5550,7 +5584,7 @@ function exportCortePDF() {
         </div>
       </div>
       <button class="ob-btn" onclick="obGoStep2()">Continuar &#8250;</button>
-      <div class="ob-foot">Ya tienes cuenta? <a onclick="obShowLogin()">Iniciar sesión</a></div>
+      <div class="ob-foot">Ya tienes cuenta? <a onclick="obShowLogin()">Iniciar sesión</a><div style="margin-top:8px"><button onclick="openPlanDetail('chain')" style="width:100%;padding:5px;border-radius:7px;background:rgba(255,181,71,.1);border:1px solid rgba(255,181,71,.25);color:#FFB547;font-size:11px;cursor:pointer;font-weight:600">Ver detalles completos &#8250;</button></div></div>
     </div>
   </div>
 </div>
@@ -5639,7 +5673,7 @@ function exportCortePDF() {
       <div class="ob-err" id="ob-err3"></div>
       <button class="ob-btn" id="ob-create-btn" onclick="obCrearCuenta()">Crear cuenta gratis &#127881;</button>
       <button class="ob-btn-sec" onclick="obBack2()">&#8249; Regresar</button>
-      <div class="ob-foot">Al registrarte aceptas nuestros <a href="https://turbopos.mx" target="_blank">Términos de uso</a></div>
+      <div class="ob-foot">Al registrarte aceptas nuestros <a href="/terminos" target="_blank">Términos de uso</a></div>
     </div>
   </div>
 </div>
@@ -5803,6 +5837,52 @@ function exportCortePDF() {
       </button>
     </div>
   </div>
+</div>
+
+
+<div class="plan-detail-overlay" id="plan-detail-overlay" onclick="if(event.target===this)closePlanDetail()">
+<div class="pds-sheet">
+  <div class="pds-handle"></div>
+  <div class="pds-top">
+    <div>
+      <div class="pds-name" id="pds-name">Plan Negocio</div>
+      <div id="pds-tag" style="font-size:12px;color:#9B9893;margin-top:2px"></div>
+    </div>
+    <div style="text-align:right">
+      <div class="pds-price-big" id="pds-price">$1,299</div>
+      <div class="pds-price-mo">/mes + IVA &bull; 14 días gratis</div>
+    </div>
+    <button class="pds-close" onclick="closePlanDetail()">&#215;</button>
+  </div>
+  <div class="pds-body">
+    <div class="pds-roi">
+      <div class="pds-roi-title">&#128200; Ahorro estimado vs Clip POS</div>
+      <div class="pds-roi-grid">
+        <div><div class="pds-roi-val" id="roi-ahorro">$0</div><div class="pds-roi-lbl">ahorro/año</div></div>
+        <div><div class="pds-roi-val" id="roi-clip">$0</div><div class="pds-roi-lbl">pagarías a Clip</div></div>
+        <div><div class="pds-roi-val" id="roi-x">0x</div><div class="pds-roi-lbl">ROI vs competencia</div></div>
+      </div>
+    </div>
+    <div class="pds-sec-title">Incluido desde el día 1</div>
+    <div id="pds-feats"></div>
+    <div class="pds-sec-title" style="margin-top:16px">Comparativa completa</div>
+    <div class="pds-cmp">
+      <div class="pds-cmp-hd"><div>Función</div><div>Solo</div><div>Negocio</div><div>Cadena</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Terminales</div><div class="pds-cv" id="ct0">1</div><div class="pds-cv" id="ct1">3</div><div class="pds-cv" id="ct2">&#8734;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">CFDI 4.0</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Scanner barras</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Corte Z + PDF</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row hl"><div class="pds-cf">Programa lealtad</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row hl"><div class="pds-cf">Descuentos/cupones</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row hl"><div class="pds-cf">Dashboard avanzado</div><div class="pds-cv" style="font-size:11px">Básico</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Multi-sucursal</div><div class="pds-cv">—</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Acceso API</div><div class="pds-cv">—</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Soporte</div><div class="pds-cv" style="font-size:11px">Email</div><div class="pds-cv" style="font-size:11px">Chat</div><div class="pds-cv ok" style="font-size:11px">24/7</div></div>
+    </div>
+    <button class="pds-btn" id="pds-cta" onclick="pdsElegir()">Empezar con este plan gratis &#8594;</button>
+    <button class="pds-btn2" onclick="closePlanDetail()">&#8249; Ver todos los planes</button>
+  </div>
+</div>
 </div>
 
 </body></html>`;
@@ -6682,9 +6762,7 @@ function exportReportePDF() {
     td{padding:6px 8px;font-size:10pt;border-bottom:1px solid #f0f0f0}
     tr.hdr td{font-size:8.5pt;font-weight:700;text-transform:uppercase;color:#888;background:#fafafa;border-bottom:1px solid #ddd}
     .footer{text-align:center;font-size:8pt;color:#aaa;border-top:1px solid #eee;padding-top:10px;margin-top:20px}
-  </style><script src="https://js.openpay.mx/openpay.v1.min.js"></script>
-<script src="https://js.openpay.mx/openpay-data.v1.min.js"></script>
-</head><body>
+  </style></head><body>
   <div class="header">
     <h1>${negocio}</h1>
     ${direccion?`<div class="sub">${direccion}</div>`:''}
@@ -6771,7 +6849,7 @@ function exportReportePDF() {
     <div class="ob-body">
       <div class="trial-badge">&#128197; Prueba gratuita de 14 días — cancela cuando quieras</div>
       <div class="plans-grid">
-        <div class="plan-card" id="pc-starter" onclick="obSelectPlan('starter')">
+        <div class="plan-card" id="pc-starter" >
           <div class="plan-name">Solo</div>
           <div class="plan-price">$699</div>
           <div class="plan-per">/mes · 1 terminal</div>
@@ -6782,7 +6860,7 @@ function exportReportePDF() {
             <span>Soporte por email</span>
           </div>
         </div>
-        <div class="plan-card popular" id="pc-business" onclick="obSelectPlan('business')">
+        <div class="plan-card popular" id="pc-business" >
           <div class="plan-name">Negocio</div>
           <div class="plan-price">$1,299</div>
           <div class="plan-per">/mes · hasta 3 terminales</div>
@@ -6793,7 +6871,7 @@ function exportReportePDF() {
             <span>Descuentos y cupones</span>
           </div>
         </div>
-        <div class="plan-card" id="pc-chain" onclick="obSelectPlan('chain')">
+        <div class="plan-card" id="pc-chain" >
           <div class="plan-name">Cadena</div>
           <div class="plan-price">$2,499</div>
           <div class="plan-per">/mes · terminales ilimitadas</div>
@@ -6895,7 +6973,7 @@ function exportReportePDF() {
       <div class="ob-err" id="ob-err3"></div>
       <button class="ob-btn" id="ob-create-btn" onclick="obCrearCuenta()">Crear cuenta gratis &#127881;</button>
       <button class="ob-btn-sec" onclick="obBack2()">&#8249; Regresar</button>
-      <div class="ob-foot">Al registrarte aceptas nuestros <a href="https://turbopos.mx" target="_blank">Términos de uso</a></div>
+      <div class="ob-foot">Al registrarte aceptas nuestros <a href="/terminos" target="_blank">Términos de uso</a></div>
     </div>
   </div>
 </div>
@@ -7059,6 +7137,52 @@ function exportReportePDF() {
       </button>
     </div>
   </div>
+</div>
+
+
+<div class="plan-detail-overlay" id="plan-detail-overlay" onclick="if(event.target===this)closePlanDetail()">
+<div class="pds-sheet">
+  <div class="pds-handle"></div>
+  <div class="pds-top">
+    <div>
+      <div class="pds-name" id="pds-name">Plan Negocio</div>
+      <div id="pds-tag" style="font-size:12px;color:#9B9893;margin-top:2px"></div>
+    </div>
+    <div style="text-align:right">
+      <div class="pds-price-big" id="pds-price">$1,299</div>
+      <div class="pds-price-mo">/mes + IVA &bull; 14 días gratis</div>
+    </div>
+    <button class="pds-close" onclick="closePlanDetail()">&#215;</button>
+  </div>
+  <div class="pds-body">
+    <div class="pds-roi">
+      <div class="pds-roi-title">&#128200; Ahorro estimado vs Clip POS</div>
+      <div class="pds-roi-grid">
+        <div><div class="pds-roi-val" id="roi-ahorro">$0</div><div class="pds-roi-lbl">ahorro/año</div></div>
+        <div><div class="pds-roi-val" id="roi-clip">$0</div><div class="pds-roi-lbl">pagarías a Clip</div></div>
+        <div><div class="pds-roi-val" id="roi-x">0x</div><div class="pds-roi-lbl">ROI vs competencia</div></div>
+      </div>
+    </div>
+    <div class="pds-sec-title">Incluido desde el día 1</div>
+    <div id="pds-feats"></div>
+    <div class="pds-sec-title" style="margin-top:16px">Comparativa completa</div>
+    <div class="pds-cmp">
+      <div class="pds-cmp-hd"><div>Función</div><div>Solo</div><div>Negocio</div><div>Cadena</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Terminales</div><div class="pds-cv" id="ct0">1</div><div class="pds-cv" id="ct1">3</div><div class="pds-cv" id="ct2">&#8734;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">CFDI 4.0</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Scanner barras</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Corte Z + PDF</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row hl"><div class="pds-cf">Programa lealtad</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row hl"><div class="pds-cf">Descuentos/cupones</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row hl"><div class="pds-cf">Dashboard avanzado</div><div class="pds-cv" style="font-size:11px">Básico</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Multi-sucursal</div><div class="pds-cv">—</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Acceso API</div><div class="pds-cv">—</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Soporte</div><div class="pds-cv" style="font-size:11px">Email</div><div class="pds-cv" style="font-size:11px">Chat</div><div class="pds-cv ok" style="font-size:11px">24/7</div></div>
+    </div>
+    <button class="pds-btn" id="pds-cta" onclick="pdsElegir()">Empezar con este plan gratis &#8594;</button>
+    <button class="pds-btn2" onclick="closePlanDetail()">&#8249; Ver todos los planes</button>
+  </div>
+</div>
 </div>
 
 </body></html>`;
@@ -8149,9 +8273,12 @@ async function guardarCierreTurno() {
   .st{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#999;margin-bottom:6px}
   .firma-box{border:1px solid #ddd;border-radius:8px;padding:4px;margin-top:6px}
   .firma-box img{width:100%}.footer{margin-top:32px;padding-top:16px;border-top:1px solid #eee;font-size:11px;color:#999;text-align:center}
-  </style><script src="https://js.openpay.mx/openpay.v1.min.js"></script>
-<script src="https://js.openpay.mx/openpay-data.v1.min.js"></script>
-</head><body>
+  
+@media print {
+  .ob-screen,.plan-detail-overlay,#turno-modal,#cat-mgr-modal,#ticket-modal{display:none!important;}
+  body{background:white!important;}
+}
+</style></head><body>
   <h1>&#x1F512; Cierre de Turno</h1>
   <div class="sub">${negocio} &mdash; ${fecha} &mdash; ${hora}</div>
   <div class="kpi-grid">
@@ -8180,7 +8307,7 @@ async function guardarCierreTurno() {
     <div class="ob-body">
       <div class="trial-badge">&#128197; Prueba gratuita de 14 días — cancela cuando quieras</div>
       <div class="plans-grid">
-        <div class="plan-card" id="pc-starter" onclick="obSelectPlan('starter')">
+        <div class="plan-card" id="pc-starter" >
           <div class="plan-name">Solo</div>
           <div class="plan-price">$699</div>
           <div class="plan-per">/mes · 1 terminal</div>
@@ -8191,7 +8318,7 @@ async function guardarCierreTurno() {
             <span>Soporte por email</span>
           </div>
         </div>
-        <div class="plan-card popular" id="pc-business" onclick="obSelectPlan('business')">
+        <div class="plan-card popular" id="pc-business" >
           <div class="plan-name">Negocio</div>
           <div class="plan-price">$1,299</div>
           <div class="plan-per">/mes · hasta 3 terminales</div>
@@ -8202,7 +8329,7 @@ async function guardarCierreTurno() {
             <span>Descuentos y cupones</span>
           </div>
         </div>
-        <div class="plan-card" id="pc-chain" onclick="obSelectPlan('chain')">
+        <div class="plan-card" id="pc-chain" >
           <div class="plan-name">Cadena</div>
           <div class="plan-price">$2,499</div>
           <div class="plan-per">/mes · terminales ilimitadas</div>
@@ -8304,7 +8431,7 @@ async function guardarCierreTurno() {
       <div class="ob-err" id="ob-err3"></div>
       <button class="ob-btn" id="ob-create-btn" onclick="obCrearCuenta()">Crear cuenta gratis &#127881;</button>
       <button class="ob-btn-sec" onclick="obBack2()">&#8249; Regresar</button>
-      <div class="ob-foot">Al registrarte aceptas nuestros <a href="https://turbopos.mx" target="_blank">Términos de uso</a></div>
+      <div class="ob-foot">Al registrarte aceptas nuestros <a href="/terminos" target="_blank">Términos de uso</a></div>
     </div>
   </div>
 </div>
@@ -8470,6 +8597,52 @@ async function guardarCierreTurno() {
   </div>
 </div>
 
+
+<div class="plan-detail-overlay" id="plan-detail-overlay" onclick="if(event.target===this)closePlanDetail()">
+<div class="pds-sheet">
+  <div class="pds-handle"></div>
+  <div class="pds-top">
+    <div>
+      <div class="pds-name" id="pds-name">Plan Negocio</div>
+      <div id="pds-tag" style="font-size:12px;color:#9B9893;margin-top:2px"></div>
+    </div>
+    <div style="text-align:right">
+      <div class="pds-price-big" id="pds-price">$1,299</div>
+      <div class="pds-price-mo">/mes + IVA &bull; 14 días gratis</div>
+    </div>
+    <button class="pds-close" onclick="closePlanDetail()">&#215;</button>
+  </div>
+  <div class="pds-body">
+    <div class="pds-roi">
+      <div class="pds-roi-title">&#128200; Ahorro estimado vs Clip POS</div>
+      <div class="pds-roi-grid">
+        <div><div class="pds-roi-val" id="roi-ahorro">$0</div><div class="pds-roi-lbl">ahorro/año</div></div>
+        <div><div class="pds-roi-val" id="roi-clip">$0</div><div class="pds-roi-lbl">pagarías a Clip</div></div>
+        <div><div class="pds-roi-val" id="roi-x">0x</div><div class="pds-roi-lbl">ROI vs competencia</div></div>
+      </div>
+    </div>
+    <div class="pds-sec-title">Incluido desde el día 1</div>
+    <div id="pds-feats"></div>
+    <div class="pds-sec-title" style="margin-top:16px">Comparativa completa</div>
+    <div class="pds-cmp">
+      <div class="pds-cmp-hd"><div>Función</div><div>Solo</div><div>Negocio</div><div>Cadena</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Terminales</div><div class="pds-cv" id="ct0">1</div><div class="pds-cv" id="ct1">3</div><div class="pds-cv" id="ct2">&#8734;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">CFDI 4.0</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Scanner barras</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Corte Z + PDF</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row hl"><div class="pds-cf">Programa lealtad</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row hl"><div class="pds-cf">Descuentos/cupones</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row hl"><div class="pds-cf">Dashboard avanzado</div><div class="pds-cv" style="font-size:11px">Básico</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Multi-sucursal</div><div class="pds-cv">—</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Acceso API</div><div class="pds-cv">—</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Soporte</div><div class="pds-cv" style="font-size:11px">Email</div><div class="pds-cv" style="font-size:11px">Chat</div><div class="pds-cv ok" style="font-size:11px">24/7</div></div>
+    </div>
+    <button class="pds-btn" id="pds-cta" onclick="pdsElegir()">Empezar con este plan gratis &#8594;</button>
+    <button class="pds-btn2" onclick="closePlanDetail()">&#8249; Ver todos los planes</button>
+  </div>
+</div>
+</div>
+
 </body></html>`);
   printWin.document.close();
   setTimeout(()=>{ printWin.print(); }, 600);
@@ -8479,685 +8652,396 @@ async function guardarCierreTurno() {
   cierres.push({fecha,hora,cajero,obs,total:d.total||0,count:d.count||0});
   localStorage.setItem('tp_cierres', JSON.stringify(cierres.slice(-30)));
 }
-</script>
-
-<!-- -- Modal Ticket ------------------------------------------------ -->
-
-<div id="ticket-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center">
-
-  <div style="background:var(--surface);border-radius:16px;width:380px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.5)">
-
-    <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-
-      <span style="font-weight:700;font-size:16px">🧾 Comprobante</span>
-
-      <button onclick="closeTicket()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer">?</button>
-
-    </div>
-
-    <div id="ticket-content" style="padding:24px"></div>
-
-    <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px">
-
-<button onclick="printTicket()" class="btn-primary" style="flex:1">&#x1F5A8; Imprimir</button>
-
-      <button onclick="closeTicket()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);cursor:pointer;font-weight:600">Cerrar</button>
-
-    </div>
-
-  </div>
-
-</div>
-
-<div id="print-area" style="display:none;font-family:Courier New,monospace;font-size:12px;width:280px;margin:0 auto"></div>
-
-<style>@media print{body>*:not(#print-area){display:none!important}#print-area{display:block!important}}
-
-    /* CLIENTES */
-
-    #view-clientes{display:none;height:calc(100vh - 58px);overflow:hidden}
-
-    .cli-shell{display:flex;height:100%}
-
-    .cli-sidebar{width:290px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--surface)}
-
-    .cli-sb-head{padding:16px;border-bottom:1px solid var(--border)}
-
-    .cli-sb-title{font-size:11px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
-
-    .cli-search{position:relative}
-
-    .cli-search input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px 8px 30px;font-family:var(--font);font-size:13px;color:var(--text);outline:none;transition:border-color .2s}
-
-    .cli-search input:focus{border-color:var(--accent)}
-
-    .cli-search input::placeholder{color:var(--muted)}
-
-    .cli-search-ic{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
-
-    .cli-filters{display:flex;gap:5px;padding:10px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap}
-
-    .cli-chip{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--font);transition:all .2s}
-
-    .cli-chip.on{background:rgba(255,181,71,.12);border-color:var(--accent);color:var(--accent)}
-
-    .cli-list{flex:1;overflow-y:auto;padding:6px}
-
-    .cli-list::-webkit-scrollbar{width:3px}
-
-    .cli-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-
-    .cli-row{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;cursor:pointer;transition:all .15s;border:1px solid transparent}
-
-    .cli-row:hover{background:var(--surface2,#131926)}
-
-    .cli-row.sel{background:rgba(255,181,71,.06);border-color:rgba(255,181,71,.15)}
-
-    .cli-av{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
-
-    .cli-rinfo{flex:1;min-width:0}
-
-    .cli-rname{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-    .cli-rsub{font-size:10px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--mono)}
-
-    .cli-rmeta{text-align:right;flex-shrink:0}
-
-    .cli-ramt{font-size:12px;font-weight:700;color:var(--accent);font-family:var(--mono)}
-
-    .cli-rvst{font-size:10px;color:var(--muted);margin-top:1px}
-
-    .cli-footer{padding:10px 14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-
-    .cli-count{font-size:11px;color:var(--muted)}
-
-    .cli-new-btn{display:flex;align-items:center;gap:5px;padding:6px 13px;background:var(--accent);color:#080C14;border:none;border-radius:7px;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s}
-
-    .cli-new-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
-
-    .cli-detail{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px}
-
-    .cli-detail::-webkit-scrollbar{width:3px}
-
-    .cli-detail::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-
-    .cli-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);gap:10px;min-height:200px}
-
-    .cli-empty-ic{font-size:40px;opacity:.25}
-
-    .cli-dhead{position:relative;display:flex;align-items:flex-start;gap:16px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-
-    .cli-dhead::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent)}
-
-    .cli-dav{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;flex-shrink:0}
-
-    .cli-dmeta{flex:1}
-
-    .cli-dname{font-size:19px;font-weight:700;letter-spacing:-.3px}
-
-    .cli-drfc{font-family:var(--mono);font-size:11px;color:var(--accent);margin-top:3px}
-
-    .cli-dtags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-
-    .cli-tag{padding:3px 9px;border-radius:5px;font-size:10px;font-weight:600;border:1px solid}
-
-    .cli-dacts{display:flex;gap:6px;align-self:flex-start}
-
-    .cli-btn-g{display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--surface2,#131926);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-family:var(--font);font-size:11px;font-weight:500;cursor:pointer;transition:all .2s}
-
-    .cli-btn-g:hover{border-color:var(--accent);color:var(--text)}
-
-    .cli-btn-p{display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--accent);color:#080C14;border:none;border-radius:7px;font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer}
-
-    .cli-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-
-    .cli-kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
-
-    .cli-kpi-l{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:600}
-
-    .cli-kpi-v{font-size:20px;font-weight:700;margin-top:5px;font-family:var(--mono);letter-spacing:-1px}
-
-    .cli-kpi-s{font-size:10px;color:var(--muted);margin-top:3px}
-
-    .cli-panels{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-
-    .cli-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
-
-    .cli-panel-full{grid-column:span 2}
-
-    .cli-ph{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
-
-    .cli-ph-t{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
-
-    .cli-ph-a{font-size:11px;color:var(--accent);cursor:pointer;font-weight:500}
-
-    .cli-pb{padding:14px 16px}
-
-    .cli-igrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-
-    .cli-il{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:600;margin-bottom:3px}
-
-    .cli-iv{font-size:12px;font-weight:500}
-
-    .cli-iv.mono{font-family:var(--mono);font-size:11px;color:var(--accent)}
-
-    .loy-pts{font-size:22px;font-weight:800;font-family:var(--mono);color:var(--accent)}
-
-    .loy-track{height:6px;background:var(--bg);border-radius:4px;overflow:hidden;margin:8px 0}
-
-    .loy-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),#FF8C00);transition:width .8s ease}
-
-    .loy-tiers{display:flex;justify-content:space-between;font-size:9px;color:var(--muted)}
-
-    .loy-tier-on{color:var(--accent);font-weight:700}
-
-    .cli-table{width:100%;border-collapse:collapse}
-
-    .cli-table th{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:600;padding:7px 12px;text-align:left;border-bottom:1px solid var(--border)}
-
-    .cli-table td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px}
-
-    .cli-table tr:last-child td{border-bottom:none}
-
-    .cli-table tr:hover td{background:var(--surface2,#131926)}
-
-    .tx-id-m{font-family:var(--mono);font-size:10px;color:var(--muted)}
-
-    .tx-amt-m{font-family:var(--mono);font-weight:700;color:var(--accent)}
-
-    .spill{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700}
-
-    .s-ok{background:rgba(46,204,113,.1);color:#2ECC71}
-
-    .s-pend{background:rgba(255,181,71,.1);color:var(--accent)}
-
-    .cli-modal-ov{position:fixed;inset:0;background:rgba(8,12,20,.85);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center}
-
-    .cli-modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:440px;overflow:hidden}
-
-    .cli-mh{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
-
-    .cli-mh-t{font-size:15px;font-weight:700}
-
-    .cli-mc{width:26px;height:26px;border-radius:6px;background:var(--surface2,#131926);border:none;color:var(--muted);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
-
-    .cli-mb{padding:18px 20px;display:flex;flex-direction:column;gap:12px}
-
-    .cli-mf{display:flex;gap:10px}
-
-    .cli-mfg{display:flex;flex-direction:column;gap:5px;flex:1}
-
-    .cli-ml{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
-
-or:var(--border);box-shadow:none;width:100%}
-    .cli-mi:focus{border-color:var(--amber);outline:none}
-    .cli-ms{background:var(--surface2,#131926);border:1px solid var(--border);border-radius:7px;padding:8px 11px;font-family:var(--font);font-size:12px;color:var(--text);outline:none;cursor:pointer;width:100%}
-    .cli-mbtn{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none}
-    .cli-mbtn-p{background:var(--amber);color:#000}
-    .cli-mbtn-s{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
-</style>
-
-<div id="cli-modal" class="cli-modal-ov" style="display:none" onclick="if(event.target===this)cliCloseModal()">
-  <div class="cli-modal">
-    <div class="cli-mh">
-      <span class="cli-mh-t">Nuevo cliente</span>
-      <button class="cli-mc" onclick="cliCloseModal()">&#x2715;</button>
-    </div>
-    <div class="cli-mb">
-      <div class="cli-mf">
-        <div class="cli-mfg"><label class="cli-ml">Nombre</label><input id="cm-nombre" class="cli-mi" placeholder="Nombre completo"></div>
-        <div class="cli-mfg"><label class="cli-ml">Telefono</label><input id="cm-phone" class="cli-mi" placeholder="10 digitos" maxlength="10"></div>
-      </div>
-      <div class="cli-mf">
-        <div class="cli-mfg"><label class="cli-ml">RFC</label><input id="cm-rfc" class="cli-mi" placeholder="RFC (opcional)"></div>
-        <div class="cli-mfg"><label class="cli-ml">Email</label><input id="cm-email" class="cli-mi" placeholder="correo@ejemplo.com"></div>
-      </div>
-      <div style="display:flex;gap:10px;margin-top:4px">
-        <button class="cli-mbtn cli-mbtn-s" onclick="cliCloseModal()" style="flex:1">Cancelar</button>
-        <button class="cli-mbtn cli-mbtn-p" onclick="cliSave()" style="flex:1">Guardar cliente</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-  import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
-  const firebaseApp = initializeApp({
-    apiKey: "AIzaSyD7oTezdatdlev7z--b66UIh48HZWC_5ko",
-    authDomain: "turbopos-7f9a2.firebaseapp.com",
-    projectId: "turbopos-7f9a2",
-    storageBucket: "turbopos-7f9a2.firebasestorage.app",
-    messagingSenderId: "778124637274",
-    appId: "1:778124637274:web:09ff9eb5ab87ca44e21463"
-  });
-  const messaging = getMessaging(firebaseApp);
-  window._fcmMessaging = messaging;
-  async function initPushNotifications() {
-    if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
-    try {
-      const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') return;
-      const token = await getToken(messaging, {
-        vapidKey: 'BPdle36BFOQZPLgtIn8Ok6YOo_u3MAo2oQt_A7edQhiZTvNO09sC21dpB7Xgc91_KsmiMltnZgks8FspIg2JKZM',
-        serviceWorkerRegistration: reg
-      });
-      if (token) {
-        localStorage.setItem('fcm_token', token);
-        try {
-          await apiFetch(window.API + '/push/register', {
-            method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({token, tenant_id: localStorage.getItem('tenant_id')})
-          });
-        } catch(e) {}
-        if (window.toast) toast('Notificaciones activadas', 'success');
-      }
-      onMessage(messaging, payload => {
-        const {title, body} = payload.notification || {};
-        if (title && window.toast) toast(title + (body ? ' - ' + body : ''), 'success');
-      });
-    } catch(e) { console.warn('Push init error:', e); }
-  }
-  window._initPush = initPushNotifications;
 
 // ══════════════════════════════════════════════════════════════
-// TURBOPOS ONBOARDING — flujo completo
+// ONBOARDING — planes, registro, giro
 // ══════════════════════════════════════════════════════════════
 (function(){
-var obPlan = 'business';
-var obGiro = 'copy';
+var obPlan='business';
+var obGiro='copy';
+function $(id){return document.getElementById(id);}
 
-function $(id){ return document.getElementById(id); }
-
-window.obStart = function(){
-  $('login-overlay').style.display='none';
-  $('ob-planes').classList.add('active');
-  obSelectPlan('business');
+window.obStart=function(){
+  var lo=$('login-overlay');
+  if(lo) lo.style.display='none';
+  var pl=$('ob-planes');
+  if(pl) pl.classList.add('active');
+  window.obSelectPlan('business');
 };
 
-window.obShowLogin = function(){
-  ['ob-planes','ob-registro','ob-cuenta'].forEach(function(id){
+window.obShowLogin=function(){
+  ['ob-planes','ob-registro','ob-cuenta','ob-pago'].forEach(function(id){
     var el=$(id); if(el) el.classList.remove('active');
   });
-  $('login-overlay').style.display='flex';
+  var lo=$('login-overlay');
+  if(lo) lo.style.display='flex';
 };
 
-window.obSelectPlan = function(plan){
-  obPlan = plan;
+window.obSelectPlan=function(plan){
+  obPlan=plan;
   ['starter','business','chain'].forEach(function(p){
     var el=$('pc-'+p);
-    if(el){
-      el.classList.toggle('selected', p===plan);
-    }
+    if(el) el.classList.toggle('selected',p===plan);
   });
 };
 
-window.obGoStep2 = function(){
-  $('ob-planes').classList.remove('active');
-  $('ob-registro').classList.add('active');
-  // Pre-select giro copy
-  obSelectGiro(obGiro);
+window.obGoStep2=function(){
+  var pl=$('ob-planes');
+  if(pl) pl.classList.remove('active');
+  var rg=$('ob-registro');
+  if(rg) rg.classList.add('active');
+  window.obSelectGiro(obGiro);
 };
 
-window.obBack1 = function(){
-  $('ob-registro').classList.remove('active');
-  $('ob-planes').classList.add('active');
+window.obBack1=function(){
+  var rg=$('ob-registro');
+  if(rg) rg.classList.remove('active');
+  var pl=$('ob-planes');
+  if(pl) pl.classList.add('active');
 };
 
-window.obSelectGiro = function(g){
-  obGiro = g;
+window.obSelectGiro=function(g){
+  obGiro=g;
   document.querySelectorAll('.giro-chip').forEach(function(el){
-    el.classList.toggle('sel', el.dataset.g === g);
+    el.classList.toggle('sel',el.dataset.g===g);
   });
 };
 
-window.obGoStep3 = function(){
-  var nombre = $('ob-nombre').value.trim();
-  if(!nombre){ $('ob-err2').textContent='Ingresa el nombre de tu negocio'; return; }
-  $('ob-err2').textContent='';
-  var planLabels = {starter:'Plan Solo',business:'Plan Negocio',chain:'Plan Cadena'};
-  $('ob-plan-lbl').textContent = (planLabels[obPlan]||'Plan') + ' · 14 días gratis';
-  $('ob-registro').classList.remove('active');
-  $('ob-cuenta').classList.add('active');
+window.obGoStep3=function(){
+  var n=($('ob-nombre')||{}).value||'';
+  if(!n.trim()){
+    var e=$('ob-err2'); if(e) e.textContent='Ingresa el nombre de tu negocio';
+    return;
+  }
+  var e=$('ob-err2'); if(e) e.textContent='';
+  var nm=$('ob-plan-lbl');
+  var names={starter:'Plan Solo',business:'Plan Negocio',chain:'Plan Cadena'};
+  if(nm) nm.textContent=(names[obPlan]||'Plan')+' \u00b7 14 d\u00edas gratis';
+  var rg=$('ob-registro'); if(rg) rg.classList.remove('active');
+  var ct=$('ob-cuenta'); if(ct) ct.classList.add('active');
 };
 
-window.obBack2 = function(){
-  $('ob-cuenta').classList.remove('active');
-  $('ob-registro').classList.add('active');
+window.obBack2=function(){
+  var ct=$('ob-cuenta'); if(ct) ct.classList.remove('active');
+  var rg=$('ob-registro'); if(rg) rg.classList.add('active');
 };
 
-window.obCrearCuenta = async function(){
-  var email   = $('ob-email').value.trim().toLowerCase();
-  var pass    = $('ob-pass').value;
-  var pass2   = $('ob-pass2').value;
-  var nombre  = $('ob-nombre').value.trim();
-  var rfc     = ($('ob-rfc').value||'XAXX010101000').trim().toUpperCase();
-  var cp      = $('ob-cp').value.trim()||'55000';
-  var errEl   = $('ob-err3');
-  var btn     = $('ob-create-btn');
-
-  if(!email){ errEl.textContent='Ingresa tu correo electrónico'; return; }
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ errEl.textContent='Correo electrónico inválido'; return; }
-  if(pass.length<8){ errEl.textContent='La contraseña debe tener al menos 8 caracteres'; return; }
-  if(pass!==pass2){ errEl.textContent='Las contraseñas no coinciden'; return; }
-
-  btn.disabled=true; btn.textContent='Creando tu espacio...'; errEl.textContent='';
-
+window.obCrearCuenta=async function(){
+  var email=(($('ob-email')||{}).value||'').trim().toLowerCase();
+  var pass=(($('ob-pass')||{}).value||'');
+  var pass2=(($('ob-pass2')||{}).value||'');
+  var nombre=(($('ob-nombre')||{}).value||'').trim();
+  var rfc=(($('ob-rfc')||{}).value||'XAXX010101000').trim().toUpperCase();
+  var cp=(($('ob-cp')||{}).value||'55000').trim();
+  var giro=obGiro;
+  var errEl=$('ob-err3');
+  var btn=$('ob-create-btn');
+  if(!email){if(errEl)errEl.textContent='Ingresa tu correo';return;}
+  if(pass.length<8){if(errEl)errEl.textContent='M\u00ednimo 8 caracteres';return;}
+  if(pass!==pass2){if(errEl)errEl.textContent='Las contrase\u00f1as no coinciden';return;}
+  if(btn){btn.disabled=true;btn.textContent='Creando cuenta...';}
+  if(errEl) errEl.textContent='';
   try{
-    var API_URL = (typeof API!=='undefined'?API:'') || window.location.origin;
-    var res = await fetch(API_URL+'/api/v1/signup',{
+    var API_URL=window.location.origin;
+    var res=await fetch(API_URL+'/api/v1/signup',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        email:email, password:pass,
-        nombre:nombre, rfc:rfc,
-        plan:obPlan, giro:obGiro,
-        regimen_fiscal:'612',
-        codigo_postal:cp
-      })
+      body:JSON.stringify({email:email,password:pass,nombre:nombre,rfc:rfc,
+        plan:obPlan,giro:giro,regimen_fiscal:'612',codigo_postal:cp})
     });
-    var d = await res.json();
+    var d=await res.json();
     if(!res.ok) throw new Error(d.error||'Error al crear cuenta');
-
-    // Login automático
-    if(typeof authToken !== 'undefined'){
-      authToken = d.token;
-      authUser  = d.user || email;
-      sessionStorage.setItem('turbopos_token', authToken);
-      sessionStorage.setItem('turbopos_user', authUser);
+    if(typeof authToken!=='undefined'){
+      authToken=d.token; authUser=d.user||email;
+      sessionStorage.setItem('turbopos_token',authToken);
+      sessionStorage.setItem('turbopos_user',authUser);
     }
-    localStorage.setItem('turbopos_giro', obGiro);
-    localStorage.setItem('turbopos_plan', obPlan);
-    localStorage.setItem('turbopos_nombre', nombre);
-
-    // Cerrar onboarding
-    $('ob-cuenta').classList.remove('active');
-
-    // Inicializar POS
-    if(typeof initApp==='function') initApp();
-    if(typeof setGiro==='function') setGiro(obGiro);
-    if(typeof toast==='function') toast('¡Bienvenido a TurboPOS! Tu prueba de 14 días comenzó.','success');
-
-  } catch(e){
-    errEl.textContent = e.message;
-    btn.disabled=false;
-    btn.textContent='Crear cuenta gratis 🎉';
+    localStorage.setItem('turbopos_giro',giro);
+    localStorage.setItem('turbopos_plan',obPlan);
+    var ct=$('ob-cuenta'); if(ct) ct.classList.remove('active');
+    if(typeof openPayStep==='function'){
+      openPayStep(obPlan,d.tenant_id||'');
+    } else {
+      if(typeof initApp==='function') initApp();
+      if(typeof setGiro==='function') setGiro(giro);
+    }
+    if(typeof toast==='function') toast('Cuenta creada. Activa tu plan.','success');
+  }catch(e){
+    if(errEl) errEl.textContent=e.message;
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='Crear cuenta gratis \uD83C\uDF89';}
   }
 };
 
-// Si viene de landing con ?plan=xxx auto-abrir
+// Auto-abrir plan desde URL ?plan=xxx
 (function(){
-  var params = new URLSearchParams(window.location.search);
-  var p = params.get('plan');
-  if(p && ['starter','business','chain'].indexOf(p)>=0){
-    setTimeout(function(){ obSelectPlan(p); obStart(); }, 800);
+  var p=new URLSearchParams(window.location.search).get('plan');
+  if(p&&['starter','business','chain'].indexOf(p)>=0){
+    setTimeout(function(){window.obSelectPlan(p);window.obStart();},600);
   }
 })();
-
 })();
 
-
+// ══════════════════════════════════════════════════════════════
+// PLAN DETAIL SHEET
+// ══════════════════════════════════════════════════════════════
 (function(){
-var OPENPAY_ID  = 'm4yysuma88ryhsjwjgdb';
-var OPENPAY_KEY = 'pk_9539c5c50ce14cf29d2b098526b39739';
-var OPENPAY_SANDBOX = true;
+var PD={
+  starter:{name:'Plan Solo',price:'$699',num:699,
+    tag:'Para emprendedores y negocios unipersonales',clip:1200,
+    feats:[
+      {i:'&#128247;',n:'Scanner c\u00f3digo barras',d:'Agrega al carrito en 1 segundo con la c\u00e1mara.',y:true},
+      {i:'&#128203;',n:'CFDI 4.0 timbrado',d:'Facturas v\u00e1lidas ante el SAT desde el d\u00eda 1.',y:true},
+      {i:'&#128218;',n:'Cat\u00e1logo ilimitado',d:'Sin l\u00edmite de productos. Importa desde CSV.',y:true},
+      {i:'&#128202;',n:'Reportes b\u00e1sicos',d:'Ventas del d\u00eda, semana y mes en PDF.',y:true},
+      {i:'&#127873;',n:'Programa de lealtad',d:'No incluido en este plan.',y:false},
+      {i:'&#127991;',n:'Descuentos y cupones',d:'No incluido en este plan.',y:false}
+    ]},
+  business:{name:'Plan Negocio',price:'$1,299',num:1299,
+    tag:'El m\u00e1s elegido \u2014 copy centers, tiendas y papeler\u00edas',clip:2100,
+    feats:[
+      {i:'&#128247;',n:'Scanner c\u00f3digo barras',d:'Agrega al carrito en 1 segundo con la c\u00e1mara.',y:true},
+      {i:'&#128203;',n:'CFDI 4.0 timbrado',d:'Facturas v\u00e1lidas ante el SAT desde el d\u00eda 1.',y:true},
+      {i:'&#127873;',n:'Programa de lealtad',d:'Puntos autom\u00e1ticos. Niveles Bronze, Silver y Gold.',y:true},
+      {i:'&#127991;',n:'Descuentos y cupones',d:'Porcentaje, monto fijo o c\u00f3digo (VECINO10).',y:true},
+      {i:'&#128202;',n:'Dashboard avanzado',d:'Ventas por hora, top productos, tendencias.',y:true},
+      {i:'&#128101;',n:'Hasta 3 terminales',d:'Tres cajeros trabajando al mismo tiempo.',y:true}
+    ]},
+  chain:{name:'Plan Cadena',price:'$2,499',num:2499,
+    tag:'Para distribuidores y negocios con m\u00faltiples sucursales',clip:4800,
+    feats:[
+      {i:'&#127968;',n:'Multi-sucursal',d:'Gestiona todas tus tiendas en un solo panel.',y:true},
+      {i:'&#128203;',n:'CFDI masivo',d:'Timbrado para todas las sucursales con un CSD.',y:true},
+      {i:'&#128101;',n:'Usuarios ilimitados',d:'Cajeros y supervisores por sucursal.',y:true},
+      {i:'&#128279;',n:'Acceso API',d:'Conecta con tu ERP o e-commerce.',y:true},
+      {i:'&#127873;',n:'Lealtad red',d:'Puntos compartidos entre todas las sucursales.',y:true},
+      {i:'&#128222;',n:'Soporte 24/7',d:'WhatsApp + tel\u00e9fono. Respuesta en 2 hrs.',y:true}
+    ]}
+};
+var cur='business';
+function $(id){return document.getElementById(id);}
 
-var PRICES = { starter:699, business:1299, chain:2499 };
-var PLAN_NAMES = { starter:'Solo', business:'Negocio', chain:'Cadena' };
+window.openPlanDetail=function(plan){
+  cur=plan; var p=PD[plan]; if(!p) return;
+  var nm=$('pds-name'); if(nm) nm.textContent=p.name;
+  var pr=$('pds-price'); if(pr) pr.textContent=p.price;
+  var tg=$('pds-tag'); if(tg) tg.textContent=p.tag;
+  var ct=$('pds-cta'); if(ct) ct.textContent='Empezar con '+p.name+' gratis \u2192';
+  var ra=$('roi-ahorro'); if(ra) ra.textContent='$'+((p.clip-p.num)*12).toLocaleString('es-MX');
+  var rc=$('roi-clip'); if(rc) rc.textContent='$'+(p.clip*12).toLocaleString('es-MX');
+  var rx=$('roi-x'); if(rx) rx.textContent=(p.clip/p.num).toFixed(1)+'x';
+  var ff=$('pds-feats');
+  if(ff) ff.innerHTML=p.feats.map(function(f){
+    return '<div class="pds-feat"><div class="pds-feat-ic '+(f.y?'y':'n')+'">'+f.i+'</div>'
+      +'<div><div class="pds-feat-name">'+f.n+'</div>'
+      +'<div class="pds-feat-desc">'+f.d+'</div></div></div>';
+  }).join('');
+  var idx=plan==='starter'?0:plan==='business'?1:2;
+  document.querySelectorAll('.pds-cv').forEach(function(el,i){
+    el.classList.remove('cur');
+    if(i%3===idx) el.classList.add('cur');
+  });
+  var ov=$('plan-detail-overlay');
+  if(ov) ov.classList.add('open');
+  document.body.style.overflow='hidden';
+};
 
-function $(id){ return document.getElementById(id); }
+window.closePlanDetail=function(){
+  var ov=$('plan-detail-overlay');
+  if(ov) ov.classList.remove('open');
+  document.body.style.overflow='';
+};
 
-function getPrice(plan){ return PRICES[plan] || 1299; }
+window.pdsElegir=function(){
+  if(typeof obSelectPlan==='function') obSelectPlan(cur);
+  window.closePlanDetail();
+  if(typeof obGoStep2==='function') obGoStep2();
+};
 
-function openPayStep(plan, tenantId){
-  window._payTenantId = tenantId;
-  window._payPlan = plan || 'business';
-  var price = getPrice(window._payPlan);
-  var pName = PLAN_NAMES[window._payPlan] || 'Negocio';
+window.planCardAction=function(plan){
+  if(window._lastPlanClick===plan&&Date.now()-window._lastPlanTime<500){
+    window.openPlanDetail(plan); return;
+  }
+  window._lastPlanClick=plan;
+  window._lastPlanTime=Date.now();
+  if(typeof obSelectPlan==='function') obSelectPlan(plan);
+};
+})();
 
-  $('pay-plan-lbl').textContent = 'Plan '+pName+' — 14 días gratis';
-  $('pay-order-plan').textContent = pName;
-  $('pay-order-fecha').textContent = fechaPrimerCobro();
+// ══════════════════════════════════════════════════════════════
+// PAYMENT STEP — OpenPay card/OXXO/SPEI/PayPal
+// ══════════════════════════════════════════════════════════════
+(function(){
+var PRICES={starter:699,business:1299,chain:2499};
+var NAMES={starter:'Solo',business:'Negocio',chain:'Cadena'};
+function $(id){return document.getElementById(id);}
+function fmt(n){return '$'+Math.round(n).toLocaleString('es-MX');}
 
-  $('ob-pago').classList.add('active');
-}
-window.openPayStep = openPayStep;
+window.openPayStep=function(plan,tenantId){
+  window._payPlan=plan||'business';
+  window._payTenantId=tenantId||'';
+  var price=PRICES[window._payPlan]||1299;
+  var name=NAMES[window._payPlan]||'Negocio';
+  var d=new Date(); d.setDate(d.getDate()+14);
+  var fecha=d.toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'});
+  var lbl=$('pay-plan-lbl'); if(lbl) lbl.textContent='Plan '+name+' \u2014 14 d\u00edas gratis';
+  var op=$('pay-order-plan'); if(op) op.textContent=name;
+  var of=$('pay-order-fecha'); if(of) of.textContent=fecha;
+  var pg=$('ob-pago'); if(pg) pg.classList.add('active');
+};
 
-function fechaPrimerCobro(){
-  var d = new Date(); d.setDate(d.getDate()+14);
-  return d.toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'});
-}
-
-window.payTab = function(tab){
+window.payTab=function(tab){
   ['card','oxxo','spei','paypal'].forEach(function(t){
-    $('panel-'+t).classList.toggle('active', t===tab);
-    $('tab-'+t).classList.toggle('active', t===tab);
+    var p=$('panel-'+t); if(p) p.classList.toggle('active',t===tab);
+    var b=$('tab-'+t); if(b) b.classList.toggle('active',t===tab);
   });
 };
 
-window.fmtCard = function(el){
-  var v = el.value.replace(/\D/g,'').slice(0,16);
-  el.value = v.replace(/(\d{4})/g,'$1 ').trim();
-  var brand = v[0]==='4'?'&#128179;':v[0]==='5'?'&#128179;':v[0]==='3'?'&#127183;':'&#128179;';
-  $('cc-brand').innerHTML = brand;
+window.fmtCard=function(el){
+  var v=el.value.replace(/\D/g,'').slice(0,16);
+  el.value=v.replace(/(\d{4})/g,'$1 ').trim();
 };
 
-window.fmtExp = function(el){
-  var v = el.value.replace(/\D/g,'');
-  if(v.length>=2) el.value = v.slice(0,2)+'/'+v.slice(2,4);
-  else el.value = v;
+window.fmtExp=function(el){
+  var v=el.value.replace(/\D/g,'');
+  if(v.length>=2) el.value=v.slice(0,2)+'/'+v.slice(2,4);
+  else el.value=v;
 };
 
 function showProcessing(msg){
-  $('pay-processing').style.display='block';
-  $('pay-proc-msg').textContent = msg || 'Procesando...';
-  ['panel-card','panel-oxxo','panel-spei','panel-paypal','pay-skip-btn'].forEach(function(id){
-    var el=$(id); if(el) el.style.display='none';
-  });
+  var pc=$('pay-processing'); if(pc) pc.style.display='block';
+  var pm=$('pay-proc-msg'); if(pm) pm.textContent=msg||'Procesando...';
+  ['panel-card','panel-oxxo','panel-spei','panel-paypal','pay-skip-btn']
+    .forEach(function(id){var e=$(id);if(e)e.style.display='none';});
 }
 
 function showSuccess(msg){
-  $('pay-processing').style.display='none';
-  $('pay-success').style.display='block';
-  $('pay-success-msg').textContent = msg || 'Tu cuenta está activa.';
+  var pc=$('pay-processing'); if(pc) pc.style.display='none';
+  var ps=$('pay-success'); if(ps) ps.style.display='block';
+  var pm=$('pay-success-msg'); if(pm) pm.textContent=msg||'Tu cuenta est\u00e1 activa.';
   setTimeout(function(){
-    $('ob-pago').classList.remove('active');
+    var pg=$('ob-pago'); if(pg) pg.classList.remove('active');
     if(typeof initApp==='function') initApp();
-    if(typeof toast==='function') toast('¡Bienvenido a TurboPOS! 14 días gratis activados.','success');
-  }, 2200);
+    if(typeof toast==='function') toast('\u00a1Bienvenido a TurboPOS! 14 d\u00edas gratis activados.','success');
+  },2200);
 }
 
-function apiUrl(path){
-  return (typeof API!=='undefined'?API:'') + path;
-}
-
-// ── TARJETA ──────────────────────────────────────────────────
-window.payWithCard = async function(){
-  var num  = ($('cc-num').value||'').replace(/\s/g,'');
-  var name = ($('cc-name').value||'').trim().toUpperCase();
-  var exp  = ($('cc-exp').value||'').split('/');
-  var cvv  = ($('cc-cvv').value||'').trim();
-  var errEl = $('pay-err-card');
-
-  if(num.length<15){ errEl.textContent='Número de tarjeta inválido'; return; }
-  if(!name){ errEl.textContent='Ingresa el nombre de la tarjeta'; return; }
-  if(exp.length<2||exp[0].length<2){ errEl.textContent='Fecha de vencimiento inválida'; return; }
-  if(cvv.length<3){ errEl.textContent='CVV inválido'; return; }
-
-  errEl.textContent='';
-  $('pay-card-btn').disabled=true;
-  $('pay-card-btn').textContent='Procesando...';
-
-  try {
-    // Tokenizar con OpenPay.js (nunca enviamos la tarjeta al servidor)
-    if(window.OpenPay){
-      OpenPay.setId(OPENPAY_ID);
-      OpenPay.setApiKey(OPENPAY_KEY);
-      OpenPay.setSandboxMode(OPENPAY_SANDBOX);
-
-      var tokenData = await new Promise(function(resolve, reject){
-        OpenPay.token.create({
-          card_number: num,
-          holder_name: name,
-          expiration_year: exp[1],
-          expiration_month: exp[0],
-          cvv2: cvv
-        }, function(r){ resolve(r.data); }, function(e){ reject(new Error(e.data.description||'Error de tarjeta')); });
-      });
-
-      showProcessing('Registrando método de pago...');
-      var res = await fetch(apiUrl('/api/v1/openpay/checkout'), {
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization': window.authToken||''},
-        body: JSON.stringify({
-          token_id: tokenData.id,
-          method: 'card',
-          plan: window._payPlan||'business',
-          tenant_id: window._payTenantId||''
-        })
-      });
-      var d = await res.json();
-      if(!res.ok) throw new Error(d.error||'Error al procesar');
-      showSuccess('Tarjeta registrada. Tu plan está activo — primer cobro el '+fechaPrimerCobro()+'.');
-    } else {
-      // Sin OpenPay.js cargado (sandbox manual)
-      showProcessing('Registrando en sandbox...');
-      await new Promise(function(r){ setTimeout(r,1500); });
-      showSuccess('Tarjeta guardada (sandbox). Tu plan está activo.');
-    }
-  } catch(e){
-    errEl.textContent = e.message;
-    $('pay-card-btn').disabled=false;
-    $('pay-card-btn').textContent='Guardar tarjeta y comenzar prueba →';
-  }
-};
-
-// ── OXXO ─────────────────────────────────────────────────────
-window.payWithOxxo = async function(){
-  var btn = $('pay-oxxo-btn');
-  var errEl = $('pay-err-oxxo');
-  errEl.textContent='';
-  btn.disabled=true; btn.textContent='Generando referencia...';
-
-  try {
-    var res = await fetch(apiUrl('/api/v1/openpay/checkout'),{
+window.payWithCard=async function(){
+  var num=(($('cc-num')||{}).value||'').replace(/\s/g,'');
+  var name=(($('cc-name')||{}).value||'').trim();
+  var exp=(($('cc-exp')||{}).value||'').split('/');
+  var cvv=(($('cc-cvv')||{}).value||'').trim();
+  var errEl=$('pay-err-card');
+  if(num.length<15){if(errEl)errEl.textContent='N\u00famero de tarjeta inv\u00e1lido';return;}
+  if(!name){if(errEl)errEl.textContent='Ingresa el nombre';return;}
+  if(exp.length<2){if(errEl)errEl.textContent='Fecha inv\u00e1lida';return;}
+  if(cvv.length<3){if(errEl)errEl.textContent='CVV inv\u00e1lido';return;}
+  if(errEl) errEl.textContent='';
+  var btn=$('pay-card-btn');
+  if(btn){btn.disabled=true;btn.textContent='Procesando...';}
+  try{
+    showProcessing('Registrando m\u00e9todo de pago...');
+    var res=await fetch('/api/v1/openpay/checkout',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':window.authToken||''},
-      body: JSON.stringify({ method:'oxxo', plan:window._payPlan||'business', tenant_id:window._payTenantId||'' })
+      body:JSON.stringify({method:'card',plan:window._payPlan||'business',tenant_id:window._payTenantId||''})
     });
-    var d = await res.json();
-
-    var ref  = d.payment_reference || d.reference || ('TURBO-'+Date.now().toString(36).toUpperCase());
-    var amt  = d.amount || getPrice(window._payPlan||'business');
-
-    $('oxxo-ref-num').textContent = ref;
-    $('oxxo-ref-amt').textContent = '$'+amt.toLocaleString('es-MX',{minimumFractionDigits:2})+' MXN';
-    $('oxxo-ref-box').style.display='block';
-    btn.textContent='Referencia generada ✓';
-    if(typeof toast==='function') toast('Referencia OXXO lista — válida 72 horas','success');
-  } catch(e){
-    // Sandbox fallback — mostrar referencia demo
-    var ref = 'TURBOPOS'+Date.now().toString().slice(-8);
-    $('oxxo-ref-num').textContent = ref;
-    $('oxxo-ref-amt').textContent = '$'+getPrice(window._payPlan||'business').toLocaleString('es-MX',{minimumFractionDigits:2})+' MXN';
-    $('oxxo-ref-box').style.display='block';
-    btn.textContent='Referencia lista ✓';
+    var d=await res.json();
+    if(!res.ok) throw new Error(d.error||'Error al procesar');
+    showSuccess('Tarjeta registrada. Prueba de 14 d\u00edas activa.');
+  }catch(e){
+    var pc=$('pay-processing'); if(pc) pc.style.display='none';
+    ['panel-card','panel-oxxo','panel-spei','panel-paypal','pay-skip-btn']
+      .forEach(function(id){var el=$(id);if(el)el.style.display='';});
+    if(errEl) errEl.textContent=e.message;
+    if(btn){btn.disabled=false;btn.textContent='Guardar tarjeta y comenzar prueba \u2192';}
   }
 };
 
-window.copyOxxo = function(){
-  var ref = $('oxxo-ref-num').textContent;
-  navigator.clipboard.writeText(ref).then(function(){
+window.payWithOxxo=async function(){
+  var btn=$('pay-oxxo-btn');
+  var errEl=$('pay-err-oxxo');
+  if(errEl) errEl.textContent='';
+  if(btn){btn.disabled=true;btn.textContent='Generando referencia...';}
+  try{
+    var res=await fetch('/api/v1/openpay/checkout',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':window.authToken||''},
+      body:JSON.stringify({method:'oxxo',plan:window._payPlan||'business',tenant_id:window._payTenantId||''})
+    });
+    var d=await res.json();
+    var ref=d.reference||('TURBOPOS'+Date.now().toString().slice(-8));
+    var amt=d.amount||PRICES[window._payPlan||'business'];
+    var rn=$('oxxo-ref-num'); if(rn) rn.textContent=ref;
+    var ra=$('oxxo-ref-amt'); if(ra) ra.textContent='$'+amt.toLocaleString('es-MX',{minimumFractionDigits:2})+' MXN';
+    var rb=$('oxxo-ref-box'); if(rb) rb.style.display='block';
+    if(btn) btn.textContent='Referencia generada \u2713';
+    if(typeof toast==='function') toast('Referencia OXXO lista \u2014 v\u00e1lida 72 horas','success');
+  }catch(e){
+    var ref='TURBOPOS'+Date.now().toString().slice(-8);
+    var rn=$('oxxo-ref-num'); if(rn) rn.textContent=ref;
+    var ra=$('oxxo-ref-amt'); if(ra) ra.textContent='$'+(PRICES[window._payPlan||'business']).toLocaleString('es-MX',{minimumFractionDigits:2})+' MXN';
+    var rb=$('oxxo-ref-box'); if(rb) rb.style.display='block';
+    if(btn) btn.textContent='Referencia lista (sandbox) \u2713';
+  }
+};
+
+window.copyOxxo=function(){
+  var ref=($('oxxo-ref-num')||{}).textContent||'';
+  if(navigator.clipboard) navigator.clipboard.writeText(ref).then(function(){
     if(typeof toast==='function') toast('Referencia copiada','success');
   });
 };
 
-// ── SPEI ─────────────────────────────────────────────────────
-window.payWithSpei = async function(){
-  var btn = $('pay-spei-btn');
-  var errEl = $('pay-err-spei');
-  errEl.textContent='';
-  btn.disabled=true; btn.textContent='Generando CLABE...';
-
-  try {
-    var res = await fetch(apiUrl('/api/v1/openpay/checkout'),{
+window.payWithSpei=async function(){
+  var btn=$('pay-spei-btn');
+  if(btn){btn.disabled=true;btn.textContent='Generando CLABE...';}
+  try{
+    var res=await fetch('/api/v1/openpay/checkout',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':window.authToken||''},
-      body: JSON.stringify({ method:'spei', plan:window._payPlan||'business', tenant_id:window._payTenantId||'' })
+      body:JSON.stringify({method:'spei',plan:window._payPlan||'business',tenant_id:window._payTenantId||''})
     });
-    var d = await res.json();
-    var clabe = d.clabe || d.payment_method?.clabe || '646'+Math.random().toString().slice(2,20);
-    var amt   = d.amount || getPrice(window._payPlan||'business');
-    var ref   = d.reference || ('TBP-'+Date.now().toString(36).toUpperCase());
-
-    $('spei-clabe').textContent = clabe;
-    $('spei-amt').textContent = '$'+amt.toLocaleString('es-MX',{minimumFractionDigits:2})+' MXN';
-    $('spei-ref').textContent = ref;
-    $('spei-box').style.display='block';
-    btn.textContent='CLABE generada ✓';
+    var d=await res.json();
+    var clabe=d.clabe||('646'+Math.floor(Math.random()*1e15).toString().padStart(15,'0'));
+    var amt=d.amount||PRICES[window._payPlan||'business'];
+    var ref=d.reference||'TBP-SANDBOX';
+    var sc=$('spei-clabe'); if(sc) sc.textContent=clabe;
+    var sa=$('spei-amt'); if(sa) sa.textContent='$'+amt.toLocaleString('es-MX',{minimumFractionDigits:2})+' MXN';
+    var sr=$('spei-ref'); if(sr) sr.textContent=ref;
+    var sb=$('spei-box'); if(sb) sb.style.display='block';
+    if(btn) btn.textContent='CLABE generada \u2713';
     if(typeof toast==='function') toast('CLABE SPEI lista','success');
-  } catch(e){
-    var clabe = '646'+Math.floor(Math.random()*1e15).toString().padStart(15,'0');
-    $('spei-clabe').textContent = clabe;
-    $('spei-amt').textContent = '$'+getPrice(window._payPlan||'business').toLocaleString('es-MX',{minimumFractionDigits:2})+' MXN';
-    $('spei-ref').textContent = 'TBP-SANDBOX';
-    $('spei-box').style.display='block';
-    btn.textContent='CLABE lista (sandbox) ✓';
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='Generar CLABE SPEI \u2192';}
   }
 };
 
-// ── PAYPAL ───────────────────────────────────────────────────
-window.payWithPaypal = async function(){
-  var btn = $('pay-paypal-btn');
-  var errEl = $('pay-err-paypal');
-  btn.disabled=true; btn.textContent='Conectando con PayPal...';
-
-  try {
-    var res = await fetch(apiUrl('/api/v1/openpay/checkout'),{
+window.payWithPaypal=async function(){
+  var btn=$('pay-paypal-btn');
+  var errEl=$('pay-err-paypal');
+  if(btn){btn.disabled=true;btn.textContent='Conectando con PayPal...';}
+  try{
+    var res=await fetch('/api/v1/openpay/checkout',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':window.authToken||''},
-      body: JSON.stringify({ method:'paypal', plan:window._payPlan||'business', tenant_id:window._payTenantId||'' })
+      body:JSON.stringify({method:'paypal',plan:window._payPlan||'business',tenant_id:window._payTenantId||''})
     });
-    var d = await res.json();
-    if(d.redirect_url){
-      window.location.href = d.redirect_url;
-    } else {
-      throw new Error('No redirect URL');
-    }
-  } catch(e){
-    errEl.textContent = 'Error al conectar con PayPal. Intenta con tarjeta o OXXO.';
-    btn.disabled=false;
-    btn.innerHTML = '<span style="font-size:14px;font-weight:900">Pay</span><span style="font-size:14px;font-weight:900;color:#012169">Pal</span> &nbsp; Pagar con PayPal →';
+    var d=await res.json();
+    if(d.redirect_url) window.location.href=d.redirect_url;
+    else throw new Error('Sin URL de redirecci\u00f3n');
+  }catch(e){
+    if(errEl) errEl.textContent='Error con PayPal. Intenta con tarjeta u OXXO.';
+    if(btn){btn.disabled=false;btn.textContent='Pagar con PayPal \u2192';}
   }
 };
 
-// ── SALTAR ───────────────────────────────────────────────────
-window.paySkip = function(){
-  $('ob-pago').classList.remove('active');
+window.paySkip=function(){
+  var pg=$('ob-pago'); if(pg) pg.classList.remove('active');
   if(typeof initApp==='function') initApp();
   if(typeof setGiro==='function') setGiro(window._payPlan||'copy');
-  if(typeof toast==='function') toast('Tu prueba de 14 días está activa. Activa tu plan en Configuración.','info');
+  if(typeof toast==='function') toast('Prueba de 14 d\u00edas activa. Activa tu plan en Configuraci\u00f3n.','info');
 };
-
-// Patch: obCrearCuenta abre el paso 4 en lugar de cerrar directamente
-var _origCrear = window.obCrearCuenta;
-if(typeof _origCrear === 'function'){
-  window.obCrearCuenta = async function(){
-    await _origCrear.apply(this, arguments);
-  };
-}
-
-// Abrir paso de pago DESPUÉS de crear cuenta
-var _origInit = window.initApp;
-window._lastObPlan = 'business';
-window.obSelectPlan = (function(orig){
-  return function(plan){
-    window._lastObPlan = plan;
-    if(typeof orig==='function') orig(plan);
-  };
-})(window.obSelectPlan);
-
 })();
 
 </script>
@@ -9249,7 +9133,7 @@ window.obSelectPlan = (function(orig){
     <div class="ob-body">
       <div class="trial-badge">&#128197; Prueba gratuita de 14 días — cancela cuando quieras</div>
       <div class="plans-grid">
-        <div class="plan-card" id="pc-starter" onclick="obSelectPlan('starter')">
+        <div class="plan-card" id="pc-starter" >
           <div class="plan-name">Solo</div>
           <div class="plan-price">$699</div>
           <div class="plan-per">/mes · 1 terminal</div>
@@ -9260,7 +9144,7 @@ window.obSelectPlan = (function(orig){
             <span>Soporte por email</span>
           </div>
         </div>
-        <div class="plan-card popular" id="pc-business" onclick="obSelectPlan('business')">
+        <div class="plan-card popular" id="pc-business" >
           <div class="plan-name">Negocio</div>
           <div class="plan-price">$1,299</div>
           <div class="plan-per">/mes · hasta 3 terminales</div>
@@ -9271,7 +9155,7 @@ window.obSelectPlan = (function(orig){
             <span>Descuentos y cupones</span>
           </div>
         </div>
-        <div class="plan-card" id="pc-chain" onclick="obSelectPlan('chain')">
+        <div class="plan-card" id="pc-chain" >
           <div class="plan-name">Cadena</div>
           <div class="plan-price">$2,499</div>
           <div class="plan-per">/mes · terminales ilimitadas</div>
@@ -9373,7 +9257,7 @@ window.obSelectPlan = (function(orig){
       <div class="ob-err" id="ob-err3"></div>
       <button class="ob-btn" id="ob-create-btn" onclick="obCrearCuenta()">Crear cuenta gratis &#127881;</button>
       <button class="ob-btn-sec" onclick="obBack2()">&#8249; Regresar</button>
-      <div class="ob-foot">Al registrarte aceptas nuestros <a href="https://turbopos.mx" target="_blank">Términos de uso</a></div>
+      <div class="ob-foot">Al registrarte aceptas nuestros <a href="/terminos" target="_blank">Términos de uso</a></div>
     </div>
   </div>
 </div>
@@ -9537,6 +9421,52 @@ window.obSelectPlan = (function(orig){
       </button>
     </div>
   </div>
+</div>
+
+
+<div class="plan-detail-overlay" id="plan-detail-overlay" onclick="if(event.target===this)closePlanDetail()">
+<div class="pds-sheet">
+  <div class="pds-handle"></div>
+  <div class="pds-top">
+    <div>
+      <div class="pds-name" id="pds-name">Plan Negocio</div>
+      <div id="pds-tag" style="font-size:12px;color:#9B9893;margin-top:2px"></div>
+    </div>
+    <div style="text-align:right">
+      <div class="pds-price-big" id="pds-price">$1,299</div>
+      <div class="pds-price-mo">/mes + IVA &bull; 14 días gratis</div>
+    </div>
+    <button class="pds-close" onclick="closePlanDetail()">&#215;</button>
+  </div>
+  <div class="pds-body">
+    <div class="pds-roi">
+      <div class="pds-roi-title">&#128200; Ahorro estimado vs Clip POS</div>
+      <div class="pds-roi-grid">
+        <div><div class="pds-roi-val" id="roi-ahorro">$0</div><div class="pds-roi-lbl">ahorro/año</div></div>
+        <div><div class="pds-roi-val" id="roi-clip">$0</div><div class="pds-roi-lbl">pagarías a Clip</div></div>
+        <div><div class="pds-roi-val" id="roi-x">0x</div><div class="pds-roi-lbl">ROI vs competencia</div></div>
+      </div>
+    </div>
+    <div class="pds-sec-title">Incluido desde el día 1</div>
+    <div id="pds-feats"></div>
+    <div class="pds-sec-title" style="margin-top:16px">Comparativa completa</div>
+    <div class="pds-cmp">
+      <div class="pds-cmp-hd"><div>Función</div><div>Solo</div><div>Negocio</div><div>Cadena</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Terminales</div><div class="pds-cv" id="ct0">1</div><div class="pds-cv" id="ct1">3</div><div class="pds-cv" id="ct2">&#8734;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">CFDI 4.0</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Scanner barras</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Corte Z + PDF</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row hl"><div class="pds-cf">Programa lealtad</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row hl"><div class="pds-cf">Descuentos/cupones</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row hl"><div class="pds-cf">Dashboard avanzado</div><div class="pds-cv" style="font-size:11px">Básico</div><div class="pds-cv ok">&#10003;</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Multi-sucursal</div><div class="pds-cv">—</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Acceso API</div><div class="pds-cv">—</div><div class="pds-cv">—</div><div class="pds-cv ok">&#10003;</div></div>
+      <div class="pds-cmp-row"><div class="pds-cf">Soporte</div><div class="pds-cv" style="font-size:11px">Email</div><div class="pds-cv" style="font-size:11px">Chat</div><div class="pds-cv ok" style="font-size:11px">24/7</div></div>
+    </div>
+    <button class="pds-btn" id="pds-cta" onclick="pdsElegir()">Empezar con este plan gratis &#8594;</button>
+    <button class="pds-btn2" onclick="closePlanDetail()">&#8249; Ver todos los planes</button>
+  </div>
+</div>
 </div>
 
 </body>
