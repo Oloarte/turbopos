@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TurboPOS — El POS para la PyME mexicana</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --amber: #F0A500;
+  --amber-light: #FFD166;
+  --navy: #08111F;
+  --navy2: #0D1E36;
+  --slate: #152345;
+  --off: #C8D8F0;
+  --muted: #5A7A9A;
+  --white: #FFFFFF;
+  --green: #16A34A;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+html{scroll-behavior:smooth;}
+
+body{
+  background: var(--navy);
+  color: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ── NOISE OVERLAY ── */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:0;
+  opacity:0.4;
+}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:1.2rem 2rem;
+  display:flex;align-items:center;justify-content:space-between;
+  background: rgba(8,17,31,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(240,165,0,0.1);
+}
+
+.nav-logo{
+  font-family:'Syne',sans-serif;
+  font-weight:800;font-size:1.5rem;
+  color:var(--white);
+  text-decoration:none;
+  display:flex;align-items:center;gap:0.5rem;
+}
+
+.nav-logo span{color:var(--amber);}
+
+.nav-links{
+  display:flex;align-items:center;gap:2rem;
+  list-style:none;
+}
+
+.nav-links a{
+  color:var(--muted);
+  text-decoration:none;
+  font-size:0.9rem;
+  font-weight:500;
+  transition:color 0.2s;
+}
+
+.nav-links a:hover{color:var(--amber);}
+
+.nav-cta{
+  background:var(--amber);
+  color:var(--navy)!important;
+  padding:0.55rem 1.4rem;
+  border-radius:6px;
+  font-weight:700!important;
+  font-size:0.9rem!important;
+  transition:transform 0.2s, box-shadow 0.2s!important;
+}
+
+.nav-cta:hover{
+  transform:translateY(-1px);
+  box-shadow:0 8px 24px rgba(240,165,0,0.3)!important;
+  color:var(--navy)!important;
+}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;
+  display:flex;align-items:center;
+  padding:8rem 2rem 4rem;
+  position:relative;
+  overflow:hidden;
+}
+
+.hero-bg{
+  position:absolute;inset:0;
+  background: radial-gradient(ellipse 80% 60% at 60% 40%, rgba(240,165,0,0.07) 0%, transparent 70%),
+              radial-gradient(ellipse 50% 50% at 10% 80%, rgba(37,99,235,0.06) 0%, transparent 60%);
+}
+
+.hero-grid{
+  position:absolute;inset:0;
+  background-image: linear-gradient(rgba(240,165,0,0.04) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(240,165,0,0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 100%);
+}
+
+.hero-content{
+  position:relative;z-index:1;
+  max-width:1200px;margin:0 auto;
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:4rem;align-items:center;
+}
+
+.hero-badge{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  background:rgba(240,165,0,0.1);
+  border:1px solid rgba(240,165,0,0.3);
+  color:var(--amber);
+  padding:0.4rem 1rem;
+  border-radius:100px;
+  font-size:0.82rem;font-weight:600;
+  margin-bottom:1.5rem;
+  animation: fadeUp 0.6s ease both;
+}
+
+.badge-dot{
+  width:6px;height:6px;
+  background:var(--amber);
+  border-radius:50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse{
+  0%,100%{opacity:1;transform:scale(1);}
+  50%{opacity:0.5;transform:scale(1.4);}
+}
+
+.hero h1{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(2.8rem,5vw,4.5rem);
+  font-weight:800;
+  line-height:1.08;
+  letter-spacing:-0.02em;
+  animation: fadeUp 0.6s 0.1s ease both;
+}
+
+.hero h1 em{
+  font-style:normal;
+  color:var(--amber);
+}
+
+.hero-sub{
+  margin-top:1.5rem;
+  font-size:1.15rem;
+  color:var(--off);
+  line-height:1.7;
+  max-width:480px;
+  animation: fadeUp 0.6s 0.2s ease both;
+}
+
+.hero-actions{
+  display:flex;gap:1rem;margin-top:2.5rem;flex-wrap:wrap;
+  animation: fadeUp 0.6s 0.3s ease both;
+}
+
+.btn-primary{
+  background:var(--amber);
+  color:var(--navy);
+  padding:0.9rem 2rem;
+  border-radius:8px;
+  font-weight:700;font-size:1rem;
+  text-decoration:none;
+  display:inline-flex;align-items:center;gap:0.5rem;
+  transition:transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover{
+  transform:translateY(-2px);
+  box-shadow:0 12px 32px rgba(240,165,0,0.35);
+}
+
+.btn-secondary{
+  background:transparent;
+  color:var(--white);
+  padding:0.9rem 2rem;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.15);
+  font-weight:500;font-size:1rem;
+  text-decoration:none;
+  transition:border-color 0.2s, background 0.2s;
+}
+
+.btn-secondary:hover{
+  border-color:var(--amber);
+  background:rgba(240,165,0,0.05);
+}
+
+.hero-trust{
+  display:flex;align-items:center;gap:1.5rem;
+  margin-top:2rem;
+  animation: fadeUp 0.6s 0.4s ease both;
+}
+
+.trust-item{
+  display:flex;align-items:center;gap:0.4rem;
+  font-size:0.85rem;color:var(--muted);
+}
+
+.trust-item svg{width:14px;height:14px;fill:var(--green);}
+
+/* ── HERO VISUAL ── */
+.hero-visual{
+  position:relative;
+  animation: fadeUp 0.8s 0.2s ease both;
+}
+
+.mockup-card{
+  background: linear-gradient(135deg, rgba(21,35,69,0.9), rgba(13,30,54,0.95));
+  border:1px solid rgba(240,165,0,0.15);
+  border-radius:20px;
+  padding:2rem;
+  backdrop-filter:blur(20px);
+  box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(240,165,0,0.05);
+}
+
+.mockup-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:1.5rem;
+}
+
+.mockup-logo{
+  font-family:'Syne',sans-serif;
+  font-weight:800;font-size:1.1rem;
+  color:var(--amber);
+}
+
+.mockup-status{
+  display:flex;align-items:center;gap:0.4rem;
+  font-size:0.75rem;color:var(--green);
+  background:rgba(22,163,74,0.1);
+  padding:0.25rem 0.7rem;
+  border-radius:100px;
+  border:1px solid rgba(22,163,74,0.2);
+}
+
+.mockup-status-dot{
+  width:6px;height:6px;
+  background:var(--green);border-radius:50%;
+  animation:pulse 2s infinite;
+}
+
+.mockup-products{
+  display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;
+  margin-bottom:1.5rem;
+}
+
+.prod-chip{
+  background:rgba(240,165,0,0.08);
+  border:1px solid rgba(240,165,0,0.15);
+  border-radius:10px;padding:0.75rem;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+
+.prod-chip:hover{
+  background:rgba(240,165,0,0.15);
+  border-color:rgba(240,165,0,0.4);
+  transform:translateY(-1px);
+}
+
+.prod-chip.active{
+  background:rgba(240,165,0,0.2);
+  border-color:var(--amber);
+}
+
+.prod-name{font-size:0.82rem;font-weight:600;color:var(--white);margin-bottom:0.2rem;}
+.prod-price{font-size:0.75rem;color:var(--amber);}
+
+.mockup-cart{
+  background:rgba(8,17,31,0.5);
+  border-radius:12px;padding:1rem;
+  margin-bottom:1rem;
+}
+
+.cart-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:0.4rem 0;
+  font-size:0.82rem;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+
+.cart-row:last-child{border-bottom:none;}
+.cart-total{font-weight:700;font-size:1rem;color:var(--amber);}
+
+.mockup-btn{
+  background:var(--amber);
+  color:var(--navy);
+  border:none;border-radius:10px;
+  padding:0.9rem;width:100%;
+  font-family:'Syne',sans-serif;
+  font-weight:800;font-size:0.95rem;
+  cursor:pointer;
+  transition:transform 0.2s, box-shadow 0.2s;
+}
+
+.mockup-btn:hover{
+  transform:translateY(-1px);
+  box-shadow:0 8px 24px rgba(240,165,0,0.4);
+}
+
+.mockup-float{
+  position:absolute;
+  background:rgba(8,17,31,0.9);
+  border:1px solid rgba(240,165,0,0.2);
+  border-radius:12px;
+  padding:0.75rem 1rem;
+  font-size:0.78rem;
+  backdrop-filter:blur(10px);
+  white-space:nowrap;
+}
+
+.float-1{top:-1.5rem;right:-1rem;animation:float1 3s ease-in-out infinite;}
+.float-2{bottom:3rem;left:-2rem;animation:float2 3.5s ease-in-out infinite;}
+
+@keyframes float1{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+@keyframes float2{0%,100%{transform:translateY(0);}50%{transform:translateY(6px);}}
+
+.float-val{font-weight:700;color:var(--amber);font-size:1rem;}
+.float-lbl{color:var(--muted);font-size:0.72rem;}
+
+/* ── SECTION BASE ── */
+section{padding:6rem 2rem;position:relative;}
+.container{max-width:1200px;margin:0 auto;}
+
+.section-tag{
+  display:inline-block;
+  font-size:0.78rem;font-weight:700;
+  letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--amber);margin-bottom:1rem;
+}
+
+.section-title{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(2rem,3.5vw,3rem);
+  font-weight:800;line-height:1.15;
+  letter-spacing:-0.02em;
+}
+
+.section-sub{
+  color:var(--off);font-size:1.05rem;
+  margin-top:1rem;max-width:560px;line-height:1.7;
+}
+
+/* ── CALCULADORA SECTION ── */
+.calc-section{
+  background:linear-gradient(180deg, var(--navy) 0%, var(--navy2) 100%);
+}
+
+.calc-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:4rem;align-items:center;
+}
+
+.calc-box{
+  background:var(--slate);
+  border:1px solid rgba(240,165,0,0.12);
+  border-radius:20px;
+  padding:2.5rem;
+}
+
+.calc-title{
+  font-family:'Syne',sans-serif;
+  font-weight:700;font-size:1.2rem;
+  margin-bottom:1.5rem;color:var(--amber);
+}
+
+.calc-slider-group{margin-bottom:2rem;}
+
+.calc-label{
+  display:flex;justify-content:space-between;
+  font-size:0.88rem;color:var(--off);
+  margin-bottom:0.6rem;
+}
+
+.calc-label span{color:var(--amber);font-weight:700;}
+
+input[type=range]{
+  width:100%;
+  -webkit-appearance:none;
+  height:4px;
+  background:rgba(240,165,0,0.2);
+  border-radius:2px;outline:none;
+  cursor:pointer;
+}
+
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:20px;height:20px;
+  background:var(--amber);
+  border-radius:50%;
+  border:3px solid var(--navy);
+  box-shadow:0 0 0 2px var(--amber);
+}
+
+.calc-results{margin-top:1.5rem;}
+
+.calc-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:0.75rem 0;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  font-size:0.9rem;
+}
+
+.calc-row:last-child{border-bottom:none;margin-top:0.5rem;padding-top:1rem;}
+.calc-key{color:var(--muted);}
+.calc-val{font-weight:600;color:var(--white);}
+.calc-val.danger{color:#EF4444;}
+.calc-val.amber{color:var(--amber);}
+.calc-val.green{color:var(--green);font-size:1.2rem;}
+
+.calc-features{
+  display:flex;flex-direction:column;gap:1rem;
+}
+
+.calc-feat{
+  display:flex;gap:1rem;align-items:flex-start;
+  padding:1.2rem;
+  background:rgba(240,165,0,0.04);
+  border:1px solid rgba(240,165,0,0.08);
+  border-radius:12px;
+}
+
+.feat-icon{
+  width:40px;height:40px;
+  background:rgba(240,165,0,0.1);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;flex-shrink:0;
+}
+
+.feat-title{font-weight:600;font-size:0.92rem;margin-bottom:0.2rem;}
+.feat-desc{font-size:0.82rem;color:var(--muted);line-height:1.5;}
+
+/* ── FEATURES GRID ── */
+.features-section{background:var(--navy);}
+
+.features-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1.5rem;
+  margin-top:3rem;
+}
+
+.feat-card{
+  background:linear-gradient(135deg, rgba(21,35,69,0.6), rgba(13,30,54,0.8));
+  border:1px solid rgba(240,165,0,0.08);
+  border-radius:16px;
+  padding:1.8rem;
+  transition:all 0.3s;
+  position:relative;
+  overflow:hidden;
+}
+
+.feat-card::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;
+  height:2px;
+  background:linear-gradient(90deg, transparent, var(--amber), transparent);
+  transform:translateX(-100%);
+  transition:transform 0.5s;
+}
+
+.feat-card:hover::before{transform:translateX(0);}
+
+.feat-card:hover{
+  border-color:rgba(240,165,0,0.2);
+  transform:translateY(-3px);
+  box-shadow:0 20px 40px rgba(0,0,0,0.3);
+}
+
+.feat-card-icon{
+  font-size:2rem;margin-bottom:1rem;
+  display:block;
+}
+
+.feat-card-title{
+  font-family:'Syne',sans-serif;
+  font-weight:700;font-size:1.05rem;
+  margin-bottom:0.5rem;
+}
+
+.feat-card-desc{
+  font-size:0.88rem;color:var(--muted);line-height:1.6;
+}
+
+/* ── PRICING ── */
+.pricing-section{
+  background:linear-gradient(180deg, var(--navy2) 0%, var(--navy) 100%);
+}
+
+.pricing-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1.5rem;margin-top:3rem;
+}
+
+.price-card{
+  background:rgba(21,35,69,0.5);
+  border:1px solid rgba(240,165,0,0.1);
+  border-radius:20px;padding:2rem;
+  position:relative;transition:all 0.3s;
+}
+
+.price-card.featured{
+  background:linear-gradient(135deg, rgba(240,165,0,0.12), rgba(240,165,0,0.05));
+  border-color:rgba(240,165,0,0.4);
+  transform:scale(1.03);
+}
+
+.price-card:hover{
+  border-color:rgba(240,165,0,0.25);
+  transform:translateY(-4px);
+  box-shadow:0 24px 48px rgba(0,0,0,0.3);
+}
+
+.price-card.featured:hover{transform:scale(1.03) translateY(-4px);}
+
+.price-badge{
+  position:absolute;top:-0.8rem;left:50%;transform:translateX(-50%);
+  background:var(--amber);color:var(--navy);
+  font-size:0.72rem;font-weight:800;
+  padding:0.3rem 1rem;border-radius:100px;
+  white-space:nowrap;letter-spacing:0.05em;
+}
+
+.price-name{
+  font-family:'Syne',sans-serif;
+  font-weight:800;font-size:1.3rem;
+  color:var(--amber);margin-bottom:0.5rem;
+}
+
+.price-amount{
+  font-family:'Syne',sans-serif;
+  font-size:2.8rem;font-weight:800;
+  line-height:1;margin:1rem 0;
+}
+
+.price-amount sup{font-size:1rem;margin-right:0.1rem;}
+.price-amount span{font-size:0.9rem;font-weight:400;color:var(--muted);}
+
+.price-desc{font-size:0.85rem;color:var(--muted);margin-bottom:1.5rem;}
+
+.price-features{list-style:none;margin-bottom:2rem;}
+.price-features li{
+  display:flex;align-items:center;gap:0.6rem;
+  font-size:0.88rem;padding:0.4rem 0;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+  color:var(--off);
+}
+
+.price-features li:last-child{border-bottom:none;}
+.price-features li::before{
+  content:'✓';
+  color:var(--green);font-weight:700;flex-shrink:0;
+}
+
+.price-btn{
+  width:100%;padding:0.85rem;
+  border-radius:10px;
+  font-family:'Syne',sans-serif;
+  font-weight:700;font-size:0.95rem;
+  cursor:pointer;border:none;
+  transition:all 0.2s;text-decoration:none;
+  display:block;text-align:center;
+}
+
+.price-btn-outline{
+  background:transparent;
+  color:var(--amber);
+  border:1px solid rgba(240,165,0,0.4)!important;
+}
+
+.price-btn-outline:hover{background:rgba(240,165,0,0.1);}
+
+.price-btn-solid{
+  background:var(--amber);color:var(--navy);
+}
+
+.price-btn-solid:hover{
+  box-shadow:0 8px 24px rgba(240,165,0,0.4);
+  transform:translateY(-1px);
+}
+
+/* ── TESTIMONIAL ── */
+.testi-section{background:var(--navy);}
+
+.testi-card{
+  background:linear-gradient(135deg, rgba(21,35,69,0.8), rgba(13,30,54,0.9));
+  border:1px solid rgba(240,165,0,0.15);
+  border-radius:24px;
+  padding:3rem;
+  max-width:700px;
+  margin:3rem auto 0;
+  text-align:center;
+  position:relative;
+}
+
+.testi-quote{
+  font-size:3rem;color:var(--amber);
+  font-family:'Syne',sans-serif;
+  line-height:1;margin-bottom:1rem;
+}
+
+.testi-text{
+  font-size:1.15rem;line-height:1.7;
+  color:var(--off);margin-bottom:2rem;
+  font-style:italic;
+}
+
+.testi-author{
+  display:flex;align-items:center;justify-content:center;gap:1rem;
+}
+
+.testi-avatar{
+  width:48px;height:48px;
+  background:linear-gradient(135deg, var(--amber), var(--amber-light));
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;
+  color:var(--navy);font-size:1.1rem;
+}
+
+.testi-name{font-weight:700;font-size:0.95rem;}
+.testi-role{font-size:0.82rem;color:var(--muted);}
+
+/* ── CTA FINAL ── */
+.cta-section{
+  background:linear-gradient(135deg, var(--navy2), var(--slate));
+  border-top:1px solid rgba(240,165,0,0.1);
+  text-align:center;
+  padding:8rem 2rem;
+}
+
+.cta-section .section-title{font-size:clamp(2.5rem,4vw,3.5rem);}
+
+.cta-section .section-sub{
+  margin:1.5rem auto 3rem;
+  max-width:500px;
+  text-align:center;
+}
+
+.cta-pill{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  background:rgba(240,165,0,0.1);
+  border:1px solid rgba(240,165,0,0.2);
+  color:var(--amber);
+  padding:0.5rem 1.2rem;border-radius:100px;
+  font-size:0.82rem;font-weight:600;
+  margin-bottom:2rem;
+}
+
+/* ── FOOTER ── */
+footer{
+  background:var(--navy);
+  border-top:1px solid rgba(255,255,255,0.05);
+  padding:3rem 2rem;
+  text-align:center;
+}
+
+.footer-logo{
+  font-family:'Syne',sans-serif;
+  font-weight:800;font-size:1.3rem;
+  color:var(--white);margin-bottom:0.5rem;
+}
+
+.footer-logo span{color:var(--amber);}
+
+footer p{font-size:0.82rem;color:var(--muted);}
+footer a{color:var(--amber);text-decoration:none;}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(24px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+.reveal{
+  opacity:0;transform:translateY(30px);
+  transition:opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal.visible{opacity:1;transform:translateY(0);}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .hero-content{grid-template-columns:1fr;}
+  .hero-visual{display:none;}
+  .calc-grid{grid-template-columns:1fr;}
+  .features-grid{grid-template-columns:1fr 1fr;}
+  .pricing-grid{grid-template-columns:1fr;}
+  .price-card.featured{transform:none;}
+  .nav-links{display:none;}
+}
+
+@media(max-width:600px){
+  .features-grid{grid-template-columns:1fr;}
+  nav{padding:1rem;}
+}
+</style>
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://turbopos.mx/">
+  <meta property="og:title" content="TurboPOS — POS con CFDI 4.0 para PyMEs mexicanas">
+  <meta property="og:description" content="Sistema de punto de venta con facturación CFDI 4.0, programa de lealtad y reportes. Desde $699/mes. 14 días gratis.">
+  <meta property="og:image" content="https://turbopos.mx/og-image.png">
+  <meta property="og:locale" content="es_MX">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="TurboPOS — POS con CFDI 4.0">
+  <meta name="twitter:description" content="POS mexicano con CFDI 4.0 desde $699/mes. Sin comisiones por venta.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://turbopos.mx/">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "TurboPOS",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web, iOS, Android",
+    "description": "Sistema de punto de venta con CFDI 4.0 para PyMEs mexicanas",
+    "url": "https://turbopos.mx",
+    "offers": {
+      "@type": "Offer",
+      "price": "699",
+      "priceCurrency": "MXN",
+      "priceSpecification": {
+        "@type": "RecurringChargeSpecification",
+        "billingDuration": "P1M"
+      }
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "reviewCount": "12"
+    }
+  }
+  </script>
+<style>
+  .calc-section{padding:80px 24px;max-width:720px;margin:0 auto;text-align:center;}
+  .calc-card{background:#111827;border:1px solid rgba(255,181,71,.2);border-radius:20px;padding:32px 28px;}
+  .calc-title{font-size:26px;font-weight:800;color:#E8E6E0;margin-bottom:8px;}
+  .calc-sub{font-size:15px;color:#9B9893;margin-bottom:32px;}
+  .calc-row{display:flex;align-items:center;gap:16px;margin-bottom:20px;}
+  .calc-label{font-size:13px;color:#9B9893;width:180px;text-align:left;flex-shrink:0;}
+  .calc-slider{flex:1;}
+  .calc-val{font-size:14px;font-weight:700;color:#FFB547;width:80px;text-align:right;}
+  .calc-result{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:28px;}
+  .calc-box{background:rgba(255,255,255,.04);border-radius:12px;padding:16px;}
+  .calc-box.winner{background:rgba(255,181,71,.1);border:1px solid rgba(255,181,71,.3);}
+  .calc-box-val{font-size:24px;font-weight:900;}
+  .calc-box-lbl{font-size:11px;color:#9B9893;margin-top:4px;}
+  .calc-cta-btn{display:inline-block;margin-top:24px;padding:14px 36px;border-radius:12px;background:#FFB547;color:#000;font-weight:800;font-size:15px;text-decoration:none;cursor:pointer;border:none;}</style>
+  <!-- Google Analytics — reemplazar G-XXXXXXXXXX con tu ID -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script> -->
+</head>
+<body>
+
+  <!-- URGENCY BANNER -->
+  <div style="background:#FFB547;padding:10px 24px;text-align:center;font-size:13px;font-weight:700;color:#000;">
+    &#127881; Oferta de lanzamiento: 3 meses al 50% para los primeros 50 clientes &mdash;
+    <span id="spots-left" style="text-decoration:underline;">quedan 47 lugares</span>
+  </div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Turbo<span>POS</span></a>
+  <ul class="nav-links">
+    <li><a href="#features">Funciones</a></li>
+    <li><a href="#calculadora">Calculadora</a></li>
+    <li><a href="#precios">Precios</a></li>
+    <li><a href="https://turbopos.mx/app" class="nav-cta">Iniciar sesión →</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-text">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        Producto 100% terminado · Cliente activo
+      </div>
+      <h1>El POS que <em>entiende</em> a la PyME mexicana</h1>
+      <p class="hero-sub">
+        CFDI 4.0 nativo, funciona sin internet y cuesta 6 veces menos que la competencia. 
+        Listo en 5 minutos, sin contratos, sin comisiones por venta.
+      </p>
+      <div class="hero-actions">
+        <a href="#precios" class="btn-primary">Empezar gratis 14 días →</a>
+        <a href="#calculadora" class="btn-secondary">¿Cuánto ahorras?</a>
+      </div>
+      <div class="hero-trust">
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Sin comisión por venta
+        </div>
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          CFDI 4.0 incluido
+        </div>
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Offline total
+        </div>
+      </div>
+    </div>
+
+    <!-- MOCKUP -->
+    <div class="hero-visual">
+      <div class="mockup-float float-1">
+        <div class="float-val">$31,212</div>
+        <div class="float-lbl">ahorro anual vs Clip</div>
+      </div>
+      <div class="mockup-card">
+        <div class="mockup-header">
+          <div class="mockup-logo">TurboPOS</div>
+          <div class="mockup-status">
+            <span class="mockup-status-dot"></span>
+            En línea
+          </div>
+        </div>
+        <div class="mockup-products">
+          <div class="prod-chip active">
+            <div class="prod-name">Copia B/N</div>
+            <div class="prod-price">$1.00</div>
+          </div>
+          <div class="prod-chip">
+            <div class="prod-name">Copia Color</div>
+            <div class="prod-price">$3.00</div>
+          </div>
+          <div class="prod-chip">
+            <div class="prod-name">Impresión B/N</div>
+            <div class="prod-price">$2.00</div>
+          </div>
+          <div class="prod-chip">
+            <div class="prod-name">Engargolado</div>
+            <div class="prod-price">$30.00</div>
+          </div>
+        </div>
+        <div class="mockup-cart">
+          <div class="cart-row">
+            <span>Copia B/N ×10</span>
+            <span>$10.00</span>
+          </div>
+          <div class="cart-row">
+            <span>Impresión Color ×3</span>
+            <span>$12.00</span>
+          </div>
+          <div class="cart-row">
+            <span class="cart-total">Total</span>
+            <span class="cart-total">$22.00</span>
+          </div>
+        </div>
+        <button class="mockup-btn">⚡ Cobrar y timbrar CFDI</button>
+      </div>
+      <div class="mockup-float float-2">
+        <div class="float-val">✓ CFDI timbrado</div>
+        <div class="float-lbl">hace 2 segundos</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="calc-section" id="calculadora">
+  <div class="container">
+    <div class="calc-grid">
+      <div>
+        <div class="section-tag">Calculadora</div>
+        <h2 class="section-title">¿Cuánto le pagas a <em style="color:var(--amber)">Clip</em> al mes?</h2>
+        <p class="section-sub">Mueve el slider y ve cuánto ahorras cambiándote a TurboPOS.</p>
+
+        <div class="calc-box" style="margin-top:2rem;">
+          <div class="calc-title">Tus ventas mensuales</div>
+          <div class="calc-slider-group">
+            <div class="calc-label">
+              <span>Ventas/mes</span>
+              <span id="ventas-label">$100,000 MXN</span>
+            </div>
+            <input type="range" id="ventas-slider" min="10000" max="500000" step="5000" value="100000" oninput="calcular()">
+          </div>
+          <div class="calc-results">
+            <div class="calc-row">
+              <span class="calc-key">Clip cobra (3.6%)</span>
+              <span class="calc-val danger" id="clip-cost">$3,600/mes</span>
+            </div>
+            <div class="calc-row">
+              <span class="calc-key">TurboPOS Pro</span>
+              <span class="calc-val amber">$999/mes</span>
+            </div>
+            <div class="calc-row">
+              <span class="calc-key">Ahorro mensual</span>
+              <span class="calc-val green" id="ahorro-mes">$2,601/mes</span>
+            </div>
+            <div class="calc-row">
+              <span class="calc-key">Ahorro anual</span>
+              <span class="calc-val green" id="ahorro-anio">$31,212/año</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="calc-features">
+        <div class="calc-feat">
+          <div class="feat-icon">📄</div>
+          <div>
+            <div class="feat-title">CFDI 4.0 incluido</div>
+            <div class="feat-desc">Factura electrónica validada por SAT en cada venta. Sin módulos extras, sin costos adicionales por timbre.</div>
+          </div>
+        </div>
+        <div class="calc-feat">
+          <div class="feat-icon">📵</div>
+          <div>
+            <div class="feat-title">Cero ventas perdidas</div>
+            <div class="feat-desc">Si se cae el internet, TurboPOS sigue registrando. Los CFDIs se timbran automáticamente al reconectar.</div>
+          </div>
+        </div>
+        <div class="calc-feat">
+          <div class="feat-icon">⚡</div>
+          <div>
+            <div class="feat-title">Listo en 5 minutos</div>
+            <div class="feat-desc">Sin instalaciones, sin técnicos, sin contratos. Entra desde cualquier dispositivo y empieza a vender.</div>
+          </div>
+        </div>
+        <div class="calc-feat">
+          <div class="feat-icon">📊</div>
+          <div>
+            <div class="feat-title">Corte Z y reportes PDF</div>
+            <div class="feat-desc">Cierra el día con firma digital. Descarga reportes de ventas, productos más vendidos e historial completo.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+  <div class="container">
+    <div style="text-align:center;">
+      <div class="section-tag">Funciones</div>
+      <h2 class="section-title reveal">Todo lo que necesita tu negocio</h2>
+      <p class="section-sub reveal" style="margin:1rem auto 0;">Sin módulos de pago, sin sorpresas. Todo incluido desde el primer día.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feat-card reveal">
+        <span class="feat-card-icon">🧾</span>
+        <div class="feat-card-title">CFDI 4.0 nativo</div>
+        <div class="feat-card-desc">Timbrado automático con Finkok PAC. Régimen fiscal, uso de CFDI y catálogos SAT actualizados.</div>
+      </div>
+      <div class="feat-card reveal">
+        <span class="feat-card-icon">📡</span>
+        <div class="feat-card-title">Funciona offline</div>
+        <div class="feat-card-desc">Cola de ventas y CFDI pendientes. Cuando regresa el internet, todo se sincroniza solo.</div>
+      </div>
+      <div class="feat-card reveal">
+        <span class="feat-card-icon">📷</span>
+        <div class="feat-card-title">Scanner de código de barras</div>
+        <div class="feat-card-desc">Usa la cámara del celular o un lector USB. Agrega productos al carrito en un segundo.</div>
+      </div>
+      <div class="feat-card reveal">
+        <span class="feat-card-icon">🏪</span>
+        <div class="feat-card-title">Multi-giro</div>
+        <div class="feat-card-desc">Copy center, restaurante, tienda, papelería, salón de belleza. La interfaz se adapta a tu negocio.</div>
+      </div>
+      <div class="feat-card reveal">
+        <span class="feat-card-icon">🎟</span>
+        <div class="feat-card-title">Cupones y descuentos</div>
+        <div class="feat-card-desc">Crea promociones por porcentaje o monto fijo. Aplica cupones directamente en el carrito.</div>
+      </div>
+      <div class="feat-card reveal">
+        <span class="feat-card-icon">👥</span>
+        <div class="feat-card-title">Módulo de clientes</div>
+        <div class="feat-card-desc">Registra RFC, historial de compras y datos de contacto. Pre-llena CFDI automáticamente.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRECIOS -->
+<section class="pricing-section" id="precios">
+  <div class="container">
+    <div style="text-align:center;">
+      <div class="section-tag">Precios</div>
+      <h2 class="section-title reveal">Sin comisiones. Sin sorpresas.</h2>
+      <p class="section-sub reveal" style="margin:1rem auto 0;text-align:center;">Un precio fijo que nunca cambia, sin importar cuánto vendas.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="price-card reveal">
+        <div class="price-name">Starter</div>
+        <div class="price-amount"><sup>$</sup>499<span>/mes</span></div>
+        <div class="price-desc">Para negocios que están empezando</div>
+        <ul class="price-features">
+          <li>1 terminal activa</li>
+          <li>CFDI hasta 100 timbres/mes</li>
+          <li>Catálogo ilimitado</li>
+          <li>Corte Z diario</li>
+          <li>Soporte por email</li>
+        </ul>
+        <a href="https://turbopos.mx/app" class="price-btn price-btn-outline">Empezar gratis →</a>
+      </div>
+
+      <div class="price-card featured reveal">
+        <div class="price-badge">⭐ MÁS POPULAR</div>
+        <div class="price-name">Pro</div>
+        <div class="price-amount"><sup>$</sup>999<span>/mes</span></div>
+        <div class="price-desc">Para negocios en crecimiento</div>
+        <ul class="price-features">
+          <li>3 terminales activas</li>
+          <li>CFDI ilimitado</li>
+          <li>Módulo de clientes</li>
+          <li>Reportes avanzados PDF</li>
+          <li>Cupones y descuentos</li>
+          <li>Soporte prioritario</li>
+        </ul>
+        <a href="https://turbopos.mx/app" class="price-btn price-btn-solid">Empezar gratis →</a>
+      </div>
+
+      <div class="price-card reveal">
+        <div class="price-name">Enterprise</div>
+        <div class="price-amount"><sup>$</sup>1,999<span>/mes</span></div>
+        <div class="price-desc">Para cadenas y distribuidores</div>
+        <ul class="price-features">
+          <li>Terminales ilimitadas</li>
+          <li>Multi-sucursal</li>
+          <li>API de integración</li>
+          <li>Manager dedicado</li>
+          <li>SLA 99.9% garantizado</li>
+          <li>Onboarding personalizado</li>
+        </ul>
+        <a href="mailto:hola@turbopos.mx" class="price-btn price-btn-outline">Contactar →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIAL -->
+<section class="testi-section">
+  <div class="container">
+    <div style="text-align:center;">
+      <div class="section-tag">Clientes</div>
+      <h2 class="section-title reveal">Ya confían en TurboPOS</h2>
+    </div>
+    <div class="testi-card reveal">
+      <div class="testi-quote">"</div>
+      <p class="testi-text">
+        Antes tardaba 10 minutos en hacer una factura. Con TurboPOS la hago mientras cobro. 
+        Ya no pierdo ventas cuando se va la luz y mis clientes reciben su CFDI al instante.
+      </p>
+      <div class="testi-author">
+        <div class="testi-avatar">VC</div>
+        <div>
+          <div class="testi-name">Vecino Copy Center</div>
+          <div class="testi-role">Ecatepec, Estado de México · Cliente activo desde 2026</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-pill">
+      <span class="badge-dot"></span>
+      14 días gratis · Sin tarjeta de crédito
+    </div>
+    <h2 class="section-title reveal">¿Listo para dejar de<br>regalarle dinero a Clip?</h2>
+    <p class="section-sub reveal">Únete a los negocios mexicanos que ya venden más inteligente.</p>
+    <div class="hero-actions" style="justify-content:center;">
+      <a href="https://turbopos.mx/app" class="btn-primary" style="font-size:1.1rem;padding:1rem 2.5rem;">Empezar gratis ahora →</a>
+      <a href="mailto:hola@turbopos.mx" class="btn-secondary">hola@turbopos.mx</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+
+  <!-- CALCULADORA -->
+  <section class="calc-section" id="calculadora">
+    <div class="calc-card">
+      <div class="calc-title">&#128200; ¿Cuánto le pagas a Clip al mes?</div>
+      <div class="calc-sub">Mueve los sliders y ve cuánto ahorras con TurboPOS</div>
+      
+      <div class="calc-row">
+        <span class="calc-label">Ventas mensuales</span>
+        <input type="range" class="calc-slider" id="sl-ventas" min="10000" max="500000" value="80000" step="5000" oninput="calcUpdate()">
+        <span class="calc-val" id="sv-ventas">$80k</span>
+      </div>
+      <div class="calc-row">
+        <span class="calc-label">Ticket promedio</span>
+        <input type="range" class="calc-slider" id="sl-ticket" min="50" max="2000" value="250" step="50" oninput="calcUpdate()">
+        <span class="calc-val" id="sv-ticket">$250</span>
+      </div>
+      <div class="calc-row">
+        <span class="calc-label">Facturas CFDI/mes</span>
+        <input type="range" class="calc-slider" id="sl-cfdi" min="0" max="500" value="80" step="10" oninput="calcUpdate()">
+        <span class="calc-val" id="sv-cfdi">80</span>
+      </div>
+
+      <div class="calc-result">
+        <div class="calc-box">
+          <div class="calc-box-val" id="cr-clip" style="color:#e74c3c">$0</div>
+          <div class="calc-box-lbl">pagas a Clip/mes</div>
+        </div>
+        <div class="calc-box winner">
+          <div class="calc-box-val" id="cr-turbo" style="color:#FFB547">$0</div>
+          <div class="calc-box-lbl">con TurboPOS/mes</div>
+        </div>
+        <div class="calc-box winner">
+          <div class="calc-box-val" id="cr-ahorro" style="color:#2ecc71">$0</div>
+          <div class="calc-box-lbl">ahorras al año &#127881;</div>
+        </div>
+      </div>
+      <button class="calc-cta-btn" onclick="window.location.href='/app?plan=business'">
+        Empezar a ahorrar — 14 días gratis &#8594;
+      </button>
+    </div>
+  </section>
+  <script>
+  function calcUpdate(){
+    var v=parseInt(document.getElementById('sl-ventas').value);
+    var t=parseInt(document.getElementById('sl-ticket').value);
+    var cfdi=parseInt(document.getElementById('sl-cfdi').value);
+    document.getElementById('sv-ventas').textContent='$'+(v/1000).toFixed(0)+'k';
+    document.getElementById('sv-ticket').textContent='$'+t.toLocaleString('es-MX');
+    document.getElementById('sv-cfdi').textContent=cfdi;
+    var txns=Math.round(v/t);
+    var clip=Math.round(v*0.029)+3.6*txns+(cfdi>0?cfdi*8:0);
+    var turbo=1299;
+    var ahorro=(clip-turbo)*12;
+    document.getElementById('cr-clip').textContent='$'+Math.round(clip).toLocaleString('es-MX');
+    document.getElementById('cr-turbo').textContent='$'+turbo.toLocaleString('es-MX');
+    document.getElementById('cr-ahorro').textContent='$'+Math.max(0,Math.round(ahorro)).toLocaleString('es-MX');
+  }
+  calcUpdate();
+  </script>
+
+  <!-- FAQ -->
+  <section style="padding:80px 24px;max-width:760px;margin:0 auto;" id="faq">
+    <h2 style="text-align:center;font-size:30px;font-weight:800;color:#E8E6E0;margin-bottom:8px;">Preguntas frecuentes</h2>
+    <p style="text-align:center;color:#9B9893;margin-bottom:40px;">Todo lo que necesitas saber antes de empezar</p>
+    <div id="faq-list"></div>
+  </section>
+  <style>
+  .faq-item{border:1px solid rgba(255,255,255,.08);border-radius:12px;margin-bottom:10px;overflow:hidden;}
+  .faq-q{padding:16px 20px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:600;color:#E8E6E0;background:rgba(255,255,255,.03);}
+  .faq-q:hover{background:rgba(255,181,71,.05);}
+  .faq-arrow{color:#FFB547;font-size:16px;transition:.2s;flex-shrink:0;}
+  .faq-a{padding:0 20px;max-height:0;overflow:hidden;transition:.25s;font-size:13px;color:#9B9893;line-height:1.6;}
+  .faq-item.open .faq-a{max-height:200px;padding:12px 20px 16px;}
+  .faq-item.open .faq-arrow{transform:rotate(90deg);}
+  </style>
+  <script>
+  var FAQS=[
+    {q:'¿Necesito instalar algo?',a:'No. TurboPOS corre 100% en el navegador — Chrome, Safari o Firefox. Funciona en celular, tablet y computadora. Sin instalaciones, sin actualizaciones manuales.'},
+    {q:'¿Cómo funciona el CFDI 4.0?',a:'Al cobrar puedes activar la factura. TurboPOS genera el XML, lo timbra con el SAT a través de Finkok (PAC autorizado) y lo envía al correo del cliente automáticamente. Solo necesitas tu Certificado de Sello Digital (CSD) del SAT.'},
+    {q:'¿Qué pasa si se va el internet?',a:'TurboPOS tiene modo offline. Puedes seguir vendiendo sin conexión y las ventas se sincronizan automáticamente cuando regresa el internet. Los CFDIs pendientes se timbran en cuanto haya conexión.'},
+    {q:'¿Puedo importar mi catálogo de productos?',a:'Sí. Sube un archivo CSV con nombre, precio, SKU y categoría y TurboPOS importa todos tus productos en segundos. También puedes usar el escáner de código de barras para agregar productos uno a uno.'},
+    {q:'¿Cuánto cobra Clip por comparación?',a:'Clip cobra 2.9% + $3.60 MXN por transacción. Con $80,000 en ventas mensuales eso es aproximadamente $2,672 MXN/mes. TurboPOS Plan Negocio cuesta $1,299 fijo — sin importar cuánto vendas.'},
+    {q:'¿Puedo cancelar cuando quiera?',a:'Sí. Cancelas desde Configuración en cualquier momento. No hay penalizaciones ni contratos mínimos. Tus datos están disponibles para exportar durante 60 días después de cancelar.'},
+    {q:'¿Funciona para restaurantes y salones?',a:'Sí. TurboPOS se adapta al giro de tu negocio: copy center, restaurante, tienda, papelería, salón de belleza. Cada giro tiene categorías e iconos personalizados.'},
+    {q:'¿Qué incluye el soporte?',a:'Plan Solo: soporte por email con respuesta en 24 hrs. Plan Negocio: chat con respuesta en 4 hrs. Plan Cadena: WhatsApp + teléfono con respuesta en menos de 2 horas.'}
+  ];
+  var fl=document.getElementById('faq-list');
+  if(fl) fl.innerHTML=FAQS.map(function(f,i){
+    return '<div class="faq-item" id="faq'+i+'">'
+      +'<div class="faq-q" onclick="toggleFaq('+i+')">'
+      +f.q+'<span class="faq-arrow">&#8250;</span></div>'
+      +'<div class="faq-a">'+f.a+'</div></div>';
+  }).join('');
+  function toggleFaq(i){
+    var el=document.getElementById('faq'+i);
+    if(el) el.classList.toggle('open');
+  }
+  </script>
+
+  <!-- REFERIDOS -->
+  <section style="padding:60px 24px;max-width:760px;margin:0 auto;text-align:center;" id="referidos">
+    <div style="background:linear-gradient(135deg,rgba(255,181,71,.12),rgba(255,181,71,.04));border:1px solid rgba(255,181,71,.3);border-radius:20px;padding:40px 32px;">
+      <div style="font-size:36px;margin-bottom:12px;">&#127873;</div>
+      <h2 style="font-size:26px;font-weight:800;color:#E8E6E0;margin-bottom:8px;">Gana $300 MXN por cada referido</h2>
+      <p style="color:#9B9893;font-size:15px;margin-bottom:24px;">Recomienda TurboPOS a otro negocio. Cuando se suscriban, tú recibes $300 MXN de crédito en tu cuenta — sin límite de referidos.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:28px;">
+        <div style="background:rgba(255,255,255,.04);border-radius:12px;padding:16px;">
+          <div style="font-size:24px;font-weight:900;color:#FFB547;">$300</div>
+          <div style="font-size:12px;color:#9B9893;margin-top:4px;">por referido activo</div>
+        </div>
+        <div style="background:rgba(255,255,255,.04);border-radius:12px;padding:16px;">
+          <div style="font-size:24px;font-weight:900;color:#FFB547;">Sin límite</div>
+          <div style="font-size:12px;color:#9B9893;margin-top:4px;">de referidos</div>
+        </div>
+        <div style="background:rgba(255,255,255,.04);border-radius:12px;padding:16px;">
+          <div style="font-size:24px;font-weight:900;color:#FFB547;">Inmediato</div>
+          <div style="font-size:12px;color:#9B9893;margin-top:4px;">al activar suscripción</div>
+        </div>
+      </div>
+      <a href="/app" style="display:inline-block;padding:13px 32px;border-radius:12px;background:#FFB547;color:#000;font-weight:800;font-size:14px;text-decoration:none;">
+        Crear cuenta y obtener mi enlace &#8594;
+      </a>
+    </div>
+  </section>
+
+  <!-- TESTIMONIOS EXTRA -->
+  <section style="padding:20px 24px 60px;max-width:900px;margin:0 auto;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;">
+      <div style="background:#111827;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:20px;">
+        <div style="color:#FFB547;font-size:16px;margin-bottom:8px;">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p style="color:#9B9893;font-size:13px;line-height:1.6;margin-bottom:12px;">"Antes pagaba casi $3,000 al mes a Clip. Con TurboPOS pago $1,299 fijo y además puedo facturar. La diferencia es brutal."</p>
+        <div style="font-size:12px;font-weight:700;color:#E8E6E0;">Roberto M. &mdash; Tienda de abarrotes, CDMX</div>
+      </div>
+      <div style="background:#111827;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:20px;">
+        <div style="color:#FFB547;font-size:16px;margin-bottom:8px;">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p style="color:#9B9893;font-size:13px;line-height:1.6;margin-bottom:12px;">"El escáner de código de barras y las facturas automáticas me ahorraron 2 horas diarias de trabajo manual. Muy recomendado."</p>
+        <div style="font-size:12px;font-weight:700;color:#E8E6E0;">Ana L. &mdash; Papelería, Ecatepec</div>
+      </div>
+      <div style="background:#111827;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:20px;">
+        <div style="color:#FFB547;font-size:16px;margin-bottom:8px;">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p style="color:#9B9893;font-size:13px;line-height:1.6;margin-bottom:12px;">"Pensé que implementar un POS sería complicado. En menos de una hora ya estaba cobrando. El soporte es excelente."</p>
+        <div style="font-size:12px;font-weight:700;color:#E8E6E0;">Carlos V. &mdash; Copy Center, Monterrey</div>
+      </div>
+    </div>
+  </section>
+<footer>
+  <div class="footer-logo">Turbo<span>POS</span></div>
+  <p style="margin:0.5rem 0;">© 2026 TurboPOS · <a href="mailto:hola@turbopos.mx">hola@turbopos.mx</a></p>
+  <p style="margin-top:0.5rem;">Hecho en México 🇲🇽 para la PyME mexicana</p>
+</footer>
+
+<script>
+// Calculadora
+function calcular(){
+  const ventas = parseInt(document.getElementById('ventas-slider').value);
+  const clip = ventas * 0.036;
+  const turbo = 999;
+  const ahorro = clip - turbo;
+  const ahorroanio = ahorro * 12;
+
+  document.getElementById('ventas-label').textContent = '$' + ventas.toLocaleString('es-MX') + ' MXN';
+  document.getElementById('clip-cost').textContent = '$' + Math.round(clip).toLocaleString('es-MX') + '/mes';
+  document.getElementById('ahorro-mes').textContent = ahorro > 0 ? '$' + Math.round(ahorro).toLocaleString('es-MX') + '/mes' : 'TurboPOS aún más barato';
+  document.getElementById('ahorro-anio').textContent = ahorroanio > 0 ? '$' + Math.round(ahorroanio).toLocaleString('es-MX') + '/año' : '—';
+}
+calcular();
+
+// Scroll reveal
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if(entry.isIntersecting){
+      setTimeout(() => entry.target.classList.add('visible'), i * 80);
+    }
+  });
+}, { threshold: 0.1 });
+reveals.forEach(el => observer.observe(el));
+
+// Mockup interactivo
+document.querySelectorAll('.prod-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.prod-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+  });
+});
+</script>
+
+  <!-- WHATSAPP FLOTANTE -->
+  <a href="https://wa.me/5215612879939?text=Hola%2C%20me%20interesa%20TurboPOS%20para%20mi%20negocio"
+     target="_blank" rel="noopener"
+     style="position:fixed;bottom:24px;right:24px;z-index:9999;width:56px;height:56px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(37,211,102,.4);text-decoration:none;"
+     title="Chatear por WhatsApp">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    </svg>
+  </a>
+</body>
+</html>
