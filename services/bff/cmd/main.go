@@ -121,6 +121,122 @@ func checkRateLimit(ip string) bool {
 	return true
 }
 
+
+// ── AI QUERY HANDLER ────────────────────────────────────────────
+func (gw *Gateway) handleAIQuery(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method == http.MethodOptions { w.WriteHeader(http.StatusOK); return }
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed); return
+	}
+
+	// Obtener tenant del token
+	tokenStr := r.Header.Get("Authorization")
+	tenantID := gw.getTenantFromToken(tokenStr)
+
+	var req struct {
+		Query string `json:"query"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Query == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "query requerida"})
+		return
+	}
+
+	// Recopilar contexto del negocio desde la DB
+	ctx := r.Context()
+	var (
+		ventasHoy    float64
+		txHoy        int
+		ventas7d     float64
+		topProducto  string
+		totalClientes int
+	)
+	gw.db.QueryRowContext(ctx,
+		`SELECT COALESCE(SUM(total),0), COUNT(*) FROM sales
+		 WHERE tenant_id=$1::uuid AND DATE(created_at)=CURRENT_DATE AND status='completed'`,
+		tenantID).Scan(&ventasHoy, &txHoy)
+	gw.db.QueryRowContext(ctx,
+		`SELECT COALESCE(SUM(total),0) FROM sales
+		 WHERE tenant_id=$1::uuid AND created_at >= NOW()-INTERVAL '7 days' AND status='completed'`,
+		tenantID).Scan(&ventas7d)
+	gw.db.QueryRowContext(ctx,
+		`SELECT COALESCE(name,'Sin datos') FROM products
+		 WHERE tenant_id=$1::uuid ORDER BY id LIMIT 1`, tenantID).Scan(&topProducto)
+	gw.db.QueryRowContext(ctx,
+		`SELECT COUNT(*) FROM customers WHERE tenant_id=$1::uuid`, tenantID).Scan(&totalClientes)
+
+	// Construir contexto para Claude
+	bizContext := fmt.Sprintf(
+		`Eres el asistente inteligente de TurboPOS para este negocio.
+Datos actuales del negocio:
+- Ventas de hoy: $%.2f MXN (%d transacciones)
+- Ventas últimos 7 días: $%.2f MXN
+- Total de clientes registrados: %d
+- Un producto en catálogo: %s
+
+Responde en español mexicano coloquial, de forma breve y útil (máximo 3 oraciones).
+Si te preguntan algo que no puedes saber con estos datos, dilo honestamente.
+No inventes números que no tienes.`,
+		ventasHoy, txHoy, ventas7d, totalClientes, topProducto)
+
+	// Llamar a Claude API
+	type Message struct {
+		Role    string `json:"role"`
+		Content string `json:"content"`
+	}
+	type ClaudeReq struct {
+		Model     string    `json:"model"`
+		MaxTokens int       `json:"max_tokens"`
+		System    string    `json:"system"`
+		Messages  []Message `json:"messages"`
+	}
+	type ContentBlock struct {
+		Type string `json:"type"`
+		Text string `json:"text"`
+	}
+	type ClaudeResp struct {
+		Content []ContentBlock `json:"content"`
+	}
+
+	claudeBody, _ := json.Marshal(ClaudeReq{
+		Model:     "claude-haiku-4-5-20251001",
+		MaxTokens: 300,
+		System:    bizContext,
+		Messages:  []Message{{Role: "user", Content: req.Query}},
+	})
+
+	httpReq, _ := http.NewRequestWithContext(ctx, "POST",
+		"https://api.anthropic.com/v1/messages",
+		bytes.NewReader(claudeBody))
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", os.Getenv("ANTHROPIC_API_KEY"))
+	httpReq.Header.Set("anthropic-version", "2023-06-01")
+
+	client := &http.Client{Timeout: 15 * time.Second}
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		// Fallback con datos locales si Claude no está disponible
+		response := fmt.Sprintf("Hoy llevas $%.2f en ventas con %d transacciones. "+
+			"Esta semana acumulas $%.2f. Tienes %d clientes registrados.",
+			ventasHoy, txHoy, ventas7d, totalClientes)
+		json.NewEncoder(w).Encode(map[string]string{"response": response})
+		return
+	}
+	defer resp.Body.Close()
+
+	var cr ClaudeResp
+	if err := json.NewDecoder(resp.Body).Decode(&cr); err != nil || len(cr.Content) == 0 {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "error al procesar respuesta"})
+		return
+	}
+
+	log.Printf("[AI] tenant=%s query=%q", tenantID, req.Query)
+	json.NewEncoder(w).Encode(map[string]string{"response": cr.Content[0].Text})
+}
+
 func main() {
 	godotenv.Load()
 	// Iniciar cron de trials - se llama después de conectar DB
@@ -160,6 +276,7 @@ func main() {
 	mux.HandleFunc("/api/v1/forgot-password",  gw.handleForgotPassword)
 	mux.HandleFunc("/api/v1/reset-password",   gw.handleResetPassword)
 	mux.HandleFunc("/api/v1/openpay/webhook", gw.handleOpenpayWebhook)
+	mux.HandleFunc("/api/v1/ai/query", gw.handleAIQuery)
 	mux.HandleFunc("/api/v1/openpay/checkout",gw.handleOpenpayCheckout)
 	mux.HandleFunc("/api/v1/cobrar",          gw.handleCobrar)
 	mux.HandleFunc("/api/v1/timbrar",         gw.handleTimbrar)
