@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 
 <html lang="es">
 
@@ -5685,36 +5685,6 @@ function loadCustomers(){
 </div>
 
 <!-- AI ASSISTANT FAB -->
-<button class="ai-fab" id="ai-fab" onclick="toggleAI()" title="Pregúntale a tu asistente IA">
-  &#129302;
-</button>
-
-<!-- AI ASSISTANT PANEL -->
-<div class="ai-panel" id="ai-panel">
-  <div class="ai-header">
-    <div class="ai-header-icon">&#129302;</div>
-    <div>
-      <div class="ai-header-title">Asistente TurboPOS</div>
-      <div class="ai-header-sub">Pregúntame sobre tu negocio</div>
-    </div>
-    <button class="ai-close" onclick="toggleAI()">&#215;</button>
-  </div>
-  <div class="ai-messages" id="ai-messages">
-    <div class="ai-msg bot">
-      ¡Hola! Soy tu asistente. Puedo ayudarte con tus ventas, inventario, clientes y facturas. ¿Qué quieres saber?
-    </div>
-  </div>
-  <div class="ai-suggestions" id="ai-sugs">
-    <button class="ai-sug" onclick="aiAsk(this.textContent)">¿Qué vendí hoy?</button>
-    <button class="ai-sug" onclick="aiAsk(this.textContent)">¿Cuál es mi producto estrella?</button>
-    <button class="ai-sug" onclick="aiAsk(this.textContent)">¿Qué clientes me deben?</button>
-    <button class="ai-sug" onclick="aiAsk(this.textContent)">¿Cuánto IVA generé este mes?</button>
-  </div>
-  <div class="ai-input-row">
-    <input class="ai-input" id="ai-input" placeholder="Pregunta sobre tu negocio..." 
-           onkeydown="if(event.key==='Enter')aiSend()">
-    <button class="ai-send" onclick="aiSend()">&#10148;</button>
-  </div>
 </div>
 
 </body></html>`;
@@ -9187,5 +9157,35 @@ window.aiSend = async function(){
   </div>
 </div>
 
+<button class="ai-fab" id="ai-fab" onclick="toggleAI()" title="Pregúntale a tu asistente IA">
+  &#129302;
+</button>
+
+<!-- AI ASSISTANT PANEL -->
+<div class="ai-panel" id="ai-panel">
+  <div class="ai-header">
+    <div class="ai-header-icon">&#129302;</div>
+    <div>
+      <div class="ai-header-title">Asistente TurboPOS</div>
+      <div class="ai-header-sub">Pregúntame sobre tu negocio</div>
+    </div>
+    <button class="ai-close" onclick="toggleAI()">&#215;</button>
+  </div>
+  <div class="ai-messages" id="ai-messages">
+    <div class="ai-msg bot">
+      ¡Hola! Soy tu asistente. Puedo ayudarte con tus ventas, inventario, clientes y facturas. ¿Qué quieres saber?
+    </div>
+  </div>
+  <div class="ai-suggestions" id="ai-sugs">
+    <button class="ai-sug" onclick="aiAsk(this.textContent)">¿Qué vendí hoy?</button>
+    <button class="ai-sug" onclick="aiAsk(this.textContent)">¿Cuál es mi producto estrella?</button>
+    <button class="ai-sug" onclick="aiAsk(this.textContent)">¿Qué clientes me deben?</button>
+    <button class="ai-sug" onclick="aiAsk(this.textContent)">¿Cuánto IVA generé este mes?</button>
+  </div>
+  <div class="ai-input-row">
+    <input class="ai-input" id="ai-input" placeholder="Pregunta sobre tu negocio..." 
+           onkeydown="if(event.key==='Enter')aiSend()">
+    <button class="ai-send" onclick="aiSend()">&#10148;</button>
+  </div>
 </body>
 </html>
