@@ -97,27 +97,25 @@ func startTrialCron(db *sql.DB) {
 
 
 // ── RATE LIMITER para login ─────────────────────────────────────
-var loginAttempts = make(map[string][]time.Time)
-var loginMu sync.Mutex
 
 func checkRateLimit(ip string) bool {
-	loginMu.Lock()
-	defer loginMu.Unlock()
+	loginAttempts.Lock()
+	defer loginAttempts.Unlock()
 	now := time.Now()
 	window := 15 * time.Minute
 	max := 5
 	// Limpiar intentos viejos
 	var recent []time.Time
-	for _, t := range loginAttempts[ip] {
+	for _, t := range loginAttempts.counts[ip] {
 		if now.Sub(t) < window {
 			recent = append(recent, t)
 		}
 	}
-	loginAttempts[ip] = recent
+	loginAttempts.counts[ip] = recent
 	if len(recent) >= max {
 		return false
 	}
-	loginAttempts[ip] = append(loginAttempts[ip], now)
+	loginAttempts.counts[ip] = append(loginAttempts.counts[ip], now)
 	return true
 }
 
@@ -133,7 +131,21 @@ func (gw *Gateway) handleAIQuery(w http.ResponseWriter, r *http.Request) {
 
 	// Obtener tenant del token
 	tokenStr := r.Header.Get("Authorization")
-	tenantID := gw.getTenantFromToken(tokenStr)
+	tenantID := ""
+	// Extraer tenant_id del JWT
+	if tokenStr != "" {
+		parts := strings.Split(strings.TrimPrefix(tokenStr, "Bearer "), ".")
+		if len(parts) == 3 {
+			if payload, err := base64.RawURLEncoding.DecodeString(parts[1]); err == nil {
+				var claims map[string]interface{}
+				if json.Unmarshal(payload, &claims) == nil {
+					if tid, ok := claims["tenant_id"].(string); ok {
+						tenantID = tid
+					}
+				}
+			}
+		}
+	}
 
 	var req struct {
 		Query string `json:"query"`
@@ -227,7 +239,7 @@ No inventes números que no tienes.`,
 	defer resp.Body.Close()
 
 	var cr ClaudeResp
-	if err := json.NewDecoder(resp.Body).Decode(&cr); err != nil || len(cr.Content) == 0 {
+	if decodeErr := json.NewDecoder(resp.Body).Decode(&cr); decodeErr != nil || len(cr.Content) == 0 {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "error al procesar respuesta"})
 		return
@@ -2133,7 +2145,7 @@ func (gw *Gateway) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	// Rate limiting: max 5 intentos por IP en 5 minutos
-	ip := r.RemoteAddr
+	ip = r.RemoteAddr
 	if i := strings.LastIndex(ip, ":"); i != -1 { ip = ip[:i] }
 	loginAttempts.Lock()
 	now := time.Now()
