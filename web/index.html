@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 
 <html lang="es">
 
@@ -8456,7 +8456,7 @@ window.payWithPaypal=async function(){
 window.paySkip=function(){
   var pg=$('ob-pago'); if(pg) pg.classList.remove('active');
   if(typeof initApp==='function') initApp();
-  if(typeof setGiro==='function') setGiro(window._payPlan||'copy');
+  var _g=localStorage.getItem('turbopos_giro')||'copy'; if(typeof setGiro==='function') setGiro(_g);
   if(typeof toast==='function') toast('Prueba de 14 d\u00edas activa. Activa tu plan en Configuraci\u00f3n.','info');
 };
 })();
