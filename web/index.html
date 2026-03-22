@@ -1,15 +1,21 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+<!DOCTYPE html>
 
 <html lang="es">
 
 <head><link rel="icon" href="/favicon.svg" type="image/svg+xml">
 
 <meta charset="UTF-8">
+<script>
+(function(){
+  var t = localStorage.getItem('turbopos_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
   <link rel="manifest" href="/manifest.json">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>TurboPOS v10.1</title>
+<title>TurboPOS v1.0</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
@@ -20,60 +26,64 @@
 
 
 :root {
-
-  --bg: #080C14;
-
-  --surface: #0E1521;
-
-  --surface2: #141F30;
-
-  --surface3: #1C2A3E;
-
-  --border: #1E2D42;
-
-  --border2: #253548;
-
-  --text: #E8F0FE;
-
-  --muted: #4A6080;
-
   --amber: #FFB547;
-
   --amber2: #E8A030;
-
-  --amber-dim: rgba(255,181,71,.12);
-
   --green: #34D399;
-
-  --green-dim: rgba(52,211,153,.12);
-
   --blue: #60A5FA;
-
-  --blue-dim: rgba(96,165,250,.12);
-
   --red: #F87171;
-
-  --red-dim: rgba(248,113,113,.12);
-
   --cyan: #22D3EE;
-
   --ff: 'Outfit', 'Noto Color Emoji', sans-serif;
-
   --nav-h: 60px;
-
   --top-h: 48px;
-
   --mono: 'JetBrains Mono', monospace;
-
   --r: 12px;
-
   --sidebar-w: 68px;
-
+}
+/* TEMA OSCURO — default */
+:root, [data-theme="dark"] {
+  --bg: #080C14;
+  --surface: #0E1521;
+  --surface2: #141F30;
+  --surface3: #1C2A3E;
+  --border: #1E2D42;
+  --border2: #253548;
+  --text: #E8F0FE;
+  --muted: #4A6080;
+  --amber: #FFB547;
+  --amber2: #E8A030;
+  --amber-dim: rgba(255,181,71,.12);
+  --green: #34D399;
+  --green-dim: rgba(52,211,153,.12);
+  --blue: #60A5FA;
+  --blue-dim: rgba(96,165,250,.12);
+  --red: #F87171;
+  --red-dim: rgba(248,113,113,.12);
+}
+/* TEMA CLARO */
+[data-theme="light"] {
+  --bg: #F0F4FA;
+  --surface: #FFFFFF;
+  --surface2: #E8EDF5;
+  --surface3: #DDE4F0;
+  --border: #C8D3E8;
+  --border2: #B0BDD4;
+  --text: #0F1923;
+  --muted: #6B7A99;
+  --amber: #D97706;
+  --amber2: #B45309;
+  --amber-dim: rgba(217,119,6,.12);
+  --green: #059669;
+  --green-dim: rgba(5,150,105,.12);
+  --blue: #2563EB;
+  --blue-dim: rgba(37,99,235,.12);
+  --red: #DC2626;
+  --red-dim: rgba(220,38,38,.12);
 }
 
 
 
 html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--ff); overflow: hidden; }
+@media screen and (max-width: 767px) { html, body { overflow-x: hidden; overflow-y: auto; } }
 
 
 
@@ -1673,7 +1683,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 
 
-  html, body { overflow: hidden !important; }
+  html, body { overflow-x: hidden !important; overflow-y: auto !important; }
 
 
 
@@ -2497,6 +2507,81 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   color:#AFA9EC;display:none;align-items:center;gap:6px;}
 .demo-banner.show{display:flex;}
 
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE — todos los dispositivos
+   ═══════════════════════════════════════════════════ */
+
+/* Scrollbar delgado global */
+* { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+*::-webkit-scrollbar { width: 4px; height: 4px; }
+*::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+/* Tablet (768–1024px) — ya existe pero reforzar */
+@media screen and (min-width: 768px) and (max-width: 1024px) {
+  .pos-layout { flex-direction: column !important; }
+  .ticket-panel { width: 100% !important; min-width: unset !important; max-height: 40vh !important; }
+  .prod-grid { grid-template-columns: repeat(3,1fr) !important; }
+  .metrics-row { grid-template-columns: repeat(2,1fr) !important; }
+  .dash-grid { grid-template-columns: 1fr !important; }
+}
+
+/* Mobile pequeño (<480px) */
+@media screen and (max-width: 480px) {
+  .topbar { padding: 0 8px !important; gap: 4px !important; }
+  .topbar-left { gap: 4px !important; }
+  .rfc-chip { display: none !important; }
+  #pos-time { font-size: 11px !important; }
+  .prod-grid { grid-template-columns: repeat(2,1fr) !important; gap: 8px !important; padding: 10px !important; }
+  .p-name { font-size: 11px !important; }
+  .p-price { font-size: 13px !important; }
+  .cart-footer { padding: 8px !important; }
+  .total-label { font-size: 13px !important; }
+  .total-amount { font-size: 20px !important; }
+  .btn-cobrar { padding: 12px !important; font-size: 14px !important; }
+  .metrics-row { grid-template-columns: repeat(2,1fr) !important; gap: 8px !important; }
+  .metric-card { padding: 12px !important; }
+  .metric-val { font-size: 22px !important; }
+  .ob-card { padding: 20px 16px !important; margin: 8px !important; max-height: 95vh !important; overflow-y: auto !important; }
+  .plans-grid { grid-template-columns: 1fr !important; }
+  .plan-card { padding: 16px !important; }
+  .pay-tabs { flex-wrap: wrap !important; gap: 6px !important; }
+  .pay-tab { flex: 1 1 40% !important; font-size: 12px !important; }
+  .cfg-card { padding: 12px !important; }
+  .cfg-card-title { font-size: 13px !important; }
+  .modal-inner { width: 96vw !important; margin: 8px !important; max-height: 90vh !important; overflow-y: auto !important; }
+  #turno-modal > div { width: 96vw !important; }
+  #cat-mgr-modal > div { width: 96vw !important; }
+}
+
+/* Pantallas muy grandes (>1400px) */
+@media screen and (min-width: 1400px) {
+  .prod-grid { grid-template-columns: repeat(5,1fr) !important; }
+  .metrics-row { grid-template-columns: repeat(4,1fr) !important; }
+}
+
+/* Modales — siempre scrolleables en mobile */
+@media screen and (max-width: 767px) {
+  [id$="-modal"] { align-items: flex-start !important; padding-top: 16px !important; overflow-y: auto !important; }
+  [id$="-modal"] > div { max-height: 90vh !important; overflow-y: auto !important; margin: 0 auto !important; }
+  .ob-screen { overflow-y: auto !important; }
+  .ob-card { max-height: 92vh !important; overflow-y: auto !important; }
+  .pds-sheet { max-height: 92vh !important; overflow-y: auto !important; }
+  .content-area { overflow-y: auto !important; }
+  .view { overflow-y: auto !important; padding-bottom: 80px !important; }
+  .cfg-sections { padding-bottom: 80px !important; }
+  .rep-wrap { padding-bottom: 80px !important; }
+}
+
+/* Touch — área táctil mínima */
+@media (pointer: coarse) {
+  .nav-item { min-height: 44px !important; }
+  .btn-cobrar { min-height: 52px !important; }
+  .pay-btn { min-height: 48px !important; }
+  .p-card { min-height: 100px !important; }
+  input, select, textarea { font-size: 16px !important; } /* evita zoom en iOS */
+}
+
 </style>
 
 <script src="https://js.openpay.mx/openpay.v1.min.js"></script>
@@ -2549,7 +2634,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
       <div class="login-logo">TurboPOS</div>
 
-      <div class="login-version">Sistema de Punto de Venta · v10.1</div>
+      <div class="login-version">Sistema de Punto de Venta · v1.0</div>
 
     </div>
 
@@ -2686,7 +2771,10 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
       </div>
 
-      <div class="rfc-chip" id="tenant-rfc">EKU9003173C9</div>
+      <div class="rfc-chip" id="tenant-rfc"></div>
+      <button id="theme-toggle" onclick="toggleTheme()" title="Cambiar tema" style="background:none;border:1px solid var(--border2);border-radius:8px;padding:4px 8px;cursor:pointer;color:var(--muted);font-size:14px;display:flex;align-items:center;gap:4px;transition:all .2s" onmouseover="this.style.borderColor='var(--amber)'" onmouseout="this.style.borderColor='var(--border2)'">
+        <span id="theme-icon">🌙</span>
+      </button>
 
       <div class="clock-display" id="clock">--:--</div>
 
@@ -3539,11 +3627,11 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
               <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
 
-                <div class="subs-plan" onclick="selectPlan('starter')"><div class="subs-plan-name">Starter</div><div class="subs-plan-price">$499<span>/mes</span></div><div class="subs-plan-features">1 sucursal</div></div>
+                <div class="subs-plan" onclick="selectPlan('starter')"><div class="subs-plan-name">Solo</div><div class="subs-plan-price">$699<span>/mes</span></div><div class="subs-plan-features">1 terminal</div></div>
 
-                <div class="subs-plan" id="subs-plan-business" onclick="selectPlan('business')"><div class="subs-plan-name">Business</div><div class="subs-plan-price">$999<span>/mes</span></div><div class="subs-plan-features">3 sucursales</div></div>
+                <div class="subs-plan" id="subs-plan-business" onclick="selectPlan('business')"><div class="subs-plan-name">Negocio</div><div class="subs-plan-price">$1,299<span>/mes</span></div><div class="subs-plan-features">3 terminales</div></div>
 
-                <div class="subs-plan" onclick="selectPlan('pro')"><div class="subs-plan-name">Pro</div><div class="subs-plan-price">$1,999<span>/mes</span></div><div class="subs-plan-features">Ilimitado</div></div>
+                <div class="subs-plan" onclick="selectPlan('pro')"><div class="subs-plan-name">Cadena</div><div class="subs-plan-price">$2,499<span>/mes</span></div><div class="subs-plan-features">Ilimitado</div></div>
 
               </div>
 
@@ -3584,14 +3672,10 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
             </div>
 
-            <div class="cfg-card-body" id="body-about"
-<div style="padding:8px 0">
-<button onclick="clearDemoData()" style="width:100%;padding:10px;border-radius:10px;
-  background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.2);
-  color:#e74c3c;font-size:13px;cursor:pointer;font-weight:600;">
-  &#128465; Eliminar datos de ejemplo
-</button>
-</div> style="display:none">
+            <div class="cfg-card-body" id="body-about" style="display:none">
+              <div style="padding:8px 0">
+                <button onclick="clearDemoData()" style="width:100%;padding:10px;border-radius:10px;background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.2);color:#e74c3c;font-size:13px;cursor:pointer;font-weight:600;">&#128465; Eliminar datos de ejemplo</button>
+              </div>
 
               <div style="font-size:13px;color:var(--muted);line-height:2.2">
 
@@ -3809,6 +3893,26 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <div class="modal-sub" id="sale-modal-sub">Revisa los detalles antes de cobrar</div>
 
     <div class="sale-breakdown" id="sale-breakdown"></div>
+    <!-- TURBOPOS-PAYMENTS v8.0: formulario de tarjeta para cobro en POS -->
+    <div id="pos-card-form" style="display:none;margin-top:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">Datos de tarjeta</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <input id="pos-cc-num" type="tel" placeholder="0000 0000 0000 0000" maxlength="19"
+          style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;"
+          oninput="this.value=this.value.replace(/\D/g,'').slice(0,16).replace(/(\d{4})/g,'$1 ').trim()">
+        <input id="pos-cc-name" type="text" placeholder="NOMBRE EN LA TARJETA"
+          style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;text-transform:uppercase">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <input id="pos-cc-exp" type="tel" placeholder="MM/AA" maxlength="5"
+            style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;"
+            oninput="var v=this.value.replace(/\D/g,'');if(v.length>=2)this.value=v.slice(0,2)+'/'+v.slice(2,4);else this.value=v;">
+          <input id="pos-cc-cvv" type="tel" placeholder="CVV" maxlength="4"
+            style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;">
+        </div>
+        <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;">&#128274; Cifrado por OpenPay</div>
+        <div id="pos-card-err" style="color:#ff6b6b;font-size:12px;display:none;"></div>
+      </div>
+    </div>
 
     <!-- CAMBIO EFECTIVO -->
 <div id="efectivo-row" style="display:none;margin-top:14px;">
@@ -4013,6 +4117,35 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 const API = window.location.origin + '/api/v1';
 
+// TURBOPOS-PAYMENTS v8.0: inicializar OpenPay desde config del tenant
+async function initOpenPay() {
+  if (typeof OpenPay === 'undefined') return;
+  try {
+    const token = sessionStorage.getItem('turbopos_token') || localStorage.getItem('turbopos_token') || '';
+    const res = await fetch('/api/v1/config/payments', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) {
+      console.warn('OpenPay config no disponible — tarjeta deshabilitada');
+      window._cardEnabled = false;
+      return;
+    }
+    const cfg = await res.json();
+    if (!cfg.card_enabled) { window._cardEnabled = false; return; }
+    OpenPay.setId(cfg.merchant_id);
+    OpenPay.setApiKey(cfg.public_key);
+    OpenPay.setSandboxMode(cfg.sandbox_mode);
+    window._cardEnabled = true;
+    console.info('OpenPay inicializado para tenant — sandbox:', cfg.sandbox_mode);
+  } catch(e) {
+    console.warn('Error inicializando OpenPay:', e);
+    window._cardEnabled = false;
+  }
+}
+(function initOpenPayWrapper() {
+  if (typeof OpenPay === 'undefined') return;
+})();
+
 
 
 // --- State --------------------------------------------------
@@ -4069,9 +4202,10 @@ async function doLogin() {
 
     document.getElementById('login-overlay').classList.add('hidden');
 
-    document.getElementById('tenant-rfc').textContent = d.tenant_id ? d.tenant_id.slice(0,12)+'...' : 'EKU9003173C9';
+    document.getElementById('tenant-rfc').textContent = d.rfc || localStorage.getItem('tp_rfc') || '';
 
     initApp();
+    initOpenPay();
 
     toast('Bienvenido, ' + authUser, 'success');
 
@@ -4819,49 +4953,148 @@ async function checkLoyalty(phone) {
 
 
 
+// TURBOPOS-PAYMENTS v8.0: cobro con tarjeta via OpenPay + /api/v1/sales/charge
+async function confirmSaleWithCard() {
+  var btn = document.getElementById('confirm-sale-btn');
+  var errEl = document.getElementById('pos-card-err');
+  if (errEl) { errEl.style.display='none'; errEl.textContent=''; }
+
+  // Validar campos
+  var num = (document.getElementById('pos-cc-num').value||'').replace(/\s/g,'');
+  var name = (document.getElementById('pos-cc-name').value||'').trim();
+  var exp = (document.getElementById('pos-cc-exp').value||'').split('/');
+  var cvv = (document.getElementById('pos-cc-cvv').value||'').trim();
+
+  if (num.length < 15) { showCardErr('Número de tarjeta inválido'); return; }
+  if (!name) { showCardErr('Ingresa el nombre'); return; }
+  if (exp.length < 2 || !exp[0] || !exp[1]) { showCardErr('Fecha inválida'); return; }
+  if (cvv.length < 3) { showCardErr('CVV inválido'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Procesando...';
+
+  try {
+    // Tokenizar con OpenPay.js (ya inicializado en el BFF)
+    var tokenData = await new Promise(function(resolve, reject) {
+      OpenPay.token.create({
+        card_number: num,
+        holder_name: name,
+        expiration_year: exp[1].length === 4 ? exp[1].slice(-2) : exp[1],
+        expiration_month: exp[0],
+        cvv2: cvv
+      }, function(r) { resolve(r); }, function(e) { reject(e); });
+    });
+
+    var token = tokenData.data ? tokenData.data.id : tokenData.id;
+    if (!token) throw new Error('No se pudo tokenizar la tarjeta');
+
+    // Generar tx_id único para esta transacción
+    var txId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = Math.random()*16|0, v = c=='x' ? r : (r&0x3|0x8);
+      return v.toString(16);
+    });
+
+    var total = getTotalConDescuento ? getTotalConDescuento() : cart.reduce(function(s,i){return s+i.subtotal;},0);
+
+    // Llamar al nuevo endpoint de pagos
+    var authHeader = (typeof authToken !== 'undefined' ? authToken : '') || sessionStorage.getItem('turbopos_token') || '';
+    var res = await fetch('/api/v1/sales/charge', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + authHeader.replace('Bearer ','')
+      },
+      body: JSON.stringify({
+        tx_id: txId,
+        amount: total,
+        token: token
+      })
+    });
+
+    var d = await res.json();
+
+    if (res.status === 200) {
+      // Pago confirmado
+      closeSaleModal();
+      toast('✅ Pago con tarjeta · $'+Number(total).toLocaleString('es-MX',{minimumFractionDigits:2}), 'success');
+      showTicket({
+        sale_id: d.sale_id,
+        total: total,
+        items: cart.map(function(i){return {name:i.name,qty:i.qty,subtotal:i.subtotal};}),
+        payment_method: 'card',
+        psp_reference: d.psp_reference
+      });
+      cart = [];
+      if (typeof clearDescuento === 'function') clearDescuento();
+      if (typeof renderCart === 'function') renderCart();
+    } else if (res.status === 202) {
+      // Pendiente de confirmación — igual mostramos éxito al cajero
+      closeSaleModal();
+      toast('⏳ Pago procesándose · $'+Number(total).toLocaleString('es-MX',{minimumFractionDigits:2}), 'info');
+      showTicket({
+        sale_id: d.sale_id,
+        total: total,
+        items: cart.map(function(i){return {name:i.name,qty:i.qty,subtotal:i.subtotal};}),
+        payment_method: 'card'
+      });
+      cart = [];
+      if (typeof clearDescuento === 'function') clearDescuento();
+      if (typeof renderCart === 'function') renderCart();
+    } else if (res.status === 402) {
+      showCardErr('Tarjeta rechazada: ' + (d.message || 'intenta con otra tarjeta'));
+    } else if (res.status === 409) {
+      showCardErr(d.message || 'Transacción duplicada');
+    } else if (res.status === 401) {
+      showCardErr('Sesión expirada — vuelve a iniciar sesión');
+    } else {
+      showCardErr(d.error || d.message || 'Error al procesar el pago');
+    }
+  } catch(e) {
+    showCardErr('Error: ' + (e.message || e.description || 'intenta de nuevo'));
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '⚡ Confirmar y cobrar';
+  }
+}
+
+function showCardErr(msg) {
+  var errEl = document.getElementById('pos-card-err');
+  if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
+}
+
 // ?? DESCUENTOS Y CUPONES ??????????????????????????????????????????????????
 let descuento = { tipo: 'pct', valor: 0, codigo: '' };
 
-const CUPONES = {
-  'VECINO10': { tipo: 'pct',   valor: 10, desc: '10% descuento piloto' },
-  'TURBO20':  { tipo: 'pct',   valor: 20, desc: '20% lanzamiento'      },
-  'PROMO50':  { tipo: 'fixed', valor: 50, desc: '$50 descuento fijo'   },
-};
-
-function setDescTipo(tipo) {
-  descuento.tipo = tipo;
-  document.getElementById('desc-pct-btn').classList.toggle('active', tipo === 'pct');
-  document.getElementById('desc-fix-btn').classList.toggle('active', tipo === 'fixed');
-  const inp = document.getElementById('desc-valor');
-  inp.max = tipo === 'pct' ? 100 : 999999;
-  applyDescuento();
-}
-
-function applyDescuento() {
-  const v = parseFloat(document.getElementById('desc-valor').value) || 0;
-  descuento.valor = v;
-  descuento.codigo = '';
-  document.getElementById('desc-codigo').value = '';
-  document.getElementById('desc-codigo').classList.remove('valid');
-  renderCart();
-}
-
-function validateCupon(code) {
-  const cup = CUPONES[code.toUpperCase()];
-  const inp = document.getElementById('desc-codigo');
-  if (cup) {
-    descuento = { tipo: cup.tipo, valor: cup.valor, codigo: code.toUpperCase() };
-    document.getElementById('desc-valor').value = cup.valor;
-    setDescTipo(cup.tipo);
-    inp.classList.add('valid');
-    document.getElementById('desc-badge').textContent = '&#x2713; ' + cup.desc;
-  } else {
-    descuento.codigo = '';
-    inp.classList.remove('valid');
-    document.getElementById('desc-badge').textContent = code.length >= 4 ? 'Cupon no valido' : '';
-    descuento.valor = parseFloat(document.getElementById('desc-valor').value) || 0;
+async function validateCupon(code) {
+  const input = document.getElementById('desc-codigo');
+  if (!code || code.length < 3) {
+    if (input) input.classList.remove('valid');
+    window._cuponActivo = null;
+    recalcTotal();
+    return;
   }
-  renderCart();
+  try {
+    const token = sessionStorage.getItem('turbopos_token') || localStorage.getItem('turbopos_token') || '';
+    const res = await fetch('/api/v1/coupons/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ code: code.toUpperCase() })
+    });
+    const d = await res.json();
+    if (d.valid) {
+      window._cuponActivo = { tipo: d.tipo, valor: d.valor, desc: d.descripcion, code: d.code };
+      if (input) input.classList.add('valid');
+      toast('Cupón aplicado: ' + d.descripcion, 'success');
+    } else {
+      window._cuponActivo = null;
+      if (input) input.classList.remove('valid');
+      if (code.length >= 4) toast(d.error || 'Cupón no válido', 'error');
+    }
+  } catch(e) {
+    window._cuponActivo = null;
+    if (input) input.classList.remove('valid');
+  }
+  recalcTotal();
 }
 
 function clearDescuento() {
@@ -5240,6 +5473,9 @@ function cobrar() {
 
   (factura ? '<div class="sb-row"><span class="sl" style="color:var(--blue)">🧾 CFDI 4.0 al SAT</span><span class="sv" style="color:var(--blue)">Auto</span></div>' : '');
 
+  // Mostrar formulario de tarjeta solo si payment === 'card'
+  var posCardForm = document.getElementById('pos-card-form');
+  if (posCardForm) posCardForm.style.display = payment === 'card' ? 'block' : 'none';
   document.getElementById('sale-modal').classList.add('open');
 
 }
@@ -5252,6 +5488,8 @@ function closeSaleModal() { document.getElementById('sale-modal').classList.remo
 
 async function confirmSale() {
 
+  // TURBOPOS-PAYMENTS v8.0: interceptar tarjeta
+  if (payment === 'card') { confirmSaleWithCard(); return; }
   const btn = document.getElementById('confirm-sale-btn');
 
   const total = cart.reduce((s,i)=>s+i.subtotal,0);
@@ -5746,7 +5984,6 @@ function loadCustomers(){
 </div>
 
 <!-- AI ASSISTANT FAB -->
-</div>
 
 
 <!-- DEMO BANNER -->
@@ -6709,35 +6946,7 @@ function exportReportePDF() {
 
 
 
-<!-- ── PRODUCT TOUR ──────────────────────────────────────────── -->
-<div class="tour-welcome" id="tour-welcome">
-  <div class="tour-welcome-card">
-    <div class="tour-emoji">&#127881;</div>
-    <div class="tour-welcome-title">&#161;Bienvenido a <span class="tour-welcome-name">TurboPOS</span>!</div>
-    <div class="tour-welcome-sub" id="tour-welcome-msg">
-      Tu sistema de punto de venta est&#225; listo. Te mostramos un recorrido r&#225;pido de 2 minutos para que empieces a vender hoy mismo.
-    </div>
-    <div class="tour-progress"><div class="tour-progress-fill" id="tour-prog-fill" style="width:0%"></div></div>
-    <button class="tour-start-btn" onclick="tourStart()">Mostrarme c&#243;mo funciona &#8594;</button>
-    <button class="tour-later-btn" onclick="tourSkip()">Ya s&#233; usarlo, omitir</button>
-  </div>
-</div>
 
-<div class="tour-overlay" id="tour-overlay" style="pointer-events:none">
-  <div class="tour-backdrop" style="opacity:0;pointer-events:none" onclick="tourSkip()"></div>
-  <div class="tour-spotlight" id="tour-spotlight" style="display:none"></div>
-  <div class="tour-tooltip" id="tour-tooltip" style="display:none">
-    <div class="tour-progress" style="margin-bottom:12px"><div class="tour-progress-fill" id="tour-prog2"></div></div>
-    <div class="tour-tip-step" id="tour-step-lbl">Paso 1 de 6</div>
-    <div class="tour-tip-title" id="tour-tip-title">T&#237;tulo</div>
-    <div class="tour-tip-desc" id="tour-tip-desc">Descripci&#243;n</div>
-    <div class="tour-tip-btns">
-      <button class="tour-skip" onclick="tourSkip()">Saltar recorrido</button>
-      <div class="tour-dots" id="tour-dots"></div>
-      <button class="tour-next" id="tour-next-btn" onclick="tourNext()">Siguiente &#8250;</button>
-    </div>
-  </div>
-</div>
 
 
 <!-- PWA INSTALL PROMPT -->
@@ -6751,38 +6960,6 @@ function exportReportePDF() {
   <button class="pwa-close" onclick="document.getElementById('pwa-install').classList.remove('show')">&#215;</button>
 </div>
 
-<!-- AI ASSISTANT FAB -->
-<button class="ai-fab" id="ai-fab" onclick="toggleAI()" title="Pregúntale a tu asistente IA">
-  &#129302;
-</button>
-
-<!-- AI ASSISTANT PANEL -->
-<div class="ai-panel" id="ai-panel">
-  <div class="ai-header">
-    <div class="ai-header-icon">&#129302;</div>
-    <div>
-      <div class="ai-header-title">Asistente TurboPOS</div>
-      <div class="ai-header-sub">Pregúntame sobre tu negocio</div>
-    </div>
-    <button class="ai-close" onclick="toggleAI()">&#215;</button>
-  </div>
-  <div class="ai-messages" id="ai-messages">
-    <div class="ai-msg bot">
-      ¡Hola! Soy tu asistente. Puedo ayudarte con tus ventas, inventario, clientes y facturas. ¿Qué quieres saber?
-    </div>
-  </div>
-  <div class="ai-suggestions" id="ai-sugs">
-    <button class="ai-sug" onclick="aiAsk(this.textContent)">¿Qué vendí hoy?</button>
-    <button class="ai-sug" onclick="aiAsk(this.textContent)">¿Cuál es mi producto estrella?</button>
-    <button class="ai-sug" onclick="aiAsk(this.textContent)">¿Qué clientes me deben?</button>
-    <button class="ai-sug" onclick="aiAsk(this.textContent)">¿Cuánto IVA generé este mes?</button>
-  </div>
-  <div class="ai-input-row">
-    <input class="ai-input" id="ai-input" placeholder="Pregunta sobre tu negocio..." 
-           onkeydown="if(event.key==='Enter')aiSend()">
-    <button class="ai-send" onclick="aiSend()">&#10148;</button>
-  </div>
-</div>
 
 
 <!-- DEMO BANNER -->
@@ -7950,19 +8127,6 @@ async function guardarCierreTurno() {
 
 
 
-<!-- ── PRODUCT TOUR ──────────────────────────────────────────── -->
-<div class="tour-welcome" id="tour-welcome">
-  <div class="tour-welcome-card">
-    <div class="tour-emoji">&#127881;</div>
-    <div class="tour-welcome-title">&#161;Bienvenido a <span class="tour-welcome-name">TurboPOS</span>!</div>
-    <div class="tour-welcome-sub" id="tour-welcome-msg">
-      Tu sistema de punto de venta est&#225; listo. Te mostramos un recorrido r&#225;pido de 2 minutos para que empieces a vender hoy mismo.
-    </div>
-    <div class="tour-progress"><div class="tour-progress-fill" id="tour-prog-fill" style="width:0%"></div></div>
-    <button class="tour-start-btn" onclick="tourStart()">Mostrarme c&#243;mo funciona &#8594;</button>
-    <button class="tour-later-btn" onclick="tourSkip()">Ya s&#233; usarlo, omitir</button>
-  </div>
-</div>
 
 <div class="tour-overlay" id="tour-overlay" style="pointer-events:none">
   <div class="tour-backdrop" style="opacity:0;pointer-events:none" onclick="tourSkip()"></div>
@@ -7992,38 +8156,11 @@ async function guardarCierreTurno() {
   <button class="pwa-close" onclick="document.getElementById('pwa-install').classList.remove('show')">&#215;</button>
 </div>
 
-<!-- AI ASSISTANT FAB -->
-<button class="ai-fab" id="ai-fab" onclick="toggleAI()" title="Pregúntale a tu asistente IA">
-  &#129302;
-</button>
-
-<!-- AI ASSISTANT PANEL -->
-<div class="ai-panel" id="ai-panel">
-  <div class="ai-header">
-    <div class="ai-header-icon">&#129302;</div>
-    <div>
-      <div class="ai-header-title">Asistente TurboPOS</div>
-      <div class="ai-header-sub">Pregúntame sobre tu negocio</div>
-    </div>
-    <button class="ai-close" onclick="toggleAI()">&#215;</button>
-  </div>
-  <div class="ai-messages" id="ai-messages">
-    <div class="ai-msg bot">
-      ¡Hola! Soy tu asistente. Puedo ayudarte con tus ventas, inventario, clientes y facturas. ¿Qué quieres saber?
-    </div>
-  </div>
-  <div class="ai-suggestions" id="ai-sugs">
-    <button class="ai-sug" onclick="aiAsk(this.textContent)">¿Qué vendí hoy?</button>
-    <button class="ai-sug" onclick="aiAsk(this.textContent)">¿Cuál es mi producto estrella?</button>
-    <button class="ai-sug" onclick="aiAsk(this.textContent)">¿Qué clientes me deben?</button>
-    <button class="ai-sug" onclick="aiAsk(this.textContent)">¿Cuánto IVA generé este mes?</button>
-  </div>
   <div class="ai-input-row">
     <input class="ai-input" id="ai-input" placeholder="Pregunta sobre tu negocio..." 
            onkeydown="if(event.key==='Enter')aiSend()">
     <button class="ai-send" onclick="aiSend()">&#10148;</button>
   </div>
-</div>
 
 
 <!-- DEMO BANNER -->
@@ -8071,7 +8208,34 @@ async function guardarCierreTurno() {
   localStorage.setItem('tp_cierres', JSON.stringify(cierres.slice(-30)));
 }
 
-// ══════════════════════════════════════════════════════════════
+// ── SISTEMA DE TEMAS ─────────────────────────────────────────────────────
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('turbopos_theme', theme);
+  const icon = document.getElementById('theme-icon');
+  const sub = document.getElementById('tema-sub');
+  const darkBtn = document.getElementById('tema-dark');
+  const lightBtn = document.getElementById('tema-light');
+  if (icon) icon.textContent = theme === 'dark' ? '🌙' : '☀️';
+  if (sub) sub.textContent = theme === 'dark' ? 'Tema oscuro activo' : 'Tema claro activo';
+  if (darkBtn) darkBtn.style.borderColor = theme === 'dark' ? 'var(--amber)' : 'var(--border)';
+  if (darkBtn) darkBtn.style.background = theme === 'dark' ? 'var(--amber-dim)' : 'var(--surface2)';
+  if (lightBtn) lightBtn.style.borderColor = theme === 'light' ? 'var(--amber)' : 'var(--border)';
+  if (lightBtn) lightBtn.style.background = theme === 'light' ? 'var(--amber-dim)' : 'var(--surface2)';
+}
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  setTheme(current === 'dark' ? 'light' : 'dark');
+}
+// Aplicar tema guardado al cargar
+(function() {
+  const saved = localStorage.getItem('turbopos_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  const icon = document.getElementById('theme-icon');
+  if (icon) icon.textContent = saved === 'dark' ? '🌙' : '☀️';
+})();
+
+// ══════════════════════════════════════════════════════════════════
 // ONBOARDING — planes, registro, giro
 // ══════════════════════════════════════════════════════════════
 (function(){
@@ -9325,7 +9489,7 @@ if(typeof _origConfirmSale === 'function'){
       <div class="order-summary">
         <div class="order-row"><span style="color:var(--text2)">Plan</span><span id="pay-order-plan" style="color:var(--text)">Negocio</span></div>
         <div class="order-row"><span style="color:var(--text2)">Período de prueba</span><span style="color:var(--green)">14 días GRATIS</span></div>
-        <div class="order-row"><span style="color:var(--text2)">Primer cobro</span><span id="pay-order-fecha" style="color:var(--text)">28 mar 2026</span></div>
+        <div class="order-row"><span style="color:var(--text2)">Primer cobro</span><span id="pay-order-fecha" style="color:var(--text)"><span id='pay-order-fecha-dyn'></span></span></div>
         <div class="order-row order-total"><span>Total hoy</span><span>$0.00 MXN</span></div>
       </div>
 
@@ -9521,19 +9685,6 @@ if(typeof _origConfirmSale === 'function'){
   </div>
 </div>
 
-<!-- ── PRODUCT TOUR ──────────────────────────────────────────── -->
-<div class="tour-welcome" id="tour-welcome">
-  <div class="tour-welcome-card">
-    <div class="tour-emoji">&#127881;</div>
-    <div class="tour-welcome-title">&#161;Bienvenido a <span class="tour-welcome-name">TurboPOS</span>!</div>
-    <div class="tour-welcome-sub" id="tour-welcome-msg">
-      Tu sistema de punto de venta est&#225; listo. Te mostramos un recorrido r&#225;pido de 2 minutos para que empieces a vender hoy mismo.
-    </div>
-    <div class="tour-progress"><div class="tour-progress-fill" id="tour-prog-fill" style="width:0%"></div></div>
-    <button class="tour-start-btn" onclick="tourStart()">Mostrarme c&#243;mo funciona &#8594;</button>
-    <button class="tour-later-btn" onclick="tourSkip()">Ya s&#233; usarlo, omitir</button>
-  </div>
-</div>
 
 <div class="tour-overlay" id="tour-overlay" style="pointer-events:none">
   <div class="tour-backdrop" style="opacity:0;pointer-events:none" onclick="tourSkip()"></div>
@@ -9563,7 +9714,12 @@ if(typeof _origConfirmSale === 'function'){
   <button class="pwa-close" onclick="document.getElementById('pwa-install').classList.remove('show')">&#215;</button>
 </div>
 
-<!-- AI ASSISTANT FAB -->
+  <div class="ai-input-row">
+    <input class="ai-input" id="ai-input" placeholder="Pregunta sobre tu negocio..." 
+           onkeydown="if(event.key==='Enter')aiSend()">
+    <button class="ai-send" onclick="aiSend()">&#10148;</button>
+  </div>
+
 <button class="ai-fab" id="ai-fab" onclick="toggleAI()" title="Pregúntale a tu asistente IA">
   &#129302;
 </button>
@@ -9595,37 +9751,6 @@ if(typeof _origConfirmSale === 'function'){
     <button class="ai-send" onclick="aiSend()">&#10148;</button>
   </div>
 </div>
-
-<button class="ai-fab" id="ai-fab" onclick="toggleAI()" title="Pregúntale a tu asistente IA">
-  &#129302;
-</button>
-
-<!-- AI ASSISTANT PANEL -->
-<div class="ai-panel" id="ai-panel">
-  <div class="ai-header">
-    <div class="ai-header-icon">&#129302;</div>
-    <div>
-      <div class="ai-header-title">Asistente TurboPOS</div>
-      <div class="ai-header-sub">Pregúntame sobre tu negocio</div>
-    </div>
-    <button class="ai-close" onclick="toggleAI()">&#215;</button>
-  </div>
-  <div class="ai-messages" id="ai-messages">
-    <div class="ai-msg bot">
-      ¡Hola! Soy tu asistente. Puedo ayudarte con tus ventas, inventario, clientes y facturas. ¿Qué quieres saber?
-    </div>
-  </div>
-  <div class="ai-suggestions" id="ai-sugs">
-    <button class="ai-sug" onclick="aiAsk(this.textContent)">¿Qué vendí hoy?</button>
-    <button class="ai-sug" onclick="aiAsk(this.textContent)">¿Cuál es mi producto estrella?</button>
-    <button class="ai-sug" onclick="aiAsk(this.textContent)">¿Qué clientes me deben?</button>
-    <button class="ai-sug" onclick="aiAsk(this.textContent)">¿Cuánto IVA generé este mes?</button>
-  </div>
-  <div class="ai-input-row">
-    <input class="ai-input" id="ai-input" placeholder="Pregunta sobre tu negocio..." 
-           onkeydown="if(event.key==='Enter')aiSend()">
-    <button class="ai-send" onclick="aiSend()">&#10148;</button>
-  </div>
 
 <!-- DEMO BANNER -->
 <div class="demo-banner" id="demo-banner">
